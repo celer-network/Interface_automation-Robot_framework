@@ -1,0 +1,60 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.13
+    # set working dir so generated go code is in the correct place
+    working_directory: /go/src/github.com/celer-network/x-proto
+    steps:
+      - checkout
+      - run:
+          name: get protoc and gen-lint, check .proto file style
+          command: |
+            source script.sh
+            dld_protoc && run_lint
+      - run:
+          name: if PR, gen go files and push to cxc and x-proto-go
+          command: |
+            if [ -n "${CIRCLE_PULL_REQUEST##*/}" ]; then
+              echo "PR mode"
+              source script.sh "${CIRCLE_PULL_REQUEST##*/}" "$CIRCLE_BRANCH"
+              prepare_tools
+              do_sdkapi
+              do_xprotogo
+            fi
+      - run:
+          # note this won't run for new tag on master because circleci sets CIRCLE_BRANCH to tag value
+          name: if master, gen go files and push to x-proto-go master
+          command: |
+            if [ $CIRCLE_BRANCH = "master" ]; then
+              echo "master mode"
+              source script.sh "" "$CIRCLE_BRANCH"
+              prepare_tools
+              do_xprotogo
+            fi
+      - run:
+          name: if tag, sync tag to x-proto-go repo
+          command: |
+            if [ -n "${CIRCLE_TAG}" ]; then
+              echo "sync TAG ${CIRCLE_TAG}"
+              source script.sh "" "master" # hard code master because circle set tag value to CIRCLE_BRANCH
+              prepare_tools && do_xprotogo # should be no-op in most cases
+              sync_tag "${CIRCLE_TAG}"
+            fi
+
+# https://circleci.com/docs/2.0/workflows/#executing-workflows-for-a-git-tag
+# to keep things simple and portable, we use one job and do condition check via bash
+workflows:
+  version: 2
+  always-run:
+    jobs:
+      - build
+  sync-tag:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/

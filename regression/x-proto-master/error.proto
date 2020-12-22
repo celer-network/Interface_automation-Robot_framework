@@ -1,0 +1,167 @@
+// Copyright 2020 Celer Network
+// This file defines error msg and enums shared between backend and mobile
+// DO NOT add import any other proto file
+
+syntax = "proto3";
+package err;
+
+option go_package = "github.com/celer-network/x-proto-go/errcode";
+option java_package = "network.celer.proto.error";
+option java_outer_classname = "ErrorProto";
+option swift_prefix = "CelerProto";
+
+// Next tag: 3
+// Note code consuming this msg can't tell difference between an empty msg vs. code is set to 0.
+// so it's not recommended to use code = 0 to communicate the success case.
+message BackendError {
+  ErrorCode code = 1;
+  string msg = 2;
+}
+
+enum ErrorCode {
+  INVALID = 0; // 0 means this is not an error. see BackendError for caveats
+  UNSPECIFIED = 1; // generic for unspecified err
+  INVALID_REQUEST = 2; // generic for one or more missing fields in request message
+  INVALID_SIGNATURE = 3; // generic for invalid signature in request message
+  INVALID_ADDR = 4; // generic for invalid eth address
+  DB_ERROR = 5; // generic for database error
+  SYS_ERROR = 6; // generic for internal system error
+  INVALID_USERNAME = 7; // generic for invalid username
+  DUPLICATED_REQUEST = 8; // generic for duplicated request in short notice
+  reserved 9 to 99; // reserve till 99 for future common err enums across services
+
+  // invitation service 100-199
+  INVITE_INTERNAL = 100; // misc internal err
+  INVITE_CONFLICT_CODE = 101; // user tries to add a code but it's different from already associated
+  INVITE_UNKNOWN_CODE = 102; // user tries to submit a code that no inviter owns.
+  reserved 103 to 199;
+
+  // finance 200-299: shared error code for both fiat and bank
+  FIN_INVALID_SYMBOL = 200;  // generic for unsupported symbol error
+  FIN_DB_ERROR = 201;        // generic for database query error
+  FIN_SYSTEM_ERROR = 202;    // generic for all internal system error
+  reserved 203 to 299;
+
+  // fiat 300-399
+  FIAT_INVALID_ADDR = 300; // invalid eth address
+  FIAT_BLOCKED_ADDR = 301; // blocked eth address
+  FIAT_INVALID_CAMP = 302; // invalid campaign
+  FIAT_STRIPE_ERROR = 303; // unsorted error from stripe
+  FIAT_PAYPAL_ERROR = 304; // unsorted error from paypal
+  FIAT_SQUARE_ERROR = 305; // unsorted error from square up
+  FIAT_AUTHORIZE_ERROR = 306; // unsorted error from authorize net
+
+  // fiat deposit error
+  FIAT_DEPOSIT_GENERIC_ERROR        = 307; // unsorted error from deposit service provider
+  FIAT_DEPOSIT_CVV_ERROR            = 308; // generic error from cvv verification
+  FIAT_DEPOSIT_EXPIRATION_ERROR     = 309; // generic error from expiration date verification
+  FIAT_DEPOSIT_CARD_NUMBER_ERROR    = 310; // generic error from card number verification
+  FIAT_DEPOSIT_ADDRESS_ERROR        = 311; // generic error from address verification
+  FIAT_DEPOSIT_INSUFFICIENT_BALANCE = 312; // generic error from balance verification
+  FIAT_DEPOSIT_UNSUPPORTED_CARD     = 313; // generic error from card not supported
+  FIAT_DEPOSIT_VOICE_ERROR          = 314; // generic error from voice verification
+
+  FIAT_WITHDRAWAL_NOT_EXIST         = 315; // get pending fiat withdrawal, but nothing return
+  FIAT_WITHDRAWAL_CANCEL_ERROR      = 316; // unexpected error from cancel withdrawal
+  FIAT_WITHDRAWAL_CANCEL_NOT_WITHIN_VALID_TIME = 317; // withdrawal record is not within 5 days, 5 days is config in reward-service
+  FIAT_WITHDRAWAL_CANCEL_FAILED_WITH_PAYOUT_PENDING = 318; // failed to cancel withdrawal, payout is already on the way
+
+  FIAT_T1_ERROR = 319; // unsorted error from T1
+  FIAT_DEPOSIT_DUPLICATE_TRANSACTION_ERROR = 320; // Duplicate transaction,  need a gap for a deposit with same card.
+  FIAT_DEPOSIT_NEED_DETAILED_INFO_ERROR = 321; // Need more info for deposit, such as address, first name, last name, city, country.
+  FIAT_WITHDRAWAL_PAYPAL_EMAIL_NOT_VERIFIED_ERROR = 322; // withdrawal request will be denied, because the paypal email for withdrawal has not been verified.
+  FIAT_WITHDRAWAL_PAYPAL_EMAIL_NOT_SAME = 323; // the email sent from mobile is not same to the verified email.
+  FIAT_WITHDRAWAL_METHOD_TEMPORARILY_UNAVAILABLE = 324; // withdrawal method is not available in backend.
+  FIAT_DEPOSIT_WYRE_PENDING = 325; // the wyre deposit request is not completed.
+  FIAT_WITHDRAWAL_SKRILL_EMAIL_NOT_VERIFIED_ERROR = 326; // withdrawal request will be denied, because the skrill email for withdrawal has not been verified.
+  FIAT_DEPOSIT_UNSUPPORTED_PROVIDER = 327; // the deposit request contains a provider that not included in fiat.
+  FIAT_DEPOSIT_TX_ALREADY_CAPTURED = 328; // the deposit request contains a provider that not included in fiat.
+  FIAT_DEPOSIT_SKRILL_PENDING = 329; // the skrill deposit request is not completed.
+  FIAT_DEPOSIT_SEND_REQUEST_TO_PROVIDER_ERROR = 330; // when send request to third-part provider fail with error(timeout or net error, and no response body returned)
+  reserved 331 to 399;
+
+  // bank 400-499
+  BANK_INVALID_TOKEN = 400; // invalid currency token type enum
+  BANK_UNKNOWN_ACCOUNT = 401; // unknown address or address/token combination
+  BANK_INVALID_AMOUNT = 402; // invalid currency amount
+  BANK_INVALID_PROOF = 403; // invalid payment proof
+  BANK_EXPIRED_PROOF = 404; // expired payment proof timestamp
+  BANK_INVALID_REFID = 405; // invalid reference ID
+  BANK_NOT_AUTHORIZED = 406; // access not authorized
+  BANK_PROOF_IN_FUTURE = 407; // payment proof timestamp far in the future
+  reserved 408 to 499;
+
+  //celex game 500~599
+  CELERX_DETAULT_ERROR = 500; // common error for celerx
+  reserved 501 to 510;
+  CELERX_READY_TIMEOUT = 511; // submiting ready but ticket has been ready time out
+  CELERX_GAME_TIMEOUT = 512; // submiting score but ticket has surrendered (Usually because of game time out)
+  CELERX_DUPLICATE_SUBMIT = 513; // submiting score but a valid score has been submitted
+  CELERX_TOURNAMENT_MAX_PLAYERS_LIMIT = 514; // blocking players to create ticket when a tournament has reached max players
+  CELERX_TOURNAMENT_MAX_PARTICIPATE_TIMES_PER_PLAYER = 515; // blocking players to create ticket when a player played more than max participate time per player
+  CELERX_CHALLENGE_RELATION_CREATED_FAILED = 516; // unable to create challenge relation for current challenger and defender
+  CELERX_NO_AVAILABLE_BOT = 517; // bot unavailable, may due to bot busy or cash pool not enough
+  CELERX_BOT_BANK_PROOF_THROTTLED = 518; // bot temporarily unavailable due to bank only allow one proof during 1s.
+  reserved 519 to 599;
+
+  // loyalty 600-699
+  LOY_INVALID_TASK = 600; // invalid task
+  LOY_INVALID_REDEEM = 601; // invalid redeem
+  LOY_INVALID_EMAIL = 602; // invalid email address
+  LOY_INVALID_CHECKIN = 603; // invalid checkin
+  LOY_INVALID_PARAMS = 604; // invalid configuration parameters
+  LOY_FREE_LOOT_BOX_ALREADY_CLAIMED = 605; // unable to claim free loot box, maybe already be claimed or double claimed
+  reserved 606 to 699;
+
+  // league 700-799
+  // client errors
+  LEAGUE_NO_ACTIVE = 700;
+  LEAGUE_NO_QUALIFIED = 701;
+  reserved 702 to 749;
+  // admin errors
+  INVALID_PRIZE_CONFIGURATION = 750;
+  SEND_PRIZE_PARTIAL_FAIL = 751;
+  SEND_PRIZE_ALL_FAIL = 752;
+  INVALID_LEAGUE_CONFIGURATION = 753;
+  reserved 754 to 799;
+
+  // notification 800-899
+  NOTIFICATION_NO_ACTIVE = 800;
+  reserved 801 to 899;
+
+  // account 900-999
+  ACT_UNKNOWN_USER = 900;
+  ACT_INVALID_EMAIL = 901;
+  // how are these 2 different from INVALID_ADDR and INVALID_USERNAME?
+  ACT_INVALID_ADDR = 902;
+  ACT_INVALID_USERNAME = 903;
+  ACT_MISSING_EMAIL = 904;
+  ACT_MISSING_ADDR = 905;
+  ACT_MISSING_USERNAME = 906;
+  ACT_USER_ALREADY_EXISTS = 907;
+  ACT_PASSWORD_ALREADY_SET = 908;
+  ACT_EMAIL_NOT_VERIFIED = 909;
+  ACT_BAD_PASSWORD = 910;
+  ACT_EMAIL_CHANGE_FORBIDDEN = 911;
+  ACT_PASSWORD_NOT_SET = 912;
+  ACT_VISIBLE_USERNAME_EXISTS = 913;
+  ACT_PAYPAL_EMAIL_USED_BY_OTHERS = 914;
+  ACT_LOGIN_EMAIL_USED_BY_OTHERS = 915;
+  ACT_INVALID_EMAIL_VERIFICATION_CODE = 916;
+  ACT_SKRILL_EMAIL_USED_BY_OTHERS = 917;
+  reserved 918 to 999;
+
+  // deposit discount 1000-1099
+  DISCOUNT_ACTIVITY_EXPIRED = 1000; //
+  DISCOUNT_ORDER_EXPIRED = 1001;
+  DISCOUNT_ORDER_ALREADY_DEPOSITED = 1002;
+  DISCOUNT_DEPOSIT_FAILED = 1003;
+  DISCOUNT_DEPOSIT_ALREADY_JOIN = 1004;
+  reserved 1005 to 1099;
+
+  // sale 1100-1199
+  INSUFFICIENT_STOCK = 1100;
+  ITEM_EXPIRED = 1101;
+  EVENT_NO_ACTIVE = 1102;
+  reserved 1103 to 1199;
+}

@@ -1,0 +1,166 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package sale;
+
+import "common_mobile.proto";
+import "error.proto";
+
+option java_package = "network.celer.proto.sale";
+option java_outer_classname = "SaleMobile";
+option go_package = "github.com/celer-network/x-proto-go/sale";
+option swift_prefix = "Sale";
+
+service Mobile {
+    rpc GetMyCoupons (GetMyCouponsRequest) returns (GetMyCouponsResponse);
+    rpc GetMyUsableCouponsByBucketId (GetMyUsableCouponsByBucketIdRequest) returns (GetMyUsableCouponsByBucketIdResponse);
+
+    // no args because what sale events the user can see is controlled in backend
+    rpc GetSaleEvent (GetSaleEventRequest) returns (GetSaleEventResponse);
+    rpc GetSaleBundle (GetSaleBundleRequest) returns (GetSaleBundleResponse);
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Request & Response
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message GetMyCouponsRequest {
+    repeated OrderStatus order_status = 1; // set to nothing to get coupons of all statuses
+    int32 limit = 2;
+    string next_page_token = 3;
+}
+
+message GetMyCouponsResponse {
+    err.BackendError error = 1;
+    repeated SaleOrder orders = 2;
+    string next_page_token = 3;
+}
+
+message GetMyUsableCouponsByBucketIdRequest {
+    string bucket_id = 1;
+}
+
+message GetMyUsableCouponsByBucketIdResponse {
+    err.BackendError error = 1;
+    repeated SaleOrder orders = 2;
+}
+
+message GetSaleEventRequest {
+    // empty
+}
+
+message GetSaleEventResponse {
+    err.BackendError error = 1;
+    SaleEvent sale_event = 2;
+}
+
+message GetSaleBundleRequest {
+    int64 bundle_id = 1;
+}
+
+message GetSaleBundleResponse {
+    err.BackendError error = 1;
+    SaleBundle bundle = 2;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Enums
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+// mobile can only see VISIBLE and ACTIVE event
+enum SaleEventStatus {
+    SALE_EVENT_STATUS_UNDEFINED = 0;
+    DRAFT = 1;
+    INACTIVE = 2;
+    VISIBLE = 3;
+    ACTIVE = 4;
+    ENDED = 5;
+}
+
+enum OrderStatus {
+    PURCHASE_STATUS_UNDEFINED = 0;
+    PENDING = 1;
+    COMPLETED = 2;
+    PAYMENT_FAILED = 3;
+    PAYMENT_TIMEOUT = 4;
+
+    // the item bought in this order is used
+    // note: if item is "money" such as bonus cash, it is "used" immediately after payment and is deposited in bank
+    ITEM_USED = 5;
+
+    // the item bought in this order is expired
+    // this status is not applicable to items that are auto used immediately after purchase
+    ITEM_EXPIRED = 6;
+}
+
+enum ItemType {
+    SALE_ITEM_TYPE_UNDEFINED = 0;
+    COUPON = 1;
+    BONUS_CASH = 2;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Data Models
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message SaleEvent {
+    int64 id = 1;
+    string title = 2;
+    string description = 3;
+    int64 start_time = 4; // epoch millis
+    int64 end_time = 5;
+
+    // images urls (event state dependent)
+    string home_page_image = 6;
+    string money_page_image = 7;
+    string event_page_image = 8;
+
+    repeated SaleBundle bundles = 9;
+    int32 unique_views = 10;
+    SaleEventStatus status = 11;
+    int64 starts_in = 12; // duration, epoch millis
+    int64 ends_in = 13; // duration, epoch millis
+    bool is_first_time_view = 14; // whether the user has viewed this event (event state dependent)
+    string popup_description = 15; // description for in-app popup (event state dependent)
+}
+
+message SaleItem {
+    ItemType item_type = 1;
+    int64 valid_duration = 2; // duration milliseconds, 0 means always valid
+    oneof Item {
+        Coupon coupon = 3;
+        BonusCash bonus_cash = 4;
+    }
+}
+
+message SaleBundle {
+    int64 id = 1;
+    string title = 2;
+    string description = 3;
+    common.TokenAmount deposit_amount = 4;
+    repeated SaleItem items = 5;
+    int32 global_stock = 6; // # of bundles available initially
+    int32 global_used_stock = 7; // # of bundles sold
+    bool out_of_stock = 8; // mobile should trust this field for the availability of the bundle as the stock numbers are fake
+    int32 per_user_purchase_limit = 9; // max number of purchases per user
+}
+
+// Match Entry Coupon
+message Coupon {
+    double discount_percentage = 1; // decimal number e.g. 0.4 means 40% off
+    repeated string applicable_bucket_ids = 2;
+    string title = 3;
+    string description = 4;
+    string image_url = 5;
+
+    // this field is derived from bucket id and is initialized on bundle creation/update.
+    map<string, common.TokenAmount> original_entry_fee = 6;
+}
+
+message BonusCash {
+    common.TokenAmount amount = 1;
+}
+
+message SaleOrder {
+    int64 id = 1;
+    int64 sale_bundle_id = 2;
+    OrderStatus status = 3;
+    int64 item_expire_time = 4; // epoch millis, 0 means this item does not expire or expiration not applicable
+    SaleItem item = 5;
+}

@@ -1,0 +1,127 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package discount;
+
+import "error.proto";
+import "common_mobile.proto";
+
+option java_package = "network.celer.proto.discount";
+option java_outer_classname = "DiscountMobile";
+option swift_prefix = "Discount";
+
+service Mobile {
+  // jwt should be add to the request header
+  rpc GetValidDiscountActivity (GetValidDiscountActivityRequest) returns (GetValidDiscountActivityResponse);
+  rpc GetDiscountOrderByActivityId (GetDiscountOrderByActivityIdRequest) returns (GetDiscountOrderByActivityIdResponse);
+  rpc GetDiscountOrderByOrderId (GetDiscountOrderByOrderIdRequest) returns (GetDiscountOrderByOrderIdResponse);
+  rpc StartNewDiscountOrder(StartNewDiscountOrderRequest) returns (StartNewDiscountOrderResponse);
+  rpc AddDiscountGuest(AddDiscountGuestRequest) returns (AddDiscountGuestResponse);
+}
+
+// Next tag: 2
+message StartNewDiscountOrderRequest {
+  uint64 activity_id = 1;
+}
+
+// Next tag: 2
+message StartNewDiscountOrderResponse {
+  err.BackendError error = 1;
+  string invite_code = 2;
+  DiscountOrder discount_order = 3;
+}
+
+// Next tag: 2
+message AddDiscountGuestRequest {
+  string invite_code = 1;
+  string vendor_id = 2;
+}
+
+// Next tag: 2
+message AddDiscountGuestResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 1
+message GetValidDiscountActivityRequest {
+  // send nothing
+}
+
+// Next tag: 3
+message GetValidDiscountActivityResponse {
+  err.BackendError error = 1;
+  discount.DiscountActivity discount_activity = 2;
+}
+
+// Next tag: 2
+message GetDiscountOrderByActivityIdRequest {
+  string activity_id = 1;
+}
+
+// Next tag: 3
+message GetDiscountOrderByActivityIdResponse {
+  err.BackendError error = 1;
+  DiscountOrder discount_order = 2;
+}
+
+// Next tag: 2
+message GetDiscountOrderByOrderIdRequest {
+  uint64 order_id = 1;
+}
+
+// Next tag: 3
+message GetDiscountOrderByOrderIdResponse {
+  err.BackendError error = 1;
+  DiscountOrder discount_order = 2;
+}
+
+// Next tag: 9
+message DiscountActivity {
+  uint64 id = 1;
+  double total_amount = 2;
+  int64 begin_time = 3; // UTC timestamp in milliseconds
+  int64 end_time = 4; // UTC timestamp in milliseconds
+  double min_discount_amount = 5;
+  double max_discount_amount = 6;
+  common.TokenTypeEnum token_type = 7;
+  DiscountActivityStatus status = 8;
+}
+
+// Next tag: 6
+message DiscountOrder {
+  uint64 order_id = 1;
+  DepositDiscountOrderStatus status = 2;
+  repeated DiscountRecord records = 3;
+  int64 expire_duration = 4; // milliseconds
+  int64 number_of_players_who_claimed = 5; // number of players who claimed
+  int64 original_price = 6; // price without discount
+  int64 discounted_price = 7; // price after discount greater than or equal to zero
+
+}
+
+// Next tag: 4
+message DiscountRecord {
+  common.UserInfo user_info = 1;
+  common.TokenAmount discount_amount = 2;
+  // UTC timestamp in milliseconds, this timestamp means when the guest finish the actions and be a valid discount record in the order.
+  // Not the time the guest accept the invite link.
+  int64 claim_time = 3;
+}
+
+// Next tag: 5
+enum DepositDiscountOrderStatus {
+  DEPOSIT_DISCOUNT_ORDER_STATUS_UNDEFINED = 0;
+  DEPOSIT_DISCOUNT_ORDER_STATUS_ACTIVE = 1;
+  DEPOSIT_DISCOUNT_ORDER_STATUS_SUBMITTED = 2;
+  DEPOSIT_DISCOUNT_ORDER_STATUS_FINISHED = 3; // order finished, success in depositing
+  DEPOSIT_DISCOUNT_ORDER_STATUS_ENDED = 4; // order expired, the activity is over
+}
+
+// Next tag: 6
+enum DiscountActivityStatus {
+  DISCOUNT_ACTIVITY_STATUS_UNDEFINED = 0;
+  DISCOUNT_ACTIVITY_STATUS_DRAFT = 1;
+  DISCOUNT_ACTIVITY_STATUS_INACTIVE = 2;
+  DISCOUNT_ACTIVITY_STATUS_VISIBLE = 3;
+  DISCOUNT_ACTIVITY_STATUS_ACTIVE = 4;
+  DISCOUNT_ACTIVITY_STATUS_ENDED = 5;
+}

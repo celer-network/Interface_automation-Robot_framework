@@ -1,0 +1,464 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package loyalty;
+
+import "error.proto";
+import "loyalty_mobile.proto";
+import "google/api/annotations.proto";
+
+option java_package = "network.celer.proto.loyalty";
+option java_outer_classname = "LoyaltyInternal";
+option go_package = "github.com/celer-network/x-proto-go/loyalty";
+
+service Internal {
+  // Called internally by the admin portal.
+  rpc AdminGetTasks(AdminGetTasksRequest) returns (AdminGetTasksResponse) {
+    option (google.api.http) = {
+      get: "/internal/loyalty/admin_get_tasks"
+    };
+  }
+  rpc AdminGetTask(AdminGetTaskRequest) returns (AdminGetTaskResponse) {
+    option (google.api.http) = {
+      get: "/internal/loyalty/admin_get_task/{task_id}"
+    };
+  }
+  rpc AdminPutTask(AdminPutTaskRequest) returns (AdminPutTaskResponse) {
+    option (google.api.http) = {
+      post: "/internal/loyalty/admin_put_task"
+      body: "*"
+    };
+  }
+  rpc AdminDelTask(AdminDelTaskRequest) returns (AdminDelTaskResponse) {
+    option (google.api.http) = {
+      post: "/internal/loyalty/admin_del_task"
+      body: "*"
+    };
+  }
+
+  rpc AdminGetRedeemTable(AdminGetRedeemTableRequest) returns (AdminGetRedeemTableResponse) {
+    option (google.api.http) = {
+      get: "/internal/loyalty/admin_get_redeem_table"
+    };
+  }
+  rpc AdminPutRedeemTable(AdminPutRedeemTableRequest) returns (AdminPutRedeemTableResponse) {
+    option (google.api.http) = {
+      post: "/internal/loyalty/admin_put_redeem_table"
+      body: "*"
+    };
+  }
+
+  rpc AdminGetCheckin(AdminGetCheckinRequest) returns (AdminGetCheckinResponse) {
+    option (google.api.http) = {
+      get: "/internal/loyalty/admin_get_checkin"
+    };
+  }
+  rpc AdminPutCheckin(AdminPutCheckinRequest) returns (AdminPutCheckinResponse) {
+    option (google.api.http) = {
+      post: "/internal/loyalty/admin_put_checkin"
+      body: "*"
+    };
+  }
+
+  rpc AdminGetFreeLootBox(AdminGetFreeLootBoxRequest) returns (AdminGetFreeLootBoxResponse) {}
+
+  rpc AdminPutFreeLootBox(AdminPutFreeLootBoxRequest) returns (AdminPutFreeLootBoxResponse) {}
+
+  rpc AdminGetParams(AdminGetParamsRequest) returns (AdminGetParamsResponse) {
+    option (google.api.http) = {
+      get: "/internal/loyalty/admin_get_params"
+    };
+  }
+  rpc AdminPutParams(AdminPutParamsRequest) returns (AdminPutParamsResponse) {
+    option (google.api.http) = {
+      post: "/internal/loyalty/admin_put_params"
+      body: "*"
+    };
+  }
+
+  rpc AdminNotify(AdminNotifyRequest) returns (AdminNotifyResponse) {
+    option (google.api.http) = {
+      post: "/internal/loyalty/admin_notify"
+      body: "*"
+    };
+  }
+
+  rpc AdminGetTiers(AdminGetTiersRequest) returns (AdminGetTiersResponse) {
+    option (google.api.http) = {
+      get: "/internal/loyalty/admin_get_tiers"
+    };
+  }
+  rpc AdminPutTiers(AdminPutTiersRequest) returns (AdminPutTiersResponse) {
+    option (google.api.http) = {
+      post: "/internal/loyalty/admin_put_tiers"
+      body: "*"
+    };
+  }
+
+  rpc AdminDump(AdminDumpRequest) returns (AdminDumpResponse) {
+    option (google.api.http) = {
+      get: "/internal/loyalty/admin_dump"
+    };
+  }
+
+  rpc AdminGetRedeemGifts(AdminGetRedeemGiftsRequest) returns (AdminGetRedeemGiftsResponse) {
+    option (google.api.http) = {
+      get: "/internal/loyalty/admin_get_redeem_gifts"
+    };
+  }
+  rpc AdminUpdateRedeemGift(AdminUpdateRedeemGiftRequest) returns (AdminUpdateRedeemGiftResponse) {
+    option (google.api.http) = {
+      post: "/internal/loyalty/admin_update_redeem_gift"
+      body: "*"
+    };
+  }
+
+  rpc AdminGetTier(AdminGetTierRequest) returns (AdminGetTierResponse) {}
+
+  // Hidden tasks are those dynamically assigned to a user by another server, asking
+  // the Loyalty server to track and notify the original owner server about their
+  // completion or expiration.  Such tasks are not visible in the regular Loyalty APIs.
+  // The Loyalty server is only acting as a hidden sub-contractor tracking the state
+  // transitions of these tasks.  APIs to configure (admin-portal) and get info on
+  // these tasks (mobile, admin-portal) are handled by the original owner server.
+  // The Loyalty server uses Kafka events to report on these task, not via any API.
+  rpc AdminAssignHiddenTasks(AdminAssignHiddenTasksRequest) returns (AdminAssignHiddenTasksResponse) {}
+}
+
+// Next tag: 2
+message AdminGetTierRequest {
+  string user_addr = 1;
+}
+
+// Next tag: 6
+message AdminGetTierResponse {
+  err.BackendError error = 1;
+  string tier = 2;
+  string icon = 3;
+  double multiplier = 4;
+  bool was_upgraded = 5;
+}
+
+// Next tag: 3
+message AdminGetTasksRequest {
+  uint32 page_number = 1; // page 1, 2, 3... (optional pagination: 0 means all)
+  uint32 page_size = 2; // tasks per page (optional pagination: 0 means all)
+}
+
+// Next tag: 4
+message AdminGetTasksResponse {
+  err.BackendError error = 1;
+  repeated AdminTask tasks = 2;
+  uint32 total_tasks = 3; // total number of tasks
+}
+
+// Next tag: 2
+message AdminGetTaskRequest {
+  uint64 task_id = 1;
+}
+
+// Next tag: 3
+message AdminGetTaskResponse {
+  err.BackendError error = 1;
+  AdminTask task = 2;
+}
+
+// Next tag: 2
+message AdminPutTaskRequest {
+  AdminTask task = 1;
+}
+
+// Next tag: 2
+message AdminPutTaskResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 2
+message AdminDelTaskRequest {
+  uint32 task_id = 1;
+}
+
+// Next tag: 2
+message AdminDelTaskResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 1
+message AdminGetRedeemTableRequest {
+}
+
+// Next tag: 3
+message AdminGetRedeemTableResponse {
+  err.BackendError error = 1;
+  repeated RedeemEntry entries = 2;
+}
+
+// Next tag: 2
+message AdminPutRedeemTableRequest {
+  repeated RedeemEntry entries = 1;
+}
+
+// Next tag: 2
+message AdminPutRedeemTableResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 1
+message AdminGetCheckinRequest {
+}
+
+// Next tag: 3
+message AdminGetCheckinResponse {
+  err.BackendError error = 1;
+  repeated CheckinDay days = 2;
+}
+
+// Next tag: 2
+message AdminPutCheckinRequest {
+  repeated CheckinDay days = 1;
+}
+
+// Next tag: 2
+message AdminPutCheckinResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 1
+message AdminGetFreeLootBoxRequest {
+}
+
+// Next tag: 4
+message AdminGetFreeLootBoxResponse {
+  err.BackendError error = 1;
+  LootBox loot_box = 2;
+  uint64 claim_interval = 3; // seconds, the interval between each valid loot box claim.
+}
+
+// Next tag: 3
+message AdminPutFreeLootBoxRequest {
+  LootBox loot_box = 1;
+  uint64 claim_interval = 2; // seconds, the interval between each valid loot box claim.
+}
+
+// Next tag: 2
+message AdminPutFreeLootBoxResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 1
+message AdminGetParamsRequest {
+}
+
+// Next tag: 3
+message AdminGetParamsResponse {
+  err.BackendError error = 1;
+  repeated Param params = 2;
+}
+
+// Next tag: 2
+message AdminPutParamsRequest {
+  repeated Param params = 1;
+}
+
+// Next tag: 2
+message AdminPutParamsResponse {
+  err.BackendError error = 1;
+}
+
+enum NotificationType {
+  NOTIF_INVALID = 0;
+  NOTIF_CHECKIN_REMIND = 1; // remind to check-in today
+  NOTIF_CHECKIN_MISSED = 2; // make up for missing yesterday's check-in
+}
+
+// Next tag: 2
+message AdminNotifyRequest {
+  NotificationType type = 1;
+}
+
+// Next tag: 2
+message AdminNotifyResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 1
+message AdminGetTiersRequest {
+}
+
+// Next tag: 3
+message AdminGetTiersResponse {
+  err.BackendError error = 1;
+  repeated AdminTierEntry entries = 2;
+}
+
+// Next tag: 2
+message AdminPutTiersRequest {
+  repeated AdminTierEntry entries = 1;
+}
+
+// Next tag: 2
+message AdminPutTiersResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 1
+message AdminDumpRequest {
+}
+
+// Next tag: 2
+message AdminDumpResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 4
+message AdminGetRedeemGiftsRequest {
+  uint32 page_number = 1; // page 1, 2, 3...
+  uint32 page_size = 2; // gift entries per page
+  RedeemGiftStatus status = 3; // filter by status (optional: no filtering if not set)
+}
+
+// Next tag: 4
+message AdminGetRedeemGiftsResponse {
+  err.BackendError error = 1;
+  bool more = 2; // more gift entries after this page
+  repeated RedeemGift gifts = 3;
+}
+
+// Next tag: 3
+message AdminUpdateRedeemGiftRequest {
+  string gift_id = 1;
+  RedeemGiftStatus status = 2;
+}
+
+// Next tag: 2
+message AdminUpdateRedeemGiftResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message AdminAssignHiddenTasksRequest {
+  string user_addr = 1;
+  repeated AdminHiddenTask tasks = 2;
+}
+
+// Next tag: 3
+message AdminAssignHiddenTasksResponse {
+  err.BackendError error = 1;
+  map<uint64, uint64> user_task_ids = 2; // base taskid -> specific user taskid
+}
+
+// --------- internal data structures ---------
+
+// Next tag: 8
+message AdminHiddenTask {
+  uint64 task_id = 1; // base task ID as configured at the original server
+  Datetime start = 2; // when task becomes active (task goal defines duration)
+  repeated string appids = 3; // empty list allowed (match any/all appids)
+  repeated string tokens = 4;
+  oneof goal {
+    TaskGoalPlay play = 5;
+    TaskGoalGather gather = 6;
+    TaskGoalWin win = 7;
+  }
+}
+
+// Next tag: 14
+message AdminTask {
+  uint64 task_id = 1;
+  string name = 2;
+  string description = 3;
+  Date expiration = 4; // when task is no longer available for players
+  Datetime start = 12; // when task starts being available for players
+  repeated string appids = 5; // empty list allowed (match any/all appids)
+  repeated string tokens = 6;
+  repeated Reward rewards = 7;
+  oneof goal {
+    TaskGoalPlay play = 8;
+    TaskGoalGather gather = 9;
+    TaskGoalWin win = 10;
+  }
+  string reward_image_url = 11;
+  string user_target_query = 13; // user-tag query to target matching users
+}
+
+// Next tag: 3
+message TaskGoalPlay {
+  uint32 count = 1; // number of matches to play
+  uint32 duration = 2; // within duration in seconds
+}
+
+// Next tag: 3
+message TaskGoalGather {
+  uint32 count = 1; // number of points to gather
+  uint32 duration = 2; // within duration in seconds
+}
+
+// Next tag: 3
+message TaskGoalWin {
+  uint32 count = 1; // number of matches to win
+  uint32 duration = 2; // within duration in seconds
+}
+
+// Next tag: 5
+message Param {
+  oneof type {
+    GameID gid = 1; // game identifier
+    string tid = 2; // tournament identifier
+    string token = 4; // token (fallback for all games)
+  }
+  double base = 3; // base reward amount
+}
+
+// Next tag: 3
+message GameID {
+  string appid = 1;
+  string token = 2;
+}
+
+// Next tag: 6
+message AdminTierEntry {
+  string tier = 1;
+  string icon = 2;
+  double multiplier = 3;
+  uint64 min_gems = 4; // gems >= min_gems to be in this tier
+  uint64 max_gems = 5; // gems <= max_gems to be in this tier
+}
+
+enum RedeemGiftStatus {
+  GIFT_STATUS_INVALID = 0;
+  GIFT_STATUS_PENDING = 1; // gift not yet sent, pending in the queue
+  GIFT_STATUS_SENT = 2; // gift was sent
+}
+
+// Next tag: 8
+message RedeemGift {
+  string gift_id = 1; // unique identifier
+  RedeemGiftStatus status = 2;
+  uint64 redeem_id = 3;
+  string addr = 4;
+  string email = 5;
+  uint64 timestamp = 6; // UTC timestamp in milliseconds
+  string description = 7;
+}
+
+// --------- structured logs ---------
+
+enum EventType {
+  EVENT_TYPE_INVALID = 0;
+  EVENT_TYPE_TASK_ACCEPT = 1;
+  EVENT_TYPE_TASK_COMPLETE = 2;
+  EVENT_TYPE_TASK_EXPIRE = 3;
+  EVENT_TYPE_TASK_CLAIM = 4;
+}
+
+// Next tag: 8
+message LoyaltyEventMessage {
+  string addr = 1;
+  EventType type = 2;
+  uint64 task_id = 3;
+  int64 start_ts_ns = 4;
+  int64 end_ts_ns = 5;
+  repeated string errors = 6;
+  string accept_all_id = 7; // common ID for multiple accepts in a batch
+}
+

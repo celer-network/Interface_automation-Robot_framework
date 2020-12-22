@@ -1,0 +1,78 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package invite;
+
+import "account_mobile.proto";
+import "error.proto";
+
+option java_package = "network.celer.proto.invite";
+option java_outer_classname = "InviteMobile";
+option swift_prefix = "Invite";
+option go_package = "github.com/celer-network/x-proto-go/invite";
+
+// ---------------------- interface to be called by app ------------------
+service Mobile {
+  // Functions to be called by inviters.
+  rpc GetInvitationCode(InvitationCodeRequest) returns (InvitationCodeResponse) {}
+  rpc QueryInviterBonus(QueryInviterBonusRequest) returns (QueryInviterBonusResponse) {}
+  // Functions to be called by invitees.
+  rpc QueryInviteeBonus(QueryInviteeBonusRequest) returns (QueryInviteeBonusResponse) {}
+  rpc SubmitInvitationCode(SubmitInvitationCodeRequest) returns (SubmitInvitationCodeResponse) {}
+}
+
+// Next tag: 4
+enum InvitationBonusStatus {
+  UNDEFINED_INVITATION_STATUS = 0;
+  CODE_NOT_ENTERED = 1;
+  BONUS_NOT_CLAIMED = 2;
+  BONUS_CLAIMED = 3;
+  NOT_ELIGIBLE = 4;
+}
+
+// Next tag: 3
+message SubmitInvitationCodeRequest {
+  string jwt_token = 1;
+  string invitation_code = 2;
+}
+// Next tag: 2
+message SubmitInvitationCodeResponse {
+  err.BackendError error = 1;
+}
+// Next tag: 2
+message QueryInviteeBonusRequest {
+  string invitee_username = 1;
+}
+// Next tag: 7
+message QueryInviteeBonusResponse {
+  double bonus_amount = 1;
+  string currency = 2;
+  string invitee_username = 3;
+  InvitationBonusStatus status = 4; 
+  err.BackendError error = 5;
+  account.UserSnip inviter_snip = 6;
+}
+
+// Next tag: 2
+message InvitationCodeRequest {
+  string jwt_token = 1;
+}
+
+// Next tag: 3
+message InvitationCodeResponse {
+  // 6-digit invitation code
+  string invitation_code = 1;
+  err.BackendError error = 2;
+}
+
+// Next tag: 2
+message QueryInviterBonusRequest {
+  string inviter_username = 1; //unique, never change username
+}
+// Next tag: 4
+message QueryInviterBonusResponse {
+  // reward cash the inviter will get on every first deposit of invitees using the code.
+  double reward_cash_per_first_deposit = 1;
+  string currency = 2;
+  err.BackendError error = 3;
+}

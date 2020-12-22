@@ -1,0 +1,81 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package history;
+
+import "error.proto";
+import "history_mobile.proto";
+import "common_backend.proto";
+
+option java_package = "network.celer.proto.history";
+option java_outer_classname = "HistoryInternal";
+option go_package = "github.com/celer-network/x-proto-go/history";
+
+service HistoryInternalService {
+    // Just as a trigger, then a new history record will be created.
+    rpc AddGameHistoryItem (AddGameHistoryRequest) returns (AddGameHistoryResponse) {
+    }
+
+    // When a league is end, league service will call this rpc, and backend will process all the history of this league.
+    rpc TagLeagueGameHistory (TagLeagueGameHistoryRequest) returns (TagLeagueGameHistoryResponse) {
+    }
+
+    rpc BatchCreateLeagueHistoryNotifications (BatchCreateLeagueHistoryNotificationsRequest) returns (BatchCreateLeagueHistoryNotificationsResponse);
+
+    rpc BatchCreateLeagueUnclaimedPrizeNotification (BatchCreateLeagueUnclaimedPrizeNotificationRequest) returns (BatchCreateLeagueUnclaimedPrizeNotificationResponse);
+
+    rpc GetUnclaimedLeaguePrize (GetUnclaimedLeaguePrizeRequest) returns (GetUnclaimedLeaguePrizeResponse);
+}
+
+message AddGameHistoryRequest {
+    string schema_id = 1; // ticket id if type is tournament or match, room id, if type is challenge, league id if type is league.
+    string username = 2;
+    GameHistoryItemType type = 3;
+}
+
+message AddGameHistoryResponse {
+    err.BackendError error = 1;
+}
+
+message TagLeagueGameHistoryRequest {
+    string league_id = 1;
+}
+
+message TagLeagueGameHistoryResponse {
+    err.BackendError error = 1;
+}
+
+message BatchCreateLeagueHistoryNotificationsRequest {
+    repeated LeagueUnclaimedPrize notifications = 1;
+}
+
+message BatchCreateLeagueHistoryNotificationsResponse {
+    err.BackendError error = 1;
+}
+
+message BatchCreateLeagueUnclaimedPrizeNotificationRequest {
+    repeated LeagueUnclaimedPrize prizes = 1;
+}
+
+message BatchCreateLeagueUnclaimedPrizeNotificationResponse {
+    err.BackendError error = 1;
+}
+
+message GetUnclaimedLeaguePrizeRequest {
+    string league_id = 1;
+    string username = 2;
+}
+
+message GetUnclaimedLeaguePrizeResponse {
+    err.BackendError error = 1;
+    // this field is repeated because league is capable of sending a combination of tokens as prizes to a user.
+    // but as of 2020/08/27, leagues are only configured to send a single prize for a user.
+    // this is also for bypassing proto's limitation on distinguishing between null value and default value
+    repeated LeagueUnclaimedPrize unclaimed_prize = 2;
+}
+
+message LeagueUnclaimedPrize {
+    string league_id = 1;
+    string username = 2;
+    common.Amount unclaimed_prize = 3;
+}

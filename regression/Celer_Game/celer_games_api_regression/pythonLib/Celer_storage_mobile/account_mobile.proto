@@ -1,0 +1,637 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package account;
+
+import "error.proto";
+import "common_mobile.proto";
+import "common_backend.proto";
+
+option java_package = "network.celer.proto.account";
+option java_outer_classname = "AccountMobile";
+option go_package = "github.com/celer-network/x-proto-go/account";
+option swift_prefix = "Account";
+
+// This is the user account service. There are other user services
+// (e.g. tagging, events), so it is not really the "user service" as
+// it only manages accounts.  However, for backward-compatibility, the
+// endpoint URLs have "/user/" instead of "/account/" at the top level
+// of the hierarchy.
+
+service Mobile {
+  //ERRORS: ACT_MISSING_USERNAME, ACT_INVALID_USERNAME, ACT_MISSING_ADDR,
+  //        ACT_INVALID_ADDR, ACT_USER_ALREADY_EXISTS
+  rpc Create(CreateRequest) returns (CreateResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME
+  rpc Update(UpdateRequest) returns (UpdateResponse) {}
+
+  rpc GeneratePresignedURL(GeneratePresignedURLRequest) returns (GeneratePresignedURLResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME, ACT_MISSING_EMAIL
+  rpc SendEmailVerificationCode(SendEmailVerificationCodeRequest) returns (SendEmailVerificationCodeResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME
+  rpc GetMe(GetMeRequest) returns (GetMeResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME
+  rpc GetUserSnip(GetUserSnipRequest) returns (GetUserSnipResponse) {}
+
+  //ERRORS: ACT_MISSING_USERNAME, ACT_INVALID_USERNAME, INVALID_SIGNATURE
+  rpc Login(LoginRequest) returns (LoginResponse) {}
+
+  //ERRORS: ACT_MISSING_EMAIL, ACT_EMAIL_CHANGE_FORBIDDEN
+  rpc SetEmail(SetEmailRequest) returns (SetEmailResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME
+  rpc SetPrimaryAccountType(SetPrimaryAccountTypeRequest) returns (SetPrimaryAccountTypeResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME, ACT_VISIBLE_USERNAME_EXISTS
+  rpc SetVisibleUsername(SetVisibleUsernameRequest) returns (SetVisibleUsernameResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME, ACT_MISSING_EMAIL, ACT_INVALID_EMAIL_VERIFICATION_CODE
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME, ACT_MISSING_EMAIL, ACT_PAYPAL_EMAIL_USED_BY_OTHERS
+  rpc SetPayPalEmail(SetPayPalEmailRequest) returns (SetPayPalEmailResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME, ACT_INVALID_EMAIL_VERIFICATION_CODE
+  rpc VerifyPayPalEmail(VerifyPayPalEmailRequest) returns (VerifyPayPalEmailResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME, ACT_MISSING_EMAIL, ACT_SKRILL_EMAIL_USED_BY_OTHERS
+  rpc SetSkrillEmail(SetSkrillEmailRequest) returns (SetSkrillEmailResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME, ACT_INVALID_EMAIL_VERIFICATION_CODE
+  rpc VerifySkrillEmail(VerifySkrillEmailRequest) returns (VerifySkrillEmailResponse) {}
+
+  //ERRORS: ACT_EMAIL_NOT_VERIFIED, ACT_PASSWORD_NOT_SET
+  rpc SetBackupStatus(SetBackupStatusRequest) returns (SetBackupStatusResponse) {}
+
+  //ERRORS: ACT_PASSWORD_ALREADY_SET
+  rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME, ACT_MISSING_EMAIL, ACT_EMAIL_NOT_VERIFIED
+  rpc ResetPasswordStatus(ResetPasswordStatusRequest) returns (ResetPasswordStatusResponse) {}
+
+  //ERRORS: ACT_INVALID_USERNAME 
+  rpc GetHash(GetHashRequest) returns (GetHashResponse) {}
+
+  //ERRORS: ACT_MISSING_USERNAME, ACT_INVALID_USERNAME, ACT_BAD_PASSWORD
+  rpc GetHashByPassword(GetHashByPasswordRequest) returns (GetHashByPasswordResponse) {}
+
+  //ERRORS: ACT_MISSING_USERNAME, ACT_INVALID_USERNAME, ACT_EMAIL_NOT_VERIFIED
+  rpc GetHashByCode(GetHashByCodeRequest) returns (GetHashByCodeResponse) {}
+
+  rpc GetRandomUsername(GetRandomUsernameRequest) returns (GetRandomUsernameResponse) {}
+
+  //ERRORS: ACT_INVALID_ADDR, INVALID_SIGNATURE
+  rpc GetMyUsername(GetMyUsernameRequest) returns (GetMyUsernameResponse) {}
+
+  rpc SetPersonalSignature(SetPersonalSignatureRequest) returns (SetPersonalSignatureResponse) {}
+  rpc SetGeo(SetGeoRequest) returns (SetGeoResponse) {}
+  rpc SetBirthday(SetBirthdayRequest) returns (SetBirthdayResponse) {}
+
+  // - Email backup
+  // SetLoginEmail->VerifyLoginEmailCode->SetEmailLoginPassword(returns upload url and pwdhash)->(upload phrase)->ConfirmPhraseUploaded
+  // To send code again, call SendLoginEmailVerificationCode
+  //
+  // - Email backup simplified flow
+  // SetLoginEmailAndPassword(returns upload url and pwdhash)->(upload phrase)->ConfirmPhraseUploaded
+  // To check if login email is verified, read the "identifier_passing_kyc" value.
+  //
+  // - Login
+  // EmailLogin
+  // - Account Recover
+  // RecoverAccountbyLoginEmail->VerifyEmailRecoverCode(returns dowload url and pwdhash)->EmailRecoverLogin->SetEmailLoginPassword(returns upload url and pwdhash)->(upload phrase)->ConfirmPhraseUploaded
+  // 1. Use VerifyEmailRecoverCodeResponse.encrypted_phrase_download_url to fetch encrypted phrase.
+  // 2. Use VerifyEmailRecoverCodeResponse.password_hash to decrypt the phrase. Assume that app is able to read wallet private key at this point.
+  // 3. The rest of calling EmailRecoverLogin is similar to calling Login() flow except replacing "username" by "login_email".
+
+  //ERRORS: ACT_MISSING_EMAIL, ACT_EMAIL_CHANGE_FORBIDDEN, ACT_LOGIN_EMAIL_USED_BY_OTHERS
+  rpc SetLoginEmail(SetLoginEmailRequest) returns (SetLoginEmailResponse) {}
+  //ERRORS: ACT_INVALID_USERNAME, ACT_MISSING_EMAIL
+  rpc SendLoginEmailVerificationCode(SendLoginEmailVerificationCodeRequest) returns (SendLoginEmailVerificationCodeResponse) {}
+  //ERRORS: ACT_INVALID_USERNAME, ACT_MISSING_EMAIL, ACT_INVALID_EMAIL_VERIFICATION_CODE
+  rpc VerifyLoginEmailCode(VerifyLoginEmailCodeRequest) returns (VerifyLoginEmailCodeResponse) {}
+  rpc SetEmailLoginPassword(SetEmailLoginPasswordRequest) returns (SetEmailLoginPasswordResponse) {}
+  //ERRORS: ACT_INVALID_USERNAME, ACT_MISSING_EMAIL, ACT_EMAIL_CHANGE_FORBIDDEN, ACT_LOGIN_EMAIL_USED_BY_OTHERS
+  rpc SetLoginEmailAndPassword(SetLoginEmailAndPasswordRequest) returns (SetLoginEmailAndPasswordResponse) {}
+  rpc ConfirmPhraseUploaded(ConfirmPhraseUploadedRequest) returns (ConfirmPhraseUploadedResponse) {}
+
+  //ERRORS: ACT_MISSING_EMAIL, ACT_INVALID_EMAIL, INVALID_SIGNATURE
+  rpc EmailRecoverLogin(EmailRecoverLoginRequest) returns (EmailRecoverLoginResponse) {}
+  //ERRORS: ACT_MISSING_EMAIL, ACT_INVALID_EMAIL, ACT_BAD_PASSWORD, ACT_PASSWORD_NOT_SET
+  rpc EmailLogin(EmailLoginRequest) returns (EmailLoginResponse) {}
+
+  // Forget password and private key.
+  rpc RecoverAccountByLoginEmail(RecoverAccountByLoginEmailRequest) returns (RecoverAccountByLoginEmailResponse) {}
+  //ERRORS: ACT_MISSING_EMAIL, ACT_INVALID_EMAIL_VERIFICATION_CODE
+  rpc VerifyEmailRecoverCode(VerifyEmailRecoverCodeRequest) returns (VerifyEmailRecoverCodeResponse) {}
+}
+// Next tag: 2
+message ConfirmPhraseUploadedRequest {
+  string jwt_token = 1;
+}
+// Next tag: 2
+message ConfirmPhraseUploadedResponse {
+  err.BackendError error = 1;
+}
+// Next tag; 2
+message RecoverAccountByLoginEmailRequest {
+  string login_email = 1;
+}
+// Next tag; 2
+message RecoverAccountByLoginEmailResponse {
+  err.BackendError error = 1;
+}
+// Next tag; 3
+message VerifyEmailRecoverCodeRequest {
+  string email = 1;
+  string code = 2;
+}
+
+// Next tag; 4
+message VerifyEmailRecoverCodeResponse {
+  err.BackendError error = 1;
+  // S3 presigned url to download encrypted phrase. Download quickly, only valid for several minutes.
+  string encrypted_phrase_download_url = 2;
+  string password_hash = 3; // aka encryption key.
+}
+// Next tag; 3
+message SetEmailLoginPasswordRequest {
+  string jwt_token = 1;
+  string email_login_password = 2;
+}
+
+// Next tag; 4
+message SetEmailLoginPasswordResponse {
+  err.BackendError error = 1;
+  // S3 presigned url to upload encrypted phrase. Upload quickly, only valid for several minutes.
+  string encrypted_phrase_upload_url = 2;
+  string password_hash = 3; // aka encryption key.
+}
+
+// Next tag; 2
+message SendLoginEmailVerificationCodeRequest {
+  string jwt_token = 1;
+}
+// Next tag; 2
+message SendLoginEmailVerificationCodeResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message SetLoginEmailRequest {
+  string jwt_token = 1;
+  string login_email = 2;
+}
+
+// Next tag: 2
+message SetLoginEmailResponse {
+  err.BackendError error = 1;
+}
+// Next tag: 3
+message VerifyLoginEmailCodeRequest {
+  string jwt_token = 1;
+  string code = 2;
+}
+
+// Next tag: 2
+message VerifyLoginEmailCodeResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 4
+message SetLoginEmailAndPasswordRequest {
+  string jwt_token = 1;
+  string login_email = 2;
+  string email_login_password = 3;
+}
+
+// Next tag: 4
+message SetLoginEmailAndPasswordResponse {
+  err.BackendError error = 1;
+  // S3 presigned url to upload encrypted phrase. Upload quickly, only valid for several minutes.
+  string encrypted_phrase_upload_url = 2;
+  string password_hash = 3; // aka encryption key.
+}
+
+// Next tag: 4
+message EmailLoginRequest {
+  string login_email = 1;
+  string password = 2;
+}
+
+// Next tag: 6
+message EmailLoginResponse {
+  err.BackendError error = 1;
+  User user = 2;
+  string jwt_token = 3;
+  string encrypted_phrase_download_url = 4;
+  string password_hash = 5;
+}
+
+// Next tag: 4
+message EmailRecoverLoginRequest {
+  string login_email = 1;
+  // auth_signature signs stringified ts_in_sig.
+  string auth_signature = 2;
+  // ts_in_sig is in epoch (in sec).
+  int64 ts_in_sig = 3;
+}
+
+// Next tag: 4
+message EmailRecoverLoginResponse {
+  err.BackendError error = 1;
+  User user = 2;
+  string jwt_token = 3;
+}
+
+// Next tag: 4
+message SetGeoRequest {
+  string jwt_token = 1;
+  // if not provided, server will use IP to determine the two fields.
+  string iso_country_code = 2; // "cn", "jp" etc, iso 3166 alpha-2
+  string administrative_area = 3; // state or province
+}
+// Next tag: 2
+message SetGeoResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message SetPersonalSignatureRequest {
+  string jwt_token = 1;
+  string personal_signature = 2;
+}
+// Next tag: 2
+message SetPersonalSignatureResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 5
+message UpdateRequest {
+  string jwt_token = 1;
+  string avatar_url = 2;
+  string full_name = 3;
+  string locale = 4;
+}
+
+// Next tag: 2
+message UpdateResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 2
+message GeneratePresignedURLRequest {
+  string jwt_token = 1;
+}
+
+// Next tag: 4
+message GeneratePresignedURLResponse {
+  err.BackendError error = 1;
+  string presigned_url = 2;
+  string get_url = 3;
+}
+
+// Next tag: 3
+message SendEmailVerificationCodeRequest {
+  string username = 1;
+  string email = 2;
+}
+
+// Next tag: 2
+message SendEmailVerificationCodeResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message SetVisibleUsernameRequest {
+  string jwt_token = 1;
+  string visible_username = 2;
+}
+
+// Next tag: 2
+message SetVisibleUsernameResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message SetPrimaryAccountTypeRequest {
+  string jwt_token = 1;
+  common.PrimaryAccountType primary_account_type = 2;
+}
+
+// Next tag: 2
+message SetPrimaryAccountTypeResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 2
+message GetMeRequest {
+  string jwt_token = 1;
+}
+
+// Next tag: 3
+message GetMeResponse {
+  err.BackendError error = 1;
+  User user = 2;
+}
+
+// Next tag: 2
+message GetUserSnipRequest {
+  string username = 1;
+}
+
+// Next tag: 3
+message GetUserSnipResponse {
+  err.BackendError error = 1;
+  UserSnip user_snip = 2;
+}
+
+// Next tag: 2
+message CreateRequest {
+  User user = 1;
+}
+
+// Next tag: 4
+message CreateResponse {
+  err.BackendError error = 1;
+  User user = 2;
+  string jwt_token = 3;
+}
+
+// Next tag: 3
+message ResetPasswordStatusRequest {
+  string username = 1;
+  string email = 2;
+}
+
+// Next tag: 2
+message ResetPasswordStatusResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message SetPayPalEmailRequest {
+  string jwt_token = 1;
+  string paypal_email = 2;
+}
+
+// Next tag: 2
+message SetPayPalEmailResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message VerifyPayPalEmailRequest {
+  string jwt_token = 1;
+  string code = 2;
+}
+
+// Next tag: 3
+message VerifyPayPalEmailResponse {
+  err.BackendError error = 1;
+  bool code_is_valid = 2;
+}
+
+// Next tag: 3
+message SetSkrillEmailRequest {
+  string jwt_token = 1;
+  string skrill_email = 2;
+}
+
+// Next tag: 2
+message SetSkrillEmailResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message VerifySkrillEmailRequest {
+  string jwt_token = 1;
+  string code = 2;
+}
+
+// Next tag: 3
+message VerifySkrillEmailResponse {
+  err.BackendError error = 1;
+  bool code_is_valid = 2;
+}
+
+// Next tag: 5
+enum BackupStatus {
+  BACKUP_STATUS_NONE = 0;
+  BACKUP_STATUS_MANUAL = 1;
+  BACKUP_STATUS_ICLOUD = 2;
+  BACKUP_STATUS_GOOGLE_DRIVE = 3;
+  BACKUP_STATUS_EMAIL = 4;
+}
+
+// Next tag: 3
+message SetBackupStatusRequest {
+  string jwt_token = 1;
+  BackupStatus backup_status = 2;
+}
+
+// Next tag: 2
+message SetBackupStatusResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 2
+message GetHashRequest {
+  string jwt_token = 1;
+}
+
+// Next tag: 3
+message GetHashResponse {
+  err.BackendError error = 1;
+  string hashed_password = 2;
+}
+
+// Next tag: 3
+message GetHashByPasswordRequest {
+  string username = 1;
+  string password = 2;
+}
+
+// Next tag: 3
+message GetHashByPasswordResponse {
+  err.BackendError error = 1;
+  string hashed_password = 2;
+}
+
+// Next tag: 3
+message GetHashByCodeRequest {
+  string username = 1;
+  string code = 2;
+}
+
+// Next tag: 3
+message GetHashByCodeResponse {
+  err.BackendError error = 1;
+  string hashed_password = 2;
+}
+
+// Next tag: 4
+message LoginRequest {
+  string username = 1;
+  // auth_signature signs stringified ts_in_sig.
+  string auth_signature = 2;
+  // ts_in_sig is in epoch.
+  int64 ts_in_sig = 3;
+}
+
+// Next tag: 4
+message LoginResponse {
+  err.BackendError error = 1;
+  User user = 2;
+  string jwt_token = 3;
+}
+
+// Next tag: 3
+message SetEmailRequest {
+  string jwt_token = 1;
+  string email = 2;
+}
+
+// Next tag: 2
+message SetEmailResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message VerifyEmailRequest {
+  string jwt_token = 1;
+  string code = 2;
+}
+
+// Next tag: 2
+message VerifyEmailResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message SetPasswordRequest {
+  string jwt_token = 1;
+  string password = 2;
+}
+
+// Next tag: 2
+message SetPasswordResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 1
+message GetRandomUsernameRequest {
+}
+
+// Next tag: 3
+message GetRandomUsernameResponse {
+  err.BackendError error = 1;
+  string username = 2;
+}
+
+// This API uses basic auth instead of JWT to handle the case of an early
+// user who restores a wallet on a device and then the device needs to
+// recover the username based on the wallet ETH address.
+// Next tag: 3
+message GetMyUsernameRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 3
+message GetMyUsernameResponse {
+  err.BackendError error = 1;
+  string username = 2;
+}
+// Given we are expecting more login options based on different PII, e.g. email and phone,
+// modeling these options in a sharable way helps better structure the User object.
+// The modeling is built on the patterns observed below
+// - login registration (aka backup) flow
+// 1. A user provides an identifier (login email, phone)
+// 2. Celer does KYC based on the identifier. This is done usually by sending a short-lived code to the identifier.
+// 3. Once passing KYC, the user sets a password and Celer stores its hash.
+// 4. The user uses the hash to encrypt the wallet phrase, and store it in Celer.
+// - login flow
+// 1. The user types in the identifier and password.
+// 2. Celer validates the login if identifier and pwd hash matches the ones in database.
+// - recover flow
+// 1. The user types in the identifier
+// 2. Similar to the KYC above, Celer uses out-of-band channel to identify the user and the identifier. Usually done by sending a code as well.
+// 3. The user uses the code to login and set password again.
+// Next tag: 6
+message LoginOption {
+  string personal_identifier = 1;
+  string login_password_hash = 2;
+  bool identifier_passing_kyc = 3;
+  bool phrase_uploaded = 4;
+  bool active = 5;  // able to login using this option
+  // probably will be used later, 
+  // string last_kyc_code
+  // string last_recover_code
+  // string phrase_file_name
+}
+
+// Next tag: 28
+message User {
+  string id = 1;
+  string eth_address = 2;
+  string username = 3;
+  string avatar_url = 4;
+  string full_name = 5;
+  string visible_username = 6;
+  string email = 7; // cloud backup
+  string locale = 8;
+  bool backed_up_wallet = 9;
+  string auth_signature = 10;
+  string token = 11;
+  // string centrifugo_token = 12; // obsolete
+  common.PrimaryAccountType primary_account_type = 13;
+  bool has_verified_email = 14; // cloud backup
+  bool has_password = 15;  // cloud backup
+  string hashed_password = 16; // cloud backup
+  BackupStatus backup_status = 17;
+  string paypal_email = 18;
+  bool has_verified_paypal_email = 19;
+  bool banned = 20;
+  uint64 createts = 21; // UTC timestamp in milliseconds
+  string personal_signature = 22; // a sentence a user provides to show characteristics
+  LoginOption email_login_option = 23;
+  Geolocation geolocation = 24;
+  common.Date birthday = 25; // age acknowledgement before deposit
+  string skrill_email = 26;
+  bool has_verified_skrill_email = 27;
+}
+
+// Next tag: 3
+message Geolocation {
+  string iso_country_code = 1; // "cn", "jp" etc, iso 3166 alpha-2
+  string administrative_area = 2; // state or province
+}
+
+// Snippet of user info that is publicly visible to other users!!!
+// See the non-auth'ed GetUserSnip() API: anybody can fetch this info
+// about any user.  DON'T ADD FIELDS without careful PRIVACY REVIEW!!!
+// Next tag: 22
+message UserSnip {
+  string id = 1;
+  string eth_address = 2;
+  string username = 3;
+  string avatar_url = 4;
+  string full_name = 5;
+  string visible_username = 6;
+  bool banned = 20;
+  Geolocation geolocation = 21;
+}
+
+// Next tag: 3
+message SetBirthdayRequest {
+  string jwt_token = 1;
+  common.Date birthday = 2;
+}
+// Next tag: 2
+message SetBirthdayResponse {
+  err.BackendError error = 1;
+}

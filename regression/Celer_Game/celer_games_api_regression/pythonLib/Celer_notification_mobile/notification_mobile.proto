@@ -1,0 +1,138 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package notification;
+
+import "google/protobuf/empty.proto";
+import "common_mobile.proto";
+import "error.proto";
+
+option java_package = "network.celer.proto.notification";
+option java_outer_classname = "NotificationMobile";
+option go_package = "github.com/celer-network/x-proto-go/notification";
+option swift_prefix = "Notification";
+
+
+// ************* below rpc should only be called by mobile *************//
+service Mobile {
+    // bind username and FCM token in aws SNS
+    rpc RegisterEndpoint (RegisterEndpointRequest) returns (RegisterEndpointResponse) {
+    }
+
+    // should be called when the notification is clicked.
+    // will add click count and reset rate limit
+    rpc ClickNotification (ClickNotificationRequest) returns (google.protobuf.Empty) {
+    }
+
+    rpc GetPopupInAppMessages (GetPopupInAppMessagesRequest) returns (GetPopupInAppMessagesResponse) {
+    }
+
+    // request is username
+    rpc GetBannerInAppMessages (GetBannerInAppMessagesRequest) returns (GetBannerInAppMessagesResponse) {
+    }
+
+    //INPUT: InAppMessage notification_metadata_id
+    rpc MarkInAppMessageAsSeenById (MarkInAppMessageAsSeenRequest) returns (google.protobuf.Empty) {
+    }
+
+    //backend need to know whether previous push notification is send when user app in front so he don't get to see it.
+    rpc MarkPushNotificationNotSeen (MarkPushNotificationNotSeenRequest) returns (google.protobuf.Empty) {
+    }
+}
+
+message RegisterEndpointRequest {
+    string device_id = 1;
+    string app_id = 2;
+    string firebase_push_notification_token = 3;
+    string app_version = 4;
+    common.DeviceType device_type = 5;
+    bool push_permission_granted = 6;
+}
+
+// mobile won't need to check the response status, because registration shouldn't block app from starting.
+// any scenario that cause status to be false will log error in Notification Backend, and engineer will look into it.
+message RegisterEndpointResponse {
+    err.BackendError error = 1;
+}
+
+message ClickNotificationRequest {
+    // used to reset rate limit by notification type
+    int64 notification_metadata_id = 1;
+    // used to track open rate by user
+    int64 notification_log_id = 2;
+}
+
+message FcmDataMessage {
+    oneof payload {
+        // whenever this payload is set, means there is a history item to claim for this user in history page.
+        NewHistoryItem new_history = 1;
+    }
+}
+
+message NewHistoryItem {
+    // true means he won, UI should show him a treasure.
+    // false means he lose, UI should react accordingly.
+    bool won = 1;
+}
+
+message GetPopupInAppMessagesRequest {
+    string game_id = 1;
+    string app_id = 2;
+    string app_version = 3;
+    common.DeviceType device_type = 4;
+}
+
+message GetPopupInAppMessagesResponse {
+    err.BackendError error = 1;
+    repeated PopupInAppMessage popup_in_app_messages = 2;
+}
+
+message GetBannerInAppMessagesRequest {
+    string app_id = 1;
+    string app_version = 2;
+    common.DeviceType device_type = 3;
+}
+
+message GetBannerInAppMessagesResponse {
+    err.BackendError error = 1;
+    repeated BannerInAppMessage banner_in_app_messages = 2;
+}
+
+
+message PopupInAppMessage {
+    // when call MarkInAppMessageAsSeenById, pass this field
+    int64 notification_metadata_id = 1;
+    string image_url = 2;
+    string link = 3;
+    string title = 4;
+    string description = 5;
+    string button_text = 6;
+    repeated string game_id = 7;
+    int64 notification_log_id = 8;
+}
+
+message BannerInAppMessage {
+    // when call MarkInAppMessageAsSeenById, pass this field
+    int64 notification_metadata_id = 1;
+    string image_url = 2;
+    string link = 3;
+    string title = 4;
+    string description = 5;
+    string button_text = 6;
+    // duration in millisecond
+    int64 display_duration = 7;
+    uint64 seen_time = 8;
+    int64 notification_log_id = 9;
+}
+
+message MarkInAppMessageAsSeenRequest {
+    // use to distinguish which pop up in app message we send
+    int64 notification_metadata_id = 1;
+    int64 notification_log_id = 2;
+}
+
+message MarkPushNotificationNotSeenRequest {
+    // used to reset rate limit
+    int64 notification_metadata_id = 1;
+    int64 notification_log_id = 2;
+}

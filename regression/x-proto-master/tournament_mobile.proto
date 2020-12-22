@@ -1,0 +1,182 @@
+syntax = "proto3";
+package tournament;
+
+import "common_backend.proto";
+import "common_mobile.proto";
+import "error.proto";
+import "league_mobile.proto";
+import "account_mobile.proto";
+
+
+option java_package = "network.celer.proto.tournament";
+option java_outer_classname = "TournamentMobile";
+option swift_prefix = "Tournament";
+option go_package = "github.com/celer-network/x-proto-go/tournament";
+
+service Mobile {
+    // gets a paginated list of current user's ticketing history in the tournament
+    rpc GetMyTournamentTickets (TournamentPaginationRequest) returns (TournamentTicketsResponse);
+
+    rpc GetTournamentRankings (TournamentPaginationRequest) returns (TournamentRankingsResponse);
+
+    rpc GetTournamentDetail (TournamentIdRequest) returns (TournamentDetailResponse);
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Requests
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message TournamentPaginationRequest {
+    string tournament_id = 1;
+    int32 limit = 2;
+    string next_page_token = 3;
+}
+
+message TournamentIdRequest {
+    string tournament_id = 1;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Responses
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message TournamentTicketsResponse {
+    err.BackendError error = 1;
+    repeated TournamentTicket ticket = 2;
+    string next_page_token = 3;
+}
+
+message TournamentRankingsResponse {
+    err.BackendError error = 1;
+    TournamentBucketDetail tournament_bucket = 2; // only set for first page
+    TournamentAchievement current_player_ranking = 3; // only set for first page
+    repeated TournamentAchievement rankings = 4;
+    string next_page_token = 5;
+}
+
+message TournamentDetailResponse {
+    err.BackendError error = 1;
+    TournamentBucketDetail bucket = 2;
+    TournamentAchievement ranking = 3;
+    bool should_notify = 4;
+    bool exists_prize_to_claim = 5;
+    common.GemRewardNote gem_reward_note = 6;
+    league.LeagueStarRewardNote league_star_reward_note = 7;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Enums
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+enum TournamentStatus {
+    TOURNAMENT_UNDEFINED = 0;
+    TOURNAMENT_INACTIVE = 1;
+    TOURNAMENT_ACTIVE = 2;
+    TOURNAMENT_ENDED = 3;
+    TOURNAMENT_DRAFT = 4;
+    TOURNAMENT_EMPTY_STATE = 5;
+}
+
+enum TournamentPrizeStatus {
+    TOURNAMENT_PRIZE_UNDEFINED = 0;
+    TOURNAMENT_PRIZE_UNPAID = 1;
+    TOURNAMENT_PRIZE_PAID = 2;
+    TOURNAMENT_PRIZE_PAYING = 3;
+    TOURNAMENT_PRIZE_CANCELLED = 4;
+    TOURNAMENT_PRIZE_FAILED = 5;
+    TOURNAMENT_PRIZE_NOT_ELIGIBLE = 6;
+}
+
+enum RankType {
+    UNDEFINED = 0;
+    GT_RANKING_ON_MONEY_LEADERBOARD = 1;
+    ETH_RANKING_ON_MONEY_LEADERBOARD = 2;
+    CELR_RANKING_ON_MONEY_LEADERBOARD = 3;
+    DAI_RANKING_ON_MONEY_LEADERBOARD = 4;
+    USD_RANKING_ON_MONEY_LEADERBOARD = 5;
+    USE_BEST_SCORE_IN_A_TOURNAMENT = 6;
+    USE_TOTAL_SUM_OF_SCORES_IN_A_TOURNAMENT = 7;
+    USE_AVERAGE_SCORE_IN_A_TOURNAMENT = 8;
+    USE_LAST_SCORE_IN_A_TOURNAMENT = 9;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Data Models
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message TournamentBucket {
+    string id = 1;
+    common.GameInfo game = 2;
+    string title = 3;
+    string description = 4;
+    string image_url = 5;
+    RankType rank_type = 6;
+    string rank_type_description = 7;
+    common.TokenAmount entry_fee = 8;
+    common.TokenAmount prize_pool = 9;
+    repeated common.PrizeDistributionChunk prize_distribution_percentages = 10;
+    int64 max_player_number = 11;
+    TournamentStatus tournament_status = 12;
+    int64 start_time = 13; //in milliseconds, example: 1568617200000
+    int64 end_time = 14; //in milliseconds, example: 1568617200000
+    int32 difficulty_level = 15; //1 - 10
+}
+
+message TournamentTicket {
+    common.UserInfo user_info = 1;
+    double shared_random_seed = 2;
+    string game_id = 3;
+    double score = 4;
+    common.TicketStatus ticket_status = 5;
+    string tournament_id = 6;
+    string ticket_id = 7;
+    common.TokenAmount entry_fee = 8;
+    int64 create_time = 9;
+    int64 update_time = 10;
+    bool surrendered = 11;
+    bool aborted = 12;
+    int32 difficulty_level = 13; // 1 - 10
+}
+
+message TournamentBucketDetail {
+    TournamentBucket bucket = 1;
+    bool should_record = 2;
+    bool should_highlight = 3;
+    string highlight_text = 4;
+    int32 max_entries = 5;
+    bool supports_infinite_entries = 6;
+    bool supports_infinite_players = 7;
+}
+
+//User Achievement in tournament history and tournament prize winners
+message TournamentAchievement {
+    common.UserRanking user_ranking = 1;
+    common.TokenAmount prize_for_user = 2;
+    TournamentPrizeStatus tournament_prize_status = 3;
+    int64 last_updated = 4; //in milliseconds, example: 1568617200000
+    common.ReplayBoard replay_board = 5; // only set if tournament is ended
+    account.Geolocation geolocation = 6;
+}
+
+message TournamentDetail {
+    string username = 1;
+    double shared_random_seed = 2;
+    string app_id = 3;
+    double score = 4;
+    string ticket_id = 5;
+    int32 ticket_status = 6;
+    string tournament_id = 7;
+    string token_symbol = 8;
+    double entry_fee = 9;
+    double entry_fee_usd_value = 10;
+    int64 initiated = 11;
+    int64 last_updated = 12;
+    TournamentStatus tournament_status = 13;
+    string title = 14;
+    string description = 15;
+    string image_url = 16;
+    double prize_pool_amount = 17;
+    repeated common.PrizeDistributionChunk prize_distribution = 18;
+    uint64 max_player_number = 19;
+    int64 start_time = 20;
+    int64 end_time = 21;
+    string rank_type_description = 22;
+    RankType rank_type = 23;
+    string prize_symbol = 24; // symbol for prize token
+}

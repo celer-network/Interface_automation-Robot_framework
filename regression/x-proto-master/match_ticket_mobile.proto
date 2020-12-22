@@ -1,0 +1,49 @@
+syntax = "proto3";
+package ticket;
+
+import "error.proto";
+import "common_mobile.proto";
+import "match_mobile.proto";
+
+option java_package = "network.celer.proto.ticket";
+option java_outer_classname = "MatchTicketMobile";
+option swift_prefix = "MatchTicket";
+
+service Mobile {
+    // called when game crash and backend should be notified and refund ASAP
+    // only allow ticket status in READY
+    rpc RefundWhenGameCrashed (RefundWhenGameCrashedRequest) returns (RefundWhenGameCrashedResponse) {
+    }
+
+    rpc GetMatchDetailByTicketId (GetMatchDetailByTicketIdRequest) returns (GetMatchDetailByTicketIdResponse) {
+    }
+}
+
+message GetMatchDetailByTicketIdRequest {
+    string ticket_id = 1;
+    string app_version = 2;
+    common.DeviceType device_type = 3;
+}
+
+message RefundWhenGameCrashedRequest {
+    int64 ticket_id = 1;
+    string token = 2;
+    uint64 submit_time = 3;
+}
+
+message RefundWhenGameCrashedResponse {
+    err.BackendError error = 1;
+    AutoRefundResultEnum refund_result = 2;
+}
+
+message GetMatchDetailByTicketIdResponse {
+    err.BackendError error = 1;
+    match.MatchDetailInfo match_detail_info = 2;
+}
+
+enum AutoRefundResultEnum {
+    AUTO_REFUND_RESULT_UNDEFINED = 0;
+    AUTO_REFUND_RESULT_SUCCESS = 1;
+    // usually means ticket status not in READY
+    AUTO_REFUND_RESULT_WRONG_TICKET_STATUS = 2;
+}

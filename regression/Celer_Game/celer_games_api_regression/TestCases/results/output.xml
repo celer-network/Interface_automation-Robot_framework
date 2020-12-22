@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 3.2.2 (Python 3.8.5 on darwin)" generated="20201214 16:05:05.489" rpa="false">
+<suite id="s1" name="Mobile Login Case" source="/Users/yandong/PycharmProjects/regression/Celer_Game/celer_games_api_regression/TestCases/mobile_login_case.robot">
+<test id="s1-t1" name="mobile login">
+<kw name="ACCOUNT MOBILE API" library="mobile_login">
+<doc>登录获取token</doc>
+<assign>
+<var>${ret}</var>
+</assign>
+<kw name="Create Dictionary" library="BuiltIn">
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<assign>
+<var>${headers}</var>
+</assign>
+<msg timestamp="20201214 16:05:05.938" level="INFO">${headers} = {}</msg>
+<status status="PASS" starttime="20201214 16:05:05.938" endtime="20201214 16:05:05.938"></status>
+</kw>
+<kw name="Test Run 01" library="robot_login_run">
+<arguments>
+<arg>pknafg52837@chacuo.net</arg>
+<arg>yandong01</arg>
+</arguments>
+<assign>
+<var>${login}</var>
+</assign>
+<msg timestamp="20201214 16:05:06.627" level="INFO">{'statuscode': '-1', 'message': '账号密码错误'}</msg>
+<msg timestamp="20201214 16:05:06.627" level="INFO">${login} = {"statuscode": "-1", "message": "账号密码错误"}</msg>
+<status status="PASS" starttime="20201214 16:05:05.938" endtime="20201214 16:05:06.627"></status>
+</kw>
+<kw name="To Json" library="RequestsKeywords">
+<doc>Convert a string to a JSON object</doc>
+<arguments>
+<arg>${login}</arg>
+</arguments>
+<assign>
+<var>${result}</var>
+</assign>
+<msg timestamp="20201214 16:05:06.628" level="INFO">To JSON using : content={"statuscode": "-1", "message": "账号密码错误"} </msg>
+<msg timestamp="20201214 16:05:06.628" level="INFO">To JSON using : pretty_print=False </msg>
+<msg timestamp="20201214 16:05:06.628" level="INFO">${result} = {'statuscode': '-1', 'message': '账号密码错误'}</msg>
+<status status="PASS" starttime="20201214 16:05:06.627" endtime="20201214 16:05:06.628"></status>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<arguments>
+<arg>${result}</arg>
+<arg>statuscode</arg>
+</arguments>
+<assign>
+<var>${str}</var>
+</assign>
+<msg timestamp="20201214 16:05:06.628" level="INFO">${str} = -1</msg>
+<status status="PASS" starttime="20201214 16:05:06.628" endtime="20201214 16:05:06.628"></status>
+</kw>
+<kw name="Log" library="BuiltIn">
+<doc>Logs the given message with the given level.</doc>
+<arguments>
+<arg>${str}</arg>
+</arguments>
+<msg timestamp="20201214 16:05:06.629" level="INFO">-1</msg>
+<status status="PASS" starttime="20201214 16:05:06.628" endtime="20201214 16:05:06.629"></status>
+</kw>
+<kw name="Should Be Equal As Strings" library="BuiltIn">
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<arguments>
+<arg>${str}</arg>
+<arg>200</arg>
+</arguments>
+<msg timestamp="20201214 16:05:06.629" level="FAIL">-1 != 200</msg>
+<status status="FAIL" starttime="20201214 16:05:06.629" endtime="20201214 16:05:06.629"></status>
+</kw>
+<status status="FAIL" starttime="20201214 16:05:05.938" endtime="20201214 16:05:06.629"></status>
+</kw>
+<tags>
+<tag>HTTP API</tag>
+</tags>
+<status status="FAIL" starttime="20201214 16:05:05.937" endtime="20201214 16:05:06.630" critical="yes">-1 != 200</status>
+</test>
+<doc>Suite description</doc>
+<status status="FAIL" starttime="20201214 16:05:05.490" endtime="20201214 16:05:06.630"></status>
+</suite>
+<statistics>
+<total>
+<stat pass="0" fail="1">Critical Tests</stat>
+<stat pass="0" fail="1">All Tests</stat>
+</total>
+<tag>
+<stat pass="0" fail="1">HTTP API</stat>
+</tag>
+<suite>
+<stat pass="0" fail="1" id="s1" name="Mobile Login Case">Mobile Login Case</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>

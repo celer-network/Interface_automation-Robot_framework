@@ -1,0 +1,1714 @@
+syntax = "proto3";
+package sdk;
+
+option go_package = "github.com/celer-network/x-proto-go/sdkdata";
+
+// This file is used by mobile team to define data structures needed by SDK APIs.
+// Both backend and mobile team will use the generated go/java/kotlin/swift code to ensure
+// we'll never have any miscommunication/confusion about data schema
+
+// Actual APIs are defined in another proto file using grpc schema but can't be used directly
+
+// Note by default protobuf json key is lowerCaseCamel, eg. field_name_one becomes fieldNameOne
+// if a different json key is desired, use json_name field option. eg. string usr_id = 1 [json_name="user"];
+
+////////////////////////////////
+//Account and User profile related
+///////////////////////////////
+
+message UserInfo {
+    string id = 1; //example: "f29447ef-b62a-4289-43a3-75b435033fbc"
+    string username = 2;
+    string eth_address = 3;
+    string visible_username = 4;
+    string full_name = 5;
+    string avatar_url = 6;
+    string email = 7;
+}
+
+message AccountDetail {
+    UserInfo user_info = 1;
+    PrimaryAccountType primary_account_type = 2;
+    bool with_password = 3;
+    bool with_verified_email = 4;
+    BackupStatus backup_status = 5;
+    bool with_deposit_tab_notification = 11; //TODO: not needed before batch-7.
+    bool with_check_in_bonus_notification = 13; //TODO: not needed before batch-7
+    bool with_training_camp_notification = 14; //TODO: not needed before batch-7 true if the user has unclaimed training rewards or available training tasks to accept
+    int32 number_of_available_training_camp_tasks = 15; //TODO: not needed before batch-7
+    int32 number_of_training_camp_rewards = 16; //TODO: not needed before batch-7
+    bool already_played_first_match = 17; //for various on-boarding reasons and daily check-in reasons
+}
+
+message GetAccountDetailResponse {
+    AccountDetail account_detail = 1;
+    bool is_from_sdk_cache = 2;
+}
+
+message RestoreBackupPhraseWithPasswordRequest {
+    string username = 1;
+    string encrypted_backup_phrase = 2;
+    string password = 3;
+}
+
+message RestoreBackupPhraseWithCodeRequest {
+    string username = 1;
+    string encrypted_backup_phrase = 2;
+    string code = 3;
+}
+
+enum EthereumNetworkType {
+    ETHEREUM_NETWORK_TYPE_UNDEFINED = 0;
+    MAINNET = 1;
+    ROPSTEN = 3; //this is 3, following industry standard
+}
+
+message LoginRequest {
+    Wallet wallet = 1;
+    string local_data_path = 2;
+    EthereumNetworkType ethereum_network_type = 3;
+}
+
+message SetAvatarRequest {
+    bytes avatar_image_data = 1;
+}
+
+message Wallet {
+    string keystore = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    AccountDetail account_detail = 2;
+}
+
+message CreateNewUserRequest {
+    string username = 1;
+    string eth_address = 2;
+}
+
+message ForgotPasswordRequest {
+    string username = 1;
+    string email = 2;
+}
+
+enum PrimaryAccountType {
+    UNDEFINED_PRIMARY_ACCOUNT_TYPE = 0;
+    PRIMARY_ACCOUNT_TYPE_FIAT = 1;
+    PRIMARY_ACCOUNT_TYPE_CRYPTO = 2;
+}
+
+message SetPrimaryAccountTypeRequest {
+    PrimaryAccountType primary_account_type = 1;
+}
+
+message GetUserInfosByUsernamesRequest {
+    repeated string usernames = 1;
+}
+
+message GetUserInfosByUsernamesResponse {
+    repeated UserInfo user_infos = 1;
+}
+
+message GetUserInfosByEthAddressesRequest {
+    repeated string eth_addresses = 1;
+}
+
+message GetUserInfosByEthAddressesResponse {
+    repeated UserInfo user_infos = 1;
+}
+
+enum BackupStatus {
+    UNDEFINED_BACKUP_STATUS = 0;
+    NOT_BACKED_UP = 1;
+    MANUALLY_BACKED_UP_NO_CLOUD_BACKED_UP = 2;
+    CLOUD_BACKED_UP_WITH_ICLOUD = 3;
+    CLOUD_BACKED_UP_WITH_GOOGLE_DRIVE = 4;
+}
+
+////////////////////////////////
+//Finance related: tokens, transactions
+///////////////////////////////
+
+message Token {
+    string symbol = 1;
+    TokenType type = 2;
+    string full_name = 3; //"Ethereum", "Dai", "US Dollar", "Game Token", etc
+    string icon_url = 4;
+    BalanceInfo balance_info = 5;
+    oneof token_detail {
+        UsdTokenDetail usd_token_detail = 6;
+        GTDetail gt_detail = 7; //TODO: not needed before batch-7
+        CryptoTokenDetail crypto_token_detail = 8;
+        GemTokenDetail gem_token_detail = 9; //TODO: not needed before batch-7
+    }
+}
+
+message Tokens {
+    repeated Token tokens = 1;
+}
+
+message ChannelInfo {
+    string channel_cap_in_smallest_unit = 1;
+    OpenChannelConfig open_channel_config = 2;
+    ChannelState channel_state = 3;
+    double receiving_cap_in_token = 4;
+    string receiving_cap_in_smallest_unit = 5;
+}
+
+//Layer2 only transactions
+message Layer2Transaction {
+    string id = 1;
+}
+
+//Layer1 only transactions
+message Layer1Transaction {
+    string id = 1;
+}
+
+//For depositToCelerPay (including open channel) and withdrawFromCelerPay
+message InterLayerTransaction {
+    string id = 1;
+}
+
+//For depositToCelerPay (including open channel) and withdrawFromCelerPay
+message DepositToLayer2Request {
+    string token_symbol = 1;
+    double token_amount = 2;
+}
+//For depositToCelerPay (including open channel) and withdrawFromCelerPay
+message WithdrawFromLayer2Request {
+    string token_symbol = 1;
+    double token_amount = 2;
+}
+
+message OpenChannelConfig {
+    string min_deposit_in_smallest_unit = 1;
+    string max_deposit_in_smallest_unit = 2;
+    double max_ratio = 3;
+}
+
+message BalanceInfo {
+    double total_amount_in_token = 1;
+    double total_amount_in_usd_value = 2;
+    double price_in_usd = 3;
+    double total_amount_to_claim_in_token = 4;
+    double total_amount_to_claim_in_usd_value = 5;
+}
+
+message CryptoTokenDetail {
+    string contract_address = 1; //For ETH, this field should not exist
+    int32 decimal = 2;
+    //on-chain
+    double onchain_amount_in_token = 4;
+    string onchain_amount_in_smallest_unit = 5;
+    double onchain_amount_in_usd_value = 6;
+    //off-chain
+    double offchain_amount_in_token = 7;
+    string offchain_amount_in_smallest_unit = 8;
+    double offchain_amount_in_usd_value = 9;
+    ChannelInfo channel_info = 10;
+}
+
+message UsdTokenDetail { //changed detail to note
+                         double withdrawable_amount = 1;
+                         double non_withdrawable_bonus_amount = 2; //Discussed with PM, this field name should be more explicit in order not to be confused with some rewards that contain iou
+                         double total_amount = 3;
+                         double iou_amount = 4;
+}
+
+message GemTokenDetail {
+    double amount_to_expire = 1; //amount to expire this year. For following years, app does not care.
+    int64 expire_at = 2; //TODO: not needed before batch-7. in milliseconds, example: 1568617200000
+}
+
+message GemHistoryItem {
+    GemHistoryItemType type = 1;
+    Amount gem_amount_delta = 2;
+    int64 last_updated = 3; //in milliseconds, example: 1568617200000
+}
+
+// next tag 8
+enum GemHistoryItemType {
+    UNDEFINED_GEM_HISTORY_ITEM_TYPE = 0;
+    GEM_HISTORY_ITEM_TYPE_DAILY_CHECK_IN = 1;
+    GEM_HISTORY_ITEM_TYPE_MATCH = 2;
+    GEM_HISTORY_ITEM_TYPE_TOURNAMENT = 3;
+    GEM_HISTORY_ITEM_TYPE_TRAINING_CAMP = 4;
+    GEM_HISTORY_ITEM_TYPE_EXPIRATION = 5;
+    GEM_HISTORY_ITEM_TYPE_REDEMPTION = 6;
+    GEM_HISTORY_ITEM_TYPE_FREE_LOOT_BOX = 7;
+}
+
+message GemHistoryItems {
+    repeated GemHistoryItem gem_history_items = 1;
+}
+
+message RedeemGemOption {
+    string id = 1;
+    RedeemGemOptionType type = 2;
+    string prize_title = 3;
+    string prize_image_url = 4;
+    Amount amount_of_gems_to_redeem = 5;
+}
+
+message RedeemGemResponse {
+    RedeemGemResponseType redeem_gem_response_type = 1;
+    oneof redeem_gem_response_detail {
+        PrizeClaim bonus_cash_prize_claim = 2; //when type is REDEEM_GEM_RESPONSE_TYPE_BONUS_CASH_SUCCEEDED
+    }
+}
+
+enum RedeemGemResponseType {
+    REDEEM_GEM_RESPONSE_TYPE_UNDEFINED = 0;
+    REDEEM_GEM_RESPONSE_TYPE_BONUS_CASH_SUCCEEDED = 1;
+    REDEEM_GEM_RESPONSE_TYPE_PHYSICAL_GIFT_SUCCEEDED = 2;
+}
+
+enum RedeemGemOptionType {
+    REDEEM_GEM_OPTION_TYPE_UNDEFINED = 0;
+    REDEEM_GEM_OPTION_TYPE_BONUS_CASH = 1;
+    REDEEM_GEM_OPTION_TYPE_PHYSICAL_GIFT = 2;
+}
+
+message RedeemGemOptions {
+    repeated RedeemGemOption redeem_gem_options = 1;
+}
+
+message TrainingCampTask {
+    string id = 1;
+    TrainingCampTaskStatus status = 3;
+    string description = 4;
+    uint64 expire_at = 5; // UTC timestamp in milliseconds
+    uint64 current_time = 6; // UTC timestamp in milliseconds
+    RewardItemType reward_item_type = 7;
+    //if it is of loot box type and it is not yet claimed, reward_to_claim should be the from loot box option with the max value of all possible values in this loot box option.
+    //If it is of loot box type and it is already claimed, reward_to_claim should be from the selected loot box option
+    PrizeClaim reward_to_claim = 8; //a reward item can contain multiple tokens
+    CompletionProgressNote completion_progress_note = 9;
+    uint64 end_time_after_acceptance = 10; // UTC timestamp in milliseconds
+    string reward_image_url = 11;
+}
+
+message CompletionProgressNote {
+    uint32 current_progress = 1;
+    uint32 goal = 2;
+}
+
+message TrainingCampTasksBoard {
+    repeated TrainingCampTask tasks_with_reward_to_claim = 1;
+    repeated TrainingCampTask tasks_on_going = 2;
+    repeated TrainingCampTask tasks_available = 3;
+}
+
+
+message ClaimTrainingCampTaskRewardResponse {
+    RewardItemType reward_item_type = 1; //based on type, show different animations
+    TrainingCampTasksBoard training_camp_tasks_board = 2;
+    PrizeClaim final_reward_to_claim = 3; //This is for the final claiming animation
+    LootBox loot_box = 4; //If the RewardItemType is NON_LOOT_BOX, this should not be filled
+}
+
+//Used in the training camp tasks history
+message GetRewardClaimedTrainingCampTasksRequest {
+    // Optional. The maximum number of RewardClaimedTrainingCampTasks to return in the response.
+    int32 max_number_of_reward_claimed_training_camp_tasks = 1;
+    // Optional. A pagination token returned from a previous call to `GetRewardClaimedTrainingCampTasks`
+    // that indicates where this listing should continue from.
+    string page_token = 2;
+}
+
+//Used in the training camp tasks history, 3 sections
+message GetRewardClaimedTrainingCampTasksResponse {
+    repeated TrainingCampTask ended_training_camp_tasks = 1;
+    // A pagination token returned from a previous call to `GetRewardClaimedTrainingCampTasks`
+    // that indicates from where searching should continue.
+    string next_page_token = 2;
+}
+
+enum TrainingCampTaskStatus {
+    TRAINING_CAMP_TASK_STATUS_UNDEFINED = 0;
+    TRAINING_CAMP_TASK_STATUS_AVAILABLE = 1;
+    TRAINING_CAMP_TASK_STATUS_ON_GOING = 2;
+    TRAINING_CAMP_TASK_STATUS_COMPLETED_WITH_REWARD_TO_CLAIM = 3;
+    TRAINING_CAMP_TASK_STATUS_REWARD_CLAIMED = 4;
+}
+
+enum TrainingCampTaskType {
+    TRAINING_CAMP_TASK_TYPE_UNDEFINED = 0;
+    TRAINING_CAMP_TASK_TYPE_WIN = 1;
+    TRAINING_CAMP_TASK_TYPE_PLAY = 2;
+    TRAINING_CAMP_TASK_TYPE_ACCUMULATE = 3;
+}
+
+message GTDetail {
+    bool free_gt_available_now = 1; //TODO: not needed before batch-7
+    double next_free_gt_amount_to_get = 2; //hard code this to be 10
+    int64 next_free_gt_available_time = 3; //TODO: not needed before batch-7, if free_gt_available is true, the next_free_gt_available_time will be the same as current_time
+    int64 current_time = 4; //TODO: not needed before batch-7
+}
+
+enum WithdrawabilityStatus {
+    WITHDRAWABILITY_STATUS_UNDEFINED = 0;
+    WITHDRAWABLE = 1;
+    CANNOT_WITHDRAW_DUE_TO_PENDING_WITHDRAWAL_TX = 2;
+    CANNOT_WITHDRAW_DUE_TO_USER_BLOCKED = 3; //there might be a chargeback
+}
+
+message GetWithdrawabilityStatusResponse {
+    WithdrawabilityStatus withdrawability_status = 1;
+}
+
+message WithdrawWithPayPalRequest {
+    string paypal_email = 1;
+    double amount = 2;
+    string currency = 3;
+}
+
+enum ChannelState {
+    UNDEFINED_CHANNEL_STATE = 0;
+    NOT_YET_OPENED = 1;
+    BUSY_OPENING = 2;
+    BUSY_INSTANTIATING_TCB = 3;
+    TRUST_OPENED = 4;
+    OPENED_NOT_BUSY = 5;
+    BUSY_SETTLING = 6; //previously disputing
+    BUSY_DEPOSITING = 7;
+    BUSY_WITHDRAWING = 8;
+    CLOSED = 9;
+}
+
+enum WithdrawalKycStatus {
+    WITHDRAWAL_KYC_STATUS_UNDEFINED = 0;
+    WITHDRAWAL_KYC_STATUS_NOT_REQUIRED = 1;
+    WITHDRAWAL_KYC_STATUS_REQUIRED_UNCOMPLETED = 2;
+    WITHDRAWAL_KYC_STATUS_REQUIRED_PENDING = 3;
+    WITHDRAWAL_KYC_STATUS_REQUIRED_FAILED = 4;
+    WITHDRAWAL_KYC_STATUS_APPROVED = 5;
+}
+
+enum TokenType {
+    INVALID_TOKEN_TYPE = 0;
+    FIAT = 1;
+    ETH = 2;
+    ERC20 = 3;
+    GT = 4;
+    GEM = 5;
+}
+
+//this is a callback function argument
+message TokenCallbackResultForOnTokenUsdValueChanged {
+    double usd_value_delta = 1;
+    Token token = 2;
+}
+
+//this is a callback function argument
+message TokenCallbackResultForOnTokenAmountChanged {
+    double amount_delta = 1;
+    Token token = 2;
+}
+
+
+message FiatTransaction {
+    string id = 1;
+    UserInfo user_info = 2;
+    string currency = 3;
+    int64 create_at = 4;
+    oneof fiat_transaction_note {
+        DepositNote deposit_note = 5;
+        WithdrawalNote withdrawal_note = 6;
+        DepositBonusNote deposit_bonus_note = 7;
+        BonusResetNote bonus_reset_note = 8;
+        UserAsInviterBonusNote user_as_inviter_bonus_note = 9;
+        UserAsInviteeBonusNote user_as_invitee_bonus_note = 10;
+        RefundNote refund_note = 11;
+    }
+}
+
+message FiatDepositResult {
+    FiatTransaction fiat_transaction = 1;
+    PrizeClaim prize_claim = 2;
+}
+
+message DepositNote {
+    FiatTransactionMethod method = 1;
+    double deposit_amount = 2;
+    double bonus_amount = 3;
+    FiatTransactionStatus status = 4;
+    oneof order_url {
+        /*
+        App opens web page with PayPal token:
+        if celerx client is on ropsten:
+        https://www.paypal.com/sandbox?token=$paypalToken
+        if mainnet:
+        https://www.paypal.com/checkoutnow?token=$paypalToken
+        */
+        string paypal_order_url = 6;
+        /*
+        App opens web page with PayPal orderId: https://pay.skrill.com/?sid=<SESSION_ID>
+        if celerx client is on Ropsten:
+        https://pay.skrill.com/?sid=<SESSION_ID>
+        if mainnet:
+        https://pay.skrill.com/?sid=<SESSION_ID>
+        */
+        string skrill_order_url = 7;
+    }
+}
+
+message WithdrawalNote {
+    FiatTransactionMethod method = 1;
+    double fee = 2;
+    double withdrawal_amount = 3;
+    double bonus_reset_amount = 4;
+    FiatTransactionStatus status = 5;
+    bool is_canceled = 6;
+    int64 withdrawal_initiated_at = 7;
+    int64 withdrawal_canceled_at = 8;
+    bool is_cancelable = 9;
+}
+
+message WithdrawalDetail {
+    string transaction_id = 1;
+    string currency = 2;
+    repeated PayoutNote payout_notes = 3;
+    double fee = 4;
+    double withdrawal_amount = 5;
+    FiatTransactionStatus status = 6;
+    bool is_canceled = 7;
+    int64 withdrawal_initiated_at = 8;
+    int64 withdrawal_canceled_at = 9;
+    bool is_cancelable = 10;
+    int64 max_withdrawal_pending_time = 11; // please use millisecond
+    int64 max_withdrawal_cancelable_time = 12; // please use millisecond
+    WithdrawalMethod method = 13; // withdrawal method
+    UserPhysicalAddress physical_address = 14;
+}
+
+message UserPhysicalAddress {
+    string first_name = 1;
+    string last_name = 2;
+    string address1 = 3;
+    string address2 = 4;
+    string iso_country_code = 5; // "cn", "jp" etc, iso 3166 alpha-2
+    string city = 6;
+    string administrative_area = 7; // state/province. e.g. CA
+    string postal_code = 8;
+}
+
+message WithdrawalConfirmationDetail {
+    double fee = 1;
+    string currency = 2;
+    int64 max_withdrawal_pending_time = 3; // please use millisecond
+    int64 max_withdrawal_cancelable_time = 4; // please use millisecond
+    WithdrawalMethod method = 5; // withdrawal method
+    UserPhysicalAddress physical_address = 6;
+}
+
+message WithdrawalKycStatusResponse {
+    WithdrawalKycStatus status = 1;
+}
+
+message DepositByMultiProvidersRequest {
+    repeated ProviderOrder provider_orders = 1; // backend will try deposit one after another in this list until deposit success.
+}
+
+message ProviderOrder {
+    oneof order {
+        AuthorizeNetDepositRequest authorize = 1;
+        T1DepositRequest t1 = 2;
+    }
+}
+
+message PayoutNote {
+    FiatTransactionMethod method = 1;
+    double amount = 2;
+    string payment_service_account_id = 3;
+    FiatCardType fiat_card_type = 4;
+}
+
+message DepositBonusNote {
+    double bonus_amount = 1;
+}
+
+message BonusResetNote {
+    double bonus_reset_amount = 1;
+    bool is_canceled = 2;
+}
+
+message UserAsInviterBonusNote {
+    double bonus_amount = 1;
+    UserInfo invitee = 2;
+}
+
+message RefundDetail {
+    string refund_id = 1;
+    string refund_token_symbol = 2;
+    double refund_token_amount = 3;
+    double refund_usd_value = 4;
+    int64 create_at = 5;
+    string refund_reason = 6;
+}
+
+message RefundNote {
+    string refund_id = 1;
+    string refund_token_symbol = 2;
+    double refund_token_amount = 3;
+    double refund_usd_value = 4;
+}
+
+message UserAsInviteeBonusNote {
+    double bonus_amount = 1;
+    UserInfo inviter = 2;
+}
+
+message UserAsInviteeBonusNotification {
+    UserInfo user_info = 1;
+    string currency = 2;
+    double bonus_amount = 3;
+    UserInfo inviter = 4;
+    InvitationStatus invitation_status = 5;
+}
+
+enum FiatTransactionStatus {
+    UNDEFINED_FIAT_TRANSACTION_STATUS = 0;
+    USER_PAYMENT_PENDING = 1;
+    CELER_PAYMENT_PENDING = 2;
+    FIAT_TRANSACTION_SUCCEEDED = 3;
+    FIAT_TRANSACTION_FAILED = 4;
+}
+
+enum InvitationStatus {
+    INVITATION_STATUS_UNDEFINED = 0;
+    INVITATION_STATUS_CODE_NOT_ENTERED = 1;
+    INVITATION_STATUS_BONUS_NOT_CLAIMED = 2;
+    INVITATION_STATUS_BONUS_CLAIMED = 3;
+    INVITATION_STATUS_NOT_ELIGIBLE = 4;
+}
+
+enum FiatTransactionMethod {
+    FIAT_TX_METHOD_UNDEFINED = 0;
+    FIAT_TX_METHOD_PAYPAL = 1;
+    FIAT_TX_METHOD_APPLE_PAY = 2;
+    FIAT_TX_METHOD_STRIPE = 3;
+    FIAT_TX_METHOD_SKRILL = 4;
+    FIAT_TX_METHOD_AUTHORIZE_NET = 5;
+    FIAT_TX_METHOD_WORLD_PAY = 6;
+    FIAT_TX_METHOD_SQUARE = 7;
+    FIAT_TX_METHOD_T1 = 8;
+    FIAT_TX_METHOD_AMAZON_PAY = 9;
+    FIAT_TX_METHOD_CHECK = 10;
+    FIAT_TX_METHOD_SKRILL_ACH = 11;
+    FIAT_TX_METHOD_WYRE = 12; // We need wyre as a value if we support wyre deposit in the future
+}
+
+enum FiatCardType {
+    FIAT_CARD_TYPE_UNDEFINED = 0;
+    FIAT_CARD_TYPE_VISA = 1;
+    FIAT_CARD_TYPE_MASTERCARD = 2;
+    FIAT_CARD_TYPE_OTHERS = 3;
+}
+
+message GetSupportedFiatTransactionMethodsRequest {
+    string iso_country_code = 1; // US
+}
+
+message GetSupportedFiatTransactionMethodsResponse {
+    repeated FiatTransactionMethod supported_fiat_transaction_methods = 1;
+}
+
+message GetFiatTransactionsResponse {
+    repeated FiatTransaction fiat_transactions = 1;
+}
+
+message FiatDepositOptionRequest {
+    FiatDepositOptionFilter filter = 1;
+}
+
+enum FiatDepositOptionFilter {
+    UNDEFINED_FIAT_DEPOSIT_OPTION = 0;
+    ALL_ELIGIBLE = 1;
+    NOT_TIME_LIMITED = 2;
+    TIME_LIMITED = 3;
+    SHOULD_NOTIFY = 4;
+}
+
+message FiatDepositOption {
+    string id = 1;
+    double deposit_amount = 2;
+    double bonus_amount = 3;
+    string currency = 4;
+    string title = 5;
+    string description = 6;
+    string image_url = 7;
+    int64 end_time = 8;
+    bool should_notify = 9;
+    int64 number_of_users = 10;
+}
+
+message FiatDepositOptions {
+    repeated FiatDepositOption time_limited_fiat_deposit_options = 1;
+    repeated FiatDepositOption non_time_limited_fiat_deposit_options = 2;
+}
+
+message PaypalDepositRequest {
+    string deposit_option_id = 1;
+}
+
+message SkrillDepositRequest {
+    string deposit_option_id = 1;
+}
+
+message StripeDepositRequest {
+    string deposit_option_id = 1;
+    string stripe_token = 2;
+    bool is_apple_pay = 3; // whether card is from apple pay
+}
+
+// this should be the last time we add payment provider specific msg
+// a generic one has many benefits, eg. no need for urgent app release when change provider
+message SquareDepositRequest {
+    string deposit_option_id = 1; // so no need for currenty/amount
+    string nonce = 2; // unique string from square sdk to track payment
+    bool is_apple_pay = 3; // whether card is from apple pay
+}
+
+message AuthorizeNetDepositRequest {
+    string deposit_option_id = 1;
+    string authorize_net_token = 2;
+    bool is_apple_pay = 3; // whether card is from apple pay
+}
+
+message T1DepositRequest {
+    string deposit_option_id = 1;
+    string t1_encrypted_card = 2;
+    bool is_apple_pay = 3; // whether card is from apple pay
+    string zip_code = 4; // t1 encrypted card info does not contain zip code
+    string first_name = 5;
+    string last_name = 6;
+    string address_1 = 7; // Street/Avenue
+    string address_2 = 8; // apt/suite optional
+    string city = 9;
+    string administrative_area = 10; // state/province. e.g. CA
+    string iso_country_code = 11;
+}
+
+message DepositWithAmazonRequest {
+    string deposit_option_id = 1;
+    string amazon_order_reference_id = 2;
+}
+
+////////////////////////////////
+//Tournament and match related
+///////////////////////////////
+
+////////////////////////////////
+//Commonly shared by tournament and match
+///////////////////////////////
+
+message Game {
+    string app_id = 1;
+    string title = 2;
+    string subtitle = 3;
+    string description = 4;
+    string primary_color = 5; //Example: "#FFFFFF"
+    string icon_url = 6;
+    string image_url = 7;
+    string poster_url = 8;
+    GameScreenOrientation orientation = 9;
+    GamePrizeWinningRule prize_winning_rule = 10;
+    GameDecentralizedMode decentralized_mode = 11;
+    GameType type = 12;
+    int64 max_match_duration = 13; //in seconds
+    int32 onchain_timeout = 14; // number of blocks
+    int64 turn_timeout = 15; // in seconds
+    string publisher_email = 16;
+    string publisher_name = 17;
+    bool real_money_enabled = 18;
+    int64 last_updated = 19; //in milliseconds, example: 1568617200011
+    bool is_shown_on_android = 20;
+    bool is_shown_on_ios = 21;
+    repeated GameAsset game_assets = 22 [deprecated = true]; // DEPRECATED on MARCH 11 DUE TO BUG CQ-893
+    repeated string screenshots = 23;
+    bool testing_mode_enabled = 24;
+    string video_url = 25; //For incoming iteration of game intro UI,Shanghai backend will provide the url
+}
+
+message Games {
+    repeated Game games = 1;
+}
+
+message GameAsset {
+    string id = 1;
+    int64 last_updated = 2; //in milliseconds, example: 1568617200011
+    GameAssetType type = 3;
+    int32 version = 4;
+    oneof game_asset_note {
+        WebGamePackageGameAssetNote web_game_source_note = 5; //for GameAssetType == WEB_GAME_SOURCE
+        SmartContractGameAssetNote smart_contract_note = 6; //for GameAssetType == SMART_CONTRACT
+    }
+}
+
+message GetWebGameUrlRequest {
+    string app_id = 1;
+    int32 version = 2;
+}
+
+message GetGameAssetsResponse {
+    string app_id = 1;
+    repeated GameAsset game_assets = 2;
+}
+
+message WebGamePackageGameAssetNote {
+    string web_game_url = 1 [deprecated = true]; //FOR SECURITY REASONS, this is deprecated
+    string package_download_url = 2 [deprecated = true]; //FOR SECURITY REASONS, this is deprecated
+}
+
+message SmartContractGameAssetNote {
+    string smart_contract_address = 1;
+}
+
+enum GameAssetType {
+    UNDEFINED_GAME_ASSET_TYPE = 0;
+    WEB_GAME_SOURCE = 1;
+    SMART_CONTRACT = 2;
+}
+
+enum GameDecentralizedMode {
+    UNDEFINED_GAME_DECENTRALIZED_MODE = 0;
+    FULLY_DECENTRALIZED = 1;
+    DECENTRALIZED_WITH_ORACLE = 2;
+    FULLY_CENTRALIZED = 3;
+}
+
+enum GameScreenOrientation {
+    UNDEFINED_GAME_SCREEN_ORIENTATION = 0;
+    GAME_SCREEN_ORIENTATION_PORTRAIT = 1;
+    GAME_SCREEN_ORIENTATION_LANDSCAPE = 2;
+}
+
+enum GamePrizeWinningRule {
+    UNDEFINED_MATCH_PRIZE_WINNING_RULE = 0;
+    HIGH_SCORE_ACHIEVER_WINS = 1;
+    LOW_SCORE_ACHIEVER_WINS = 2;
+}
+
+enum GameType {
+    UNDEFINED_GAME_TYPE = 0;
+    SOLO = 1;
+    TURN_BASED = 2;
+    SMART_CONTRACT_ENABLED = 3;
+    REAL_TIME = 4;
+}
+
+message Amount {
+    Token token = 1;
+    double amount_in_token = 2;
+    double amount_in_usd_value = 3;
+}
+
+enum RankType {
+    UNDEFINED_TOURNAMENT_RANK_TYPE = 0;
+    GT_RANKING_ON_MONEY_LEADERBOARD = 1;
+    ETH_RANKING_ON_MONEY_LEADERBOARD = 2;
+    CELR_RANKING_ON_MONEY_LEADERBOARD = 3;
+    DAI_RANKING_ON_MONEY_LEADERBOARD = 4;
+    USD_RANKING_ON_MONEY_LEADERBOARD = 5;
+    USE_BEST_SCORE_IN_A_TOURNAMENT = 6;
+    USE_TOTAL_SUM_OF_SCORES_IN_A_TOURNAMENT = 7;
+    USE_AVERAGE_SCORE_IN_A_TOURNAMENT = 8;
+    USE_LAST_SCORE_IN_A_TOURNAMENT = 9;
+}
+
+// a single item in the history tab
+message GameHistoryItem {
+    oneof game_history_item_detail {
+        MatchDetail match_detail = 1;
+        TournamentDetail tournament_detail = 2;
+        LeagueDetail league_detail = 3; //TODO: for league history feature
+    }
+    GameHistoryItemType game_history_item_type = 4;
+    string id = 5; // if type is match, it is matchDetail id, if type is league, it is league bucket id, if it is tournament, it is tournament bucket id
+    string app_id = 6;
+}
+
+enum GameHistoryItemType {
+    GAME_HISTORY_ITEM_TYPE_UNDEFINED = 0;
+    GAME_HISTORY_ITEM_TYPE_MATCH = 1;
+    GAME_HISTORY_ITEM_TYPE_TOURNAMENT = 2;
+    GAME_HISTORY_ITEM_TYPE_LEAGUE = 3;
+    GAME_HISTORY_ITEM_TYPE_CHALLENGE = 4;
+}
+
+enum DeviceType {
+    DEVICE_TYPE_UNDEFINED = 0;
+    DEVICE_TYPE_ANDROID = 1;
+    DEVICE_TYPE_IOS = 2;
+}
+
+
+//used in the history tab, 3 sections
+message GetGameHistoryItemsRequest {
+    // Optional. The maximum number of GameHistoryItem to return in the response.
+    int32 max_number_of_ended_game_history_items = 1;
+    // Optional. A pagination token returned from a previous call to `GetGameHistoryItems`
+    // that indicates where this listing should continue from.
+    // If this is not specified, the API should return the first page
+    string page_token = 2;
+    // Optional appId. AppId is used to filter history. If appId is not specified, it is CelerX platform app and should return history for all games
+    string app_id = 3;
+    // Optional token symbol. Token symbol is used to filter history. If token_symbol is not specified, it should return history for all tokens
+    //string token_symbol = 4;
+
+}
+
+//Used in the history tab, 3 sections.
+//https://cloud.google.com/apis/design/design_patterns#list_pagination
+//This should be divided carefully by current mode (FIAT/Crypto)
+message GetGameHistoryItemsResponse {
+    // The first page should contain at least all items in
+    // `game_history_items_with_prize_to_claim` and `game_history_items_ongoing`
+    // This is means if there is a second page, `game_history_items_with_prize_to_claim` and `game_history_items_ongoing` should not exist on the second page
+    // max_number_of_ended_game_history_items will determine the max number of items in game_history_items_ended for one page
+    // only maximum 5 game_history_items_with_prize_to_claim should be returned. If there are in total more than 5 game_history_items_with_prize_to_claim for this user,
+    // the bool exists_more_game_history_items_with_prize_to_claim is set to true
+    // only maximum 5 game_history_items_ongoing should be returned. If there are more than 5 game_history_items_ongoing,
+    // the bool exists_more_game_history_items_ongoing is set to true
+    repeated GameHistoryItem game_history_items_with_prize_to_claim = 1;
+    repeated GameHistoryItem game_history_items_ongoing = 2;
+    repeated GameHistoryItem game_history_items_ended = 3; //these should not include those items which has unclaimed prizes
+    // A pagination token returned from a previous call to `GetGameHistoryItems`
+    // that indicates from where searching should continue.
+    string next_page_token = 4;
+    bool exists_more_game_history_items_with_prize_to_claim = 5;
+    bool exists_more_game_history_items_ongoing = 6;
+}
+
+message GetOngoingGameHistoryItemsRequest {
+    // Optional. The maximum number of GameHistoryItems to return in the response.
+    int32 max_number_of_ongoing_game_history_items = 1;
+    // Optional. A pagination token returned from a previous call to `GetOngoingGameHistoryItems`
+    // that indicates where this listing should continue from.
+    // If this is not specified, the API should return the first page
+    string page_token = 2;
+    // Optional appId. AppId is used to filter history. If appId is not specified, it is CelerX platform app and should return history for all games, in current mode
+    string app_id = 3;
+    // Optional token symbol. Token symbol is used to filter history. If token_symbol is not specified, it should return history for all tokens in current mode
+    //string token_symbol = 4;
+}
+
+//https://cloud.google.com/apis/design/design_patterns#list_pagination
+//This should be divided carefully by current mode (FIAT/Crypto)
+message GetOngoingGameHistoryItemsResponse {
+    repeated GameHistoryItem ongoing_game_history_items = 1;
+    // A pagination token returned from a previous call to `GetOngoingGameHistoryItems`
+    // that indicates from where searching should continue.
+    string next_page_token = 2;
+}
+
+
+message GetGameHistoryItemsWithPrizeToClaimRequest {
+    // Optional. The maximum number of GameHistoryItems to return in the response.
+    int32 max_number_of_game_history_items_with_prize_to_claim = 1;
+    // Optional. A pagination token returned from a previous call to `GetGameHistoryItemsWithPrizeToClaim`
+    // that indicates where this listing should continue from.
+    // If this is not specified, the API should return the first page
+    string page_token = 2;
+    // Optional appId. AppId is used to filter history. If appId is not specified, it is CelerX platform app and should return history for all games, in current mode
+    string app_id = 3;
+    // Optional token symbol. Token symbol is used to filter history. If token_symbol is not specified, it should return history for all tokens in current mode
+    //string token_symbol = 4;
+}
+
+//https://cloud.google.com/apis/design/design_patterns#list_pagination
+//This should be divided carefully by current mode (FIAT/Crypto)
+message GetGameHistoryItemsWithPrizeToClaimResponse {
+    repeated GameHistoryItem game_history_items_with_prize_to_claim = 1;
+    // A pagination token returned from a previous call to `GetGameHistoryItemsWithPrizeToClaim`
+    // that indicates from where searching should continue.
+    string next_page_token = 2;
+}
+
+//TicketStatus could be used for both tournament ticket and match ticket
+enum TicketStatus {
+    UNDEFINED_TICKET_STATUS = 0;
+    UNPAID = 1;
+    PAID = 2;
+    PAY_TIMEOUT = 3;
+    TICKET_STATUS_MATCHED = 4;
+    REFUNDING = 5;
+    REFUND_FAILED = 6;
+    REFUND_SUCCEEDED = 7;
+    READY = 8;
+    SCORE_SUBMITTED = 9;
+    RANK_DETERMINED = 10;
+    PRIZE_SENDING_FAILED = 11;
+    PRIZE_SENDING_SUCCEEDED = 12;
+}
+
+//Ranking could be used for both tournament and match leaderboard
+message UserRanking {
+    UserInfo user_info = 1;
+    int64 score = 2;
+    int32 rank_number = 3;
+}
+
+//PrizeClaim
+message PrizeClaim {
+    repeated Amount claims = 1;
+    BalanceBannerInfo balance_banner_info_to_claim = 2;
+    BalanceBannerInfo balance_banner_info_balance_before_claim = 3;
+    BalanceBannerInfo balance_banner_info_balance_after_claim = 4;
+}
+
+message BalanceBannerInfo {
+    double total_usd_value = 1;
+    double total_gt_balance = 2;
+    double total_gem_balance = 3;
+    PrimaryAccountType primary_account_type = 4;
+}
+
+message BucketReward {
+    BucketRewardType type = 1;
+    double amount = 2;
+    string image_url = 3;
+}
+
+enum BucketRewardType {
+    BUCKET_REWARD_TYPE_UNDEFINED = 0;
+    BUCKET_REWARD_TYPE_GEM = 1;
+    BUCKET_REWARD_TYPE_GOLD_STAR = 2;
+    BUCKET_REWARD_TYPE_SILVER_STAR = 3;
+}
+
+enum PlayerRoleType {
+    PLAYER_ROLE_TYPE_UNDEFINED = 0;
+    PLAYER_ROLE_TYPE_CHALLENGER = 1;
+    PLAYER_ROLE_TYPE_DEFENDER = 2;
+}
+
+////////////////////////////////
+//Match only
+///////////////////////////////
+
+message MatchBucket {
+    string id = 1;
+    string title = 2; //Example: Rookie, Novice, Pro
+    string description = 3; //Example: Got skills? Win cash!
+    Amount entry_fee = 4;
+    Amount prize = 5;
+    string image_url = 6; // https://get.celer.app/celerx/bucket-icon/cash2.png
+    int32 max_player_number = 7;
+    bool should_highlight = 8;
+    repeated BucketReward bucket_rewards = 9;
+    bool should_record = 10;
+    int32 difficulty_level = 11;
+}
+
+message RequestQuickMatchRequest {
+    string app_id = 1; // game_id
+    string match_bucket_id = 2;
+    bool is_first_match = 3;
+    string precheck_token_symbol = 4;
+    double precheck_entry_fee = 5;
+    string coupon_id = 6;
+}
+
+message MatchTicket {
+    string ticket_id = 1;
+    TicketStatus ticket_status = 2;
+    string username = 3;
+    string eth_address = 4;
+    string visible_username = 5;
+    string full_name = 6;
+    string avatar_url = 7;
+    int64 initiated = 8; //in milliseconds, example: 1568617200000
+    int64 last_updated = 9; //in milliseconds, example: 1568617200011
+    bool is_cancelable = 10; //this value can be calculated by using the the current time minus the initiated time. If it > = 24 hours and the ticket status == SCORE_SUBMITTED, then the value is true, else, is_cancelable is false. If is_cancelable is true user can call CancelMatchTicketByMatchTicketId to cancel it
+    int32 player_index = 11;
+    PlayerRoleType player_role = 12; //FOR SOCIAL CHALLENGE. CHALLENGER or DEFENDER
+    bool surrendered = 13; //the default value is false. If user really surrendered during game, the value is true.
+    bool aborted = 14; //if the game timed out without user submitting score, the value is true
+    int32 rank_number = 15;
+    int64 score = 16;
+    string challenge_shout_out_message = 17;
+}
+
+message MatchDetail {
+    string match_id = 1;
+    Game game = 2;
+    MatchBucket match_bucket = 3;
+    MatchStatus match_status = 4;
+    MatchResultStatus match_result_status = 5;
+    double shared_random_seed = 6; // a double number between 0 and 1, example: 0.81739652
+    MatchTicket current_player_ticket = 7;
+    repeated MatchTicket all_players_tickets = 8;
+    int64 initiated = 9; //in milliseconds, example: 1568617200000
+    int64 last_updated = 10; //in milliseconds, example: 1568617200011
+    bool should_notify = 11;
+    bool with_prize_to_claim = 12;
+    Amount prize_to_claim = 13;
+    GemRewardNote gem_reward_note = 14;
+    bool should_show_accept_button = 15; //FOR SOCIAL CHALLENGE. WHEN MatchResultStatus is PENDING_MY_ACCEPTANCE, this value is true
+    bool should_show_dismiss_button = 16; //FOR SOCIAL CHALLENGE. WHEN MatchResultStatus is PENDING_MY_ACCEPTANCE, this value is true
+    bool should_show_rematch_button = 17; //FOR SOCIAL CHALLENGE. WHEN MatchResultStatus is LOST or DRAW, this value is true
+    LeagueStarRewardNote league_star_reward_note = 18; //TODO: league feature
+    string room_id = 19;
+    ReplayBoard replay_board = 20;
+}
+
+message MatchInfo {
+    string match_id = 1;
+    string game_id = 2;
+    string match_bucket_id = 3;
+    MatchStatus match_status = 4;
+    string room_id = 5;
+    double shared_random_seed = 6; // a double number between 0 and 1, example: 0.81739652
+    MatchTicket current_player_ticket = 7;
+    repeated MatchTicket all_players_tickets = 8;
+    int64 initiated = 9; //in milliseconds, example: 1568617200000
+    int64 last_updated = 10; //in milliseconds, example: 1568617200011
+    int32 difficulty_level = 11; //1 - 10
+}
+
+message GemRewardNote {
+    //this is for match and tournament
+    GemRewardNoteStatus status = 1;
+    Amount gems_earned = 2;
+}
+
+enum GemRewardNoteStatus {
+    GEM_REWARD_NOTE_STATUS_UNDEFINED = 0;
+    GEM_REWARD_NOTE_STATUS_PENDING = 1;
+    GEM_REWARD_NOTE_STATUS_FAILED_TO_SEND = 2;
+    GEM_REWARD_NOTE_STATUS_COMPLETED = 3;
+    GEM_REWARD_NOTE_STATUS_NOT_ELIGIBLE = 4;
+}
+
+enum MatchStatus {
+    UNDEFINED_MATCH_STATUS = 0;
+    UNMATCHED = 1;
+    MATCH_STATUS_MATCHED = 2;
+    READY_TO_START = 3;
+    GAME_PLAY_ENDED = 4;
+    ANY_PRIZE_SENDING_FAILED = 5;
+    ALL_PRIZE_SENDING_SUCCEEDED = 6;
+    MATCH_CANCELED = 7;
+}
+
+//MatchResultStatus is used in match
+//Here is how to get the MatchResultStatus
+/*
+IF :
+    MatchStatus is MATCH_CANCELED,
+THEN :
+    MatchResultStatus is MATCH_RESULT_STATUS_CANCELED
+IF :
+    MatchStatus is UNMATCHED or MATCH_STATUS_MATCHED
+THEN :
+    MatchResultStatus is MATCH_RESULT_STATUS_PENDING_WAITING_FOR_RESULT
+ELSE :
+    {
+        IF:
+            all_players_tickets size is < = 1
+        THEN:
+            MatchResultStatus is MATCH_RESULT_STATUS_PENDING_WAITING_FOR_RESULT
+
+        ELSE IF:
+            all_players_tickets size is > 1
+        THEN:
+            {
+            IF CURRENT PLAYER's Ticket ranking number == OPPONENT's Ticket ranking number
+            THEN MatchResultStatus is MATCH_RESULT_STATUS_DRAW
+
+            IF CURRENT PLAYER's Ticket ranking number < OPPONENT's Ticket ranking number
+            THEN MatchResultStatus is MATCH_RESULT_STATUS_FIRST_PLACE
+
+            IF CURRENT PLAYER's Ticket ranking number > OPPONENT's Ticket ranking number
+            THEN MatchResultStatus is MATCH_RESULT_STATUS_SECOND_PLACE
+
+            }
+    }
+*/
+enum MatchResultStatus {
+    UNDEFINED_MATCH_RESULT_STATUS = 0;
+    MATCH_RESULT_STATUS_FIRST_PLACE = 1;
+    MATCH_RESULT_STATUS_SECOND_PLACE = 2;
+    MATCH_RESULT_STATUS_PENDING_WAITING_FOR_RESULT = 3;
+    MATCH_RESULT_STATUS_DRAW = 4;
+    MATCH_RESULT_STATUS_CANCELED = 5;
+    MATCH_RESULT_STATUS_PENDING_OPPONENT_ACCEPTANCE = 6;
+    MATCH_RESULT_STATUS_PENDING_MY_ACCEPTANCE = 7; //TODO: SOCIAL CHALLENGE. when pending my acceptance, do not show detail page
+}
+
+//this is a callback function argument
+message MatchState {
+    MatchDetail match_detail = 1;
+    UserInfo sender = 2;
+    int32 op_code = 3;
+    string base64_encoded_match_state = 4;
+}
+
+message OutboundMatchStateRequest {
+    bytes match_state = 1;
+}
+
+//this is a callback function argument
+message MatchMakingError {
+    MatchTicket match_ticket = 1;
+    SdkError error = 2;
+}
+
+message SubmitScoreForMatchTicketRequest {
+    string match_ticket_id = 1;
+    int64 score = 2;
+}
+
+////////////////////////////////
+//Tournament only
+///////////////////////////////
+
+message PrizeDistributionPercentage {
+    int32 from_rank_number = 1;
+    int32 to_rank_number = 2;
+    double percentage_of_prize_pool = 3;
+}
+
+enum TournamentStatus {
+    UNDEFINED_TOURNAMENT_STATUS = 0;
+    COMING_SOON = 1;
+    ON_GOING = 2;
+    ENDED = 3;
+    DRAFT = 4;
+    EMPTY_STATE = 5;
+}
+
+message TournamentBucket {
+    string id = 1;
+    Game game = 2;
+    string title = 3;
+    string description = 4;
+    string image_url = 5; // https://get.celer.app/celerx/bucket-icon/cash2.png
+    RankType rank_type = 6;
+    string rank_type_description = 7;
+    Amount entry_fee = 8;
+    Amount prize_pool = 9;
+    repeated PrizeDistributionPercentage prize_distribution_percentages = 10;
+    int32 max_player_number = 11;
+    TournamentStatus tournament_status = 12;
+    int64 start_time = 13; //in milliseconds, example: 1568617200000
+    int64 end_time = 14; //in milliseconds, example: 1568617200000
+    bool should_record = 15; //TODO: for replay feature
+    bool should_highlight = 16;
+    string highlight_text = 17;
+    bool supports_infinite_number_of_players = 18;
+    bool supports_infinite_entries_per_player = 19;
+    int32 max_number_of_entries_per_player = 20;
+}
+
+message OngoingAndUpcomingTournamentBucketsInCurrentMode {
+    repeated TournamentBucket ongoing_tournament_buckets = 1;
+    repeated TournamentBucket upcoming_tournament_buckets = 2;
+}
+
+message GetOngoingAndUpcomingTournamentBucketsRequest {
+    //if the optional app id is specified, return only the info related to the game
+    string app_id = 1;
+}
+
+message TournamentDetail {
+    TournamentBucket tournament_bucket = 1;
+    TournamentAchievement tournament_achievement = 2;
+    bool should_notify = 3;
+    bool with_prize_to_claim = 4;
+    Amount prize_to_claim = 5;
+    //player can get stars
+    LeagueStarRewardNote league_star_reward_note = 6; //TODO: league feature
+}
+
+message TournamentBannerInCurrentMode {
+    double total_usd_prize = 1; //total USD prize in current mode
+    double total_gt_prize = 2;
+    int32 number_of_ongoing_tournament_buckets = 3;
+    int32 number_of_upcoming_tournament_buckets = 4;
+}
+
+message GetTournamentBannerInCurrentModeRequest {
+    //app id is optional, if app_id is specified, return only banner info related to a particular game
+    string app_id = 1;
+}
+
+message TournamentLeaderBoard {
+    TournamentBucket tournament_bucket = 1;
+    TournamentAchievement current_player_tournament_achievement = 2;
+    repeated TournamentAchievement all_players_tournament_achievements = 3;
+    /*
+    A ReplayBoard when the tournament is still on-going. We only show this single replay button
+    which shows the replay of a player who is slightly better than the current user
+    */
+    ReplayBoard replay_board_for_on_going_tournament = 4;
+}
+
+//User Achievement in tournament history and tournament prize winners
+message TournamentAchievement {
+    UserRanking user_ranking = 1;
+    Amount prize_for_user = 2;
+    TournamentPrizeStatus tournament_prize_status = 3;
+    GemRewardNote gem_reward_note = 4;
+    int64 last_updated = 5; //in milliseconds, example: 1568617200000
+    ReplayBoard replay_board = 6; //Replay board for ended tournament
+}
+
+//Recording
+message ReplayBoard {
+    ReplayItem my_replay_item = 2;
+    ReplayItem opponent_replay_item = 3;
+}
+
+message ReplayItem {
+    UserInfo user_info = 1;
+    string video_url = 2;
+    int32 rank_number = 3;
+}
+
+enum TournamentPrizeStatus {
+    UNDEFINED_TOURNAMENT_PRIZE_STATUS = 0;
+    NO_PRIZE_YET_TOURNAMENT_NOT_ENDED = 1; //tournament not ended, no prize yet
+    SENDING_PRIZE = 2; //tournament ended, score eligible, sending prize
+    PRIZE_SENDING_COMPLETED = 3; //tournament ended, score eligible, prize sending completed
+    SCORE_ELIGIBLE_FOR_PRIZE_BUT_PRIZE_CANCELED = 4; //tournament ended, score eligible, but detected user is a potential cheater, canceled the prize
+    TOURNAMENT_ENDED_PRIZE_SENDING_FAILED = 5; //tournament ended, score eligible, but prize sending failed
+    TOURNAMENT_ENDED_SCORE_NOT_ELIGIBLE_FOR_PRIZE = 6; //tournament ended, score not eligible
+}
+
+message TournamentTicket {
+    string ticket_id = 1;
+    string tournament_bucket_id = 2;
+    string game_id = 3;
+    TicketStatus ticket_status = 4;
+    int64 score = 5; //the score in the current ticket. example: 1888
+    string username = 6;
+    string eth_address = 7;
+    string visible_username = 8;
+    string full_name = 9;
+    string avatar_url = 10;
+    double shared_random_seed = 11; // a double number between 0 and 1, example: 0.81739652
+    int64 initiated = 12; //in milliseconds, example: 1568617200000
+    int64 last_updated = 13; //in milliseconds, example: 1568617200011
+    bool surrendered = 14; //the default value is false. If user really surrendered during game, the value is true.
+    bool aborted = 15; //if the game timed out without user submitting score, the value is true
+    int32 difficulty_level = 16; //1 - 10
+}
+
+message SubmitScoreForTournamentTicketRequest {
+    string tournament_ticket_id = 1;
+    int64 score = 2;
+}
+
+message TournamentTickets {
+    repeated TournamentTicket tournament_tickets = 1;
+}
+
+////////////////////////////////
+//Daily Bonus Related
+///////////////////////////////
+message DailyCheckInBonusItem {
+    int32 day_number = 1; //Day 1 is 1, Day 2 is 2...Day 7 is 7
+    DailyCheckInBonusItemStatus status = 2; //There are 5 possible status
+    bool is_today = 3;
+    RewardItemType type = 4;
+    string image_url = 5; // hardcode image url in either SDK or backend for this field. For different amounts, use different image urls. Contact PM to get images for different amounts.
+    //if it is of loot box type and it is not yet checked, prize_to_claim should be the from loot box option with the max value of all possible values in this loot box option.
+    //If it is of loot box type and it is already checked, prize_to_claim should be from the selected loot box option
+    PrizeClaim prize_to_claim = 6; //a reward item can contain multiple tokens
+}
+
+enum DailyCheckInBonusItemStatus {
+    UNDEFINED_DAILY_CHECK_IN_BONUS_ITEM_STATUS = 0;
+    DAILY_CHECK_IN_BONUS_ITEM_STATUS_CHECKED_IN = 1;
+    DAILY_CHECK_IN_BONUS_ITEM_STATUS_AVAILABLE_TODAY = 2;
+    DAILY_CHECK_IN_BONUS_ITEM_STATUS_NOT_YET_AVAILABLE = 3;
+    DAILY_CHECK_IN_BONUS_ITEM_STATUS_MISSED_CAN_MAKE_UP = 4;
+    DAILY_CHECK_IN_BONUS_ITEM_STATUS_MISSED_CANNOT_MAKE_UP = 5;
+}
+
+enum DailyCheckInBoardStatus {
+    UNDEFINED_DAILY_CHECK_IN_BOARD_STATUS = 0;
+    DAILY_CHECK_IN_BOARD_STATUS_READY_TO_CHECK_IN = 1;
+    DAILY_CHECK_IN_BOARD_STATUS_MISSED_CAN_MAKE_UP = 2;
+    DAILY_CHECK_IN_BOARD_STATUS_MISSED_CAN_ONLY_RESET = 3;
+    DAILY_CHECK_IN_BOARD_STATUS_WAITING_FOR_NEXT_DAY_TO_CHECK_IN = 4;
+}
+
+message LootBox {
+    repeated LootBoxOption loot_box_options = 1; //A prize_claim item can contain multiple tokens
+}
+
+message LootBoxOption {
+    PrizeClaim prize_to_claim = 1;
+    bool is_selected_as_final_prize_to_claim = 2;
+}
+
+message ConfirmOrMakeUpDailyCheckInResponse {
+    RewardItemType daily_check_in_bonus_item_type = 1; //based on type, show different animations
+    DailyCheckInBoard daily_check_in_board_after_confirm_or_make_up = 2;
+    PrizeClaim final_prize_to_claim = 3; //This is for the final claiming animation
+    LootBox loot_box = 4; //If the RewardItemType is NON_LOOT_BOX, this should not be filled
+}
+
+enum RewardItemType {
+    REWARD_ITEM_TYPE_UNDEFINED = 0;
+    REWARD_ITEM_TYPE_NON_LOOT_BOX = 1;
+    REWARD_ITEM_TYPE_LOOT_BOX = 2;
+}
+
+message DailyCheckInBoard {
+    repeated DailyCheckInBonusItem daily_check_in_bonus_items = 1;
+    DailyCheckInBoardStatus daily_check_in_board_status = 2;
+    int64 end_time_today = 3; //UTC millis
+    int64 start_time_next_day = 4; //UTC millis
+    int32 stopped_at_which_day = 5; // this field should only be filled if daily_check_in_board_status is MISSED_CAN_MAKE_UP or MISSED_CAN_ONLY_RESET
+    int64 server_time_now = 6; //UTC millis
+}
+
+message ClaimFreeLootBoxRequest {
+    // empty
+}
+
+message ClaimFreeLootBoxResponse {
+    LootBox loot_box = 1;
+    uint64 next_claim_duration = 2; // milliseconds, the time user need to wait until next valid claim.
+}
+
+////////////////////////////////
+//Replay Related APIs
+///////////////////////////////
+
+message RecordFrameForTournamentTicketRequest {
+    string tournament_ticket_id = 1;
+    bytes frame_data = 2;
+}
+
+message RecordFrameForMatchTicketRequest {
+    string match_ticket_id = 1;
+    bytes frame_data = 2;
+}
+
+message AcceptSocialChallengeRequest {
+    string match_id = 1;
+    string bucket_id = 2;
+    string app_id = 3;
+    string precheck_token_symbol = 4;
+    double precheck_entry_fee = 5;
+}
+
+message RematchRequest {
+    string match_id = 1;
+    string bucket_id = 2;
+    string app_id = 3;
+    string precheck_token_symbol = 4;
+    double precheck_entry_fee = 5;
+}
+
+message CreateSocialChallengeRequest {
+    string opponent_username = 1;
+    string app_id = 2;
+    string match_bucket_id = 3;
+    string shout_out_message = 4;
+    string shout_out_message_id = 5; //optional, used to track common phrases, empty when using custom message
+    string precheck_token_symbol = 6;
+    double precheck_entry_fee = 7;
+}
+
+message GetSocialChallengeNotificationRequest {
+    string app_id = 1; //if app_id is not specified, it means this is for platform app. Otherwise, only return response based on one app id
+}
+
+message GetSocialChallengeNotificationResponse {
+    bool should_notify_social_challenge = 1;
+}
+
+////////////////////////////////
+//League Related
+///////////////////////////////
+message LeagueLeaderBoard {
+    LeagueBucket league_bucket = 1;
+    LeagueAchievement current_player_league_achievement = 3;
+    repeated LeagueAchievement all_players_league_achievements = 4;
+}
+
+message LeagueDetail {
+    LeagueBucket league_bucket = 1;
+    LeagueAchievement league_achievement = 3;
+    // field will determine the red dot displaying. If the LeaguePrizeStatus , should_notify is true. But if the user has dismissed this, the field is false. Check with backend.
+    bool should_notify = 6;
+    LeagueHistoryTabSection league_history_tab_section = 7; //for deciding which section it should be on game history item list
+    Amount prize_to_claim = 9; //do not fill data unless there is some prize to claim
+}
+
+message GetOngoingLeagueBucketsResponse {
+    repeated LeagueBucket ongoing_league_buckets = 1;
+
+}
+
+message LeagueBucket {
+    string id = 1;
+    LeagueStarType league_rank_type = 2;
+    // prize pool amount. it is usd or gt prize.
+    Amount prize_pool_size = 4;
+    // in milliseconds
+    int64 start_time = 5;
+    // in milliseconds, example: 1568617200000
+    int64 end_time = 6;
+    LeagueUnlockStatus league_unlock_status = 7;
+
+}
+
+
+message LeagueAchievement {
+    UserInfo user_info = 1;
+    // rank number of player
+    int32 rank_number = 4;
+    // gold or silver type
+    LeagueStarType league_star_type = 5;
+    double total_stars_earned_in_league = 6;
+    // in milliseconds, example: 1568617200000
+    int64 last_updated = 7;
+    LeaguePrizeStatus league_prize_status = 8;
+    // prize amount
+    Amount prize = 9;
+}
+
+message LeagueStarRewardNote {
+    //this is for match and tournament
+    LeagueStarRewardNoteStatus status = 1;
+    double stars_earned = 2;
+    LeagueBucket league_bucket = 3; //this will tell the prize pool and unlock status
+}
+
+enum LeagueStarRewardNoteStatus {
+    LEAGUE_STAR_REWARD_NOTE_STATUS_UNDEFINED = 0;
+    LEAGUE_STAR_REWARD_NOTE_STATUS_PENDING = 1;
+    LEAGUE_STAR_REWARD_NOTE_STATUS_FAILED_TO_SEND = 2;
+    LEAGUE_STAR_REWARD_NOTE_STATUS_COMPLETED = 3;
+    LEAGUE_STAR_REWARD_NOTE_STATUS_NOT_ELIGIBLE = 4;
+}
+
+message LeagueUnlockStatus {
+    // return true if league has been unlocked else false
+    bool is_unlocked = 1;
+    // player must matched 4 times then can unlock league feature
+    int32 number_of_remaining_matches_to_unlock = 2;
+}
+
+enum LeaguePrizeStatus {
+    LEAGUE_STATUS_UNDEFINED = 0;
+    LEAGUE_STATUS_ONGOING_NO_PRIZE_YET = 1; // If the league is still ongoing
+    LEAGUE_STATUS_ENDED_SENDING_PRIZE = 2; // If the league has ended but sending prize is pending. This should be included in Pending game history section.
+    LEAGUE_STATUS_ENDED_PRIZE_READY_HAS_NOT_CLAIMED_PRIZE = 3; // the prize has not been claimed
+    LEAGUE_STATUS_ENDED_HAS_CLAIMED_PRIZE = 4; // the prize has been claimed
+    LEAGUE_STATUS_ENDED_PRIZE_SENDING_FAILED = 5; // league ended, eligible, but prize sending failed
+    LEAGUE_STATUS_ENDED_NOT_ELIGIBLE_FOR_PRIZE = 6; // the prize has not been claimed
+    LEAGUE_STATUS_ENDED_ELIGIBLE_FOR_PRIZE_BUT_PRIZE_CANCELED = 7; // league ended, eligible for prize, but detected user is a potential cheater, canceled the prize
+}
+
+enum LeagueHistoryTabSection {
+    LEAGUE_HISTORY_TAB_SECTION_UNDEFINED = 0;
+
+    /*
+    If LeaguePrizeStatus is LEAGUE_STATUS_ENDED_PRIZE_READY_HAS_NOT_CLAIMED_PRIZE
+    */
+    LEAGUE_HISTORY_TAB_SECTION_PRIZES = 1;
+
+    /*
+    If LeaguePrizeStatus is LEAGUE_STATUS_ENDED_SENDING_PRIZE
+    or LEAGUE_STATUS_ENDED_PRIZE_SENDING_FAILED
+    */
+    LEAGUE_HISTORY_TAB_SECTION_PENDING = 2;
+
+    /*
+    If LeaguePrizeStatus is LEAGUE_STATUS_ENDED_HAS_CLAIMED_PRIZE
+    or LEAGUE_STATUS_ENDED_NOT_ELIGIBLE_FOR_PRIZE
+    or LEAGUE_STATUS_ENDED_ELIGIBLE_FOR_PRIZE_BUT_PRIZE_CANCELED
+    */
+    LEAGUE_HISTORY_TAB_SECTION_HISTORY = 3;
+}
+
+enum LeagueStarType {
+    LEAGUE_STAR_UNDEFINED = 0;
+    LEAGUE_STAR_GOLD = 1;
+    LEAGUE_STAR_SILVER = 2;
+}
+
+// Deprecated: Mobile needs getGeoBlockStatus and setGeoBlockStatus API separately. Current checkGeoBlockStatusRequest contains both.
+message CheckGeoBlockStatusRequest {
+    string administrative_area = 1; //state or province, e.g.: "CA" or "California"
+    string country_code = 2; // ISO country code, e.g.: "US", "FR", "DE"
+}
+
+// Deprecated
+message CheckGeoBlockStatusResponse {
+    GeoBlockStatus geo_block_status = 1;
+}
+
+enum GeoBlockStatus {
+    GEO_BLOCK_STATUS_UNDEFINED = 0;
+    GEO_BLOCK_STATUS_BLOCKED = 1;
+    GEO_BLOCK_STATUS_UNBLOCKED = 2;
+}
+
+message SdkLog {
+    SdkLogLevel sdk_log_level = 1;
+    string tag = 2;
+    string message = 3;
+}
+
+enum SdkLogLevel {
+    SDK_LOG_LEVEL_UNDEFINED = 0;
+    SDK_LOG_LEVEL_INFO = 1;
+    SDK_LOG_LEVEL_DEBUG = 2;
+    SDK_LOG_LEVEL_ERROR = 3;
+}
+
+message ReportCrashForMatchTicketIdRequest {
+    string match_ticket_id = 1;
+    double memory_usage_in_mb = 2;
+    string crash_log = 3;
+}
+
+message ReportCrashForTournamentTicketIdRequest {
+    string tournament_ticket_id = 1;
+    double memory_usage_in_mb = 2;
+    string crash_log = 3;
+}
+
+message SetGeoBlockStatusRequest {
+    string administrative_area = 1; //state or province, e.g.: "CA" or "California"
+    string country_code = 2; // ISO country code, e.g.: "US", "FR", "DE"
+}
+
+message SetGeoBlockStatusResponse {
+    GeoBlockStatus geo_block_status = 1;
+}
+
+message GetGeoBlockStatusRequest {
+}
+
+message GetGeoBlockStatusResponse {
+    GeoBlockStatus geo_block_status = 1;
+}
+
+message ConstructPrizeRequest {
+    repeated Amount rewards = 1;
+}
+
+message ConstructPrizeResponse {
+    PrizeClaim prize_claim = 1;
+}
+
+message GetProofRequest {
+    TokenType token = 1; // token type "fiat" is usd
+    double amount = 2;
+}
+
+message GetProofResponse {
+    int64 proof_ts = 1;
+    bytes proof = 2;
+}
+
+enum WithdrawalMethod {
+    WITHDRAWAL_METHOD_UNDEFINED = 0;
+    WITHDRAWAL_METHOD_PAYPAL = 1;
+    WITHDRAWAL_METHOD_CHECK = 2;
+    WITHDRAWAL_METHOD_SKRILL = 3;
+}
+
+message GetDisplayedWithdrawalMethodsRequest {
+
+}
+
+message GetDisplayedWithdrawalMethodsResponse {
+    repeated DisplayedWithdrawalMethod displayed_withdrawal_methods = 1;
+}
+
+//All items in GetDisplayedWithdrawalMethodsResponse should be displayed.
+//If isActive == false, when user clicks "next button", app should display a popup to block user.
+message DisplayedWithdrawalMethod {
+    WithdrawalMethod withdrawal_method = 1;
+    bool is_active = 2;
+}
+
+////////////////////////////////
+//Error Related
+///////////////////////////////
+
+message SdkError {
+    SdkErrorCode code = 1;
+    string message = 2;
+}
+
+enum SdkErrorCode {
+    // common errors
+    INVALID_ERROR = 0; // 0 should never be used. Successful response should NOT have SdkError
+    GENERIC_SDK_ERROR = 1; // generic error code for unspecified error in sdk layer
+    GENERIC_SERVICE_ERROR = 2; // generic error for unspecified error in backend services
+    NETWORK_CONNECTION_ERROR = 3; // generic error for network connection problem
+    reserved 4 to 99; // reserve till 99 for future common error
+
+    // product logic errors
+    APP_BLOCKED_GEOLOCATION = 100;
+    APP_BLOCKED_ACCOUNT = 101;
+    APP_UNSUPPORTED_TOKEN = 102;
+    APP_INSUFFICIENT_BALANCE = 103;
+    APP_NO_WALLET_BACKUP = 104;
+    APP_NO_WALLET_CLOUD_BACKUP = 105;
+    APP_INVALID_CODE_ENTERED = 106;
+    APP_INVALID_EMAIL_ENTERED = 107;
+    APP_CANNOT_CHANGE_ALREADY_VERIFIED_EMAIL = 108;
+    APP_INVALID_PASSWORD_ENTERED = 109;
+    APP_INVALID_USERNAME_ENTERED = 110;
+    APP_PLAY_GAME_TIME_LIMIT_REACHED = 111;
+    APP_CONFIRM_READY_TIME_LIMIT_REACHED = 112;
+    APP_INVALID_DEPOSIT_OPTION = 113;
+    APP_INSUFFICIENT_NON_BONUS_CASH_BALANCE = 114;
+    APP_INSUFFICIENT_RECEIVING_CAPACITY = 115;
+    APP_USER_EXISTS_ALREADY = 116;
+    APP_GEOLOCATION_NOT_SET = 117;
+    APP_TOURNAMENT_MAX_NUMBER_OF_PARTICIPANTS_REACHED = 118;
+    APP_TOURNAMENT_MAX_NUMBER_OF_ALLOWED_ENTRIES_REACHED = 119;
+    APP_CRYPTO_INSUFFICIENT_ETH_FOR_GAS_FEE = 120;
+    APP_DEPOSIT_GENERIC_FAILURE = 121;
+    APP_DEPOSIT_WRONG_CVV = 122;
+    APP_DEPOSIT_CARD_EXPIRED = 123;
+    APP_DEPOSIT_WRONG_CARD_NUMBER = 124;
+    APP_DEPOSIT_WRONG_ADDRESS = 125;
+    APP_DEPOSIT_INSUFFICIENT_FUND = 126;
+    APP_DEPOSIT_CARD_NOT_SUPPORTED = 127;
+    APP_DEPOSIT_VOICE_FAILURE = 128;
+    APP_DEPOSIT_PAYPAL_ERROR = 129;
+    APP_SUBMIT_RESULT_RETRIABLE_CONNECTION_ERROR = 130;
+    APP_NETWORK_ERROR_REQUEST_MATCH = 131;
+    APP_NETWORK_ERROR_CONFIRM_MATCH_READY = 132;
+    APP_NETWORK_ERROR_GET_MATCH_DETAIL = 133;
+    APP_NETWORK_ERROR_CREATE_TOURNAMENT_TICKET = 134;
+    APP_NETWORK_ERROR_CONFIRM_TOURNAMENT_READY = 135;
+    APP_NETWORK_ERROR_GET_CURRENT_USER_TOURNAMENT_ACHIEVEMENT = 136;
+    APP_NETWORK_ERROR_GET_TOURNAMENT_LEADERBOARD = 137;
+    APP_NETWORK_ERROR_GET_TOURNAMENT_TICKET = 138;
+    APP_SUBMIT_RESULT_GAME_TIMED_OUT = 139;
+    APP_SUBMIT_RESULT_GENERIC_NON_RETRIABLE_ERROR = 140;
+    APP_SOCIAL_CHALLENGE_INELIGIBLE_TO_CREATE_CHALLENGE = 141;
+    APP_AUTO_REFUND_GLOBAL_REFUND_LIMIT_REACHED = 142;
+    APP_AUTO_REFUND_PER_USER_REFUND_LIMIT_REACHED = 143;
+    APP_AUTO_REFUND_REFUSED = 144;
+    APP_DEPOSIT_DUPLICATED_TRANSACTION_ERROR = 145;
+    APP_DEPOSIT_NEED_DETAILED_INFO_ERROR = 146;
+    APP_INVALID_PAYMENT_PROOF = 147; // happens if the signed proof is fake or wrong (bad signature)
+    APP_EXPIRED_PROOF_TIMESTAMP = 148; // happens when new proof ts is < previous payment proof ts (user changed clock back) -- (more importantly protects against double-payment using the same proof)
+    APP_PROOF_TIMESTAMP_TOO_FAR_IN_THE_FUTURE = 149; // this is the new one added to stop users with future clocks from playing (if proof ts is more than 3 minutes in the future it is rejected) -- players who change clocks for other games must now fix their clocks back before playing CelerX
+    APP_BLOCKED_GEO_FOR_CARD_RELATED_GAMES = 150; // It indicates user cannot play real money for this game. However, user can play real money for other games. For example, users in Maine/Indiana cannot play 21 cash, SW and Spider rush.
+    APP_FREE_LOOT_BOX_ALREADY_CLAIMED = 151; // It indicates the free loot box already claimed or not reach the count down.
+    APP_WITHDRAWAL_PAYPAL_EMAIL_NOT_VERIFIED = 152; // It indicates the withdrawal is denied, because the paypal email got withdrawal has not been verified.
+    APP_WITHDRAWAL_PAYPAL_EMAIL_NOT_SAME = 153; // It indicates the withdrawal is denied, because the paypal email sent from mobile is not same to the paypal email which has already been verified.
+    APP_WITHDRAWAL_METHOD_TEMPORARILY_UNAVAILABLE = 154; // returned when requested withdraw method is unavailable in backend.
+    reserved 155 to 199; // reserve till 199 for app flow logic error
+}

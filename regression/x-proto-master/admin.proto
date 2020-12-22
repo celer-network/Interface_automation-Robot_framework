@@ -1,0 +1,57 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package admin;
+
+import "google/protobuf/empty.proto";
+option java_package = "network.celer.user.admin";
+
+service Admin {
+  rpc GetUserByUsername(Username) returns (GetUserResponse) {}
+  rpc GetUserByEthAddress(EthAddress) returns (GetUserResponse) {}
+  rpc BatchGetUserByUsername(BatchUsername) returns (BatchGetUserResponse) {}
+  rpc BatchGetUserByEthAddress(BatchEthAddress) returns (BatchGetUserResponse) {
+  }
+  rpc Ban(Username) returns (google.protobuf.Empty) {}
+  rpc Unban(Username) returns (google.protobuf.Empty) {}
+}
+
+message Username { string username = 1; }
+
+message EthAddress { string eth_address = 1; }
+
+message User {
+  string id = 1;
+  string eth_address = 2;
+  string username = 3;
+  string avatar_url = 4;
+  string full_name = 5;
+  string visible_username = 6;
+  string email = 7;
+  repeated string unlocked_level_ids = 8;
+  string current_level_id = 9;
+  string locale = 10;
+  bool backed_up_wallet = 11;
+  string auth_signature = 12;
+  string token = 13;
+  string centrifugo_token = 14;
+  int32 primary_account_type = 15;
+  bool has_verified_email = 16;
+  bool has_password = 17;
+  string hashed_password = 18;
+  int32 backup_status = 19;
+  string paypal_email = 20;
+  bool has_verified_paypal_email = 21;
+  bool banned = 22;
+}
+
+message GetUserResponse {
+  bool exists = 1;
+  User user = 2;
+}
+
+message BatchGetUserResponse { repeated User users = 1; }
+
+message BatchUsername { repeated string usernames = 1; }
+
+message BatchEthAddress { repeated string eth_addresses = 1; }

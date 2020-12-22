@@ -1,0 +1,23 @@
+
+syntax = "proto3";
+package invite;
+
+import "common_backend.proto";
+
+option go_package = "github.com/celer-network/x-proto-go/invite";
+
+service Internal {
+  rpc SendRCOnDepositIfEligible(SendRCOnDepositRequest) returns (SendRCOnDepositResponse) {}
+}
+
+// Next tag: 3
+message SendRCOnDepositRequest {
+  string depositer_username = 1;
+  common.Amount deposit_amount = 2;
+}
+// Next tag: 4
+message SendRCOnDepositResponse {
+  bool has_send_success = 1;
+  common.Amount reward_cash_amount = 2;
+  string error = 3;
+}

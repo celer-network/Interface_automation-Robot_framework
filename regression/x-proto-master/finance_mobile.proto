@@ -1,0 +1,730 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package finance;
+
+import "google/api/annotations.proto";
+import "error.proto";
+import "campaign_mobile.proto";
+import "common_backend.proto";
+import "common_mobile.proto";
+import "sale_mobile.proto";
+
+option java_package = "network.celer.backend.rpcApi";
+option java_outer_classname = "FinanceOuterClass";
+option swift_prefix = "Finance";
+option go_package = "github.com/celer-network/x-proto-go/finance";
+
+// old api work as restful, and only sdk will call they.
+// if there is new apis need to add, please add them to "service mobile" in this proto file.
+// new api should work as grpc.
+service Fiat {
+    // DO NOT follow the re-use RpcRequest example!
+    // It's generally preferred/encouraged to define rpc specific msg.
+    rpc GetTransaction(RpcRequest) returns (FiatTxResp) {
+        option (google.api.http) = {
+            post: "/v1/cfs/get_tx"
+            body: "*"
+        };
+    }
+
+    rpc GetNotSuccessTransactions(RpcRequest) returns (FiatTxListResp) {
+        option (google.api.http) = {
+            post: "/v1/cfs/get_nstxs"
+            body: "*"
+        };
+    }
+
+    rpc Deposit(DepositReq) returns (FiatTxResp) {
+        option (google.api.http) = {
+            post: "/v1/cfs/deposit/add_fund"
+            body: "*"
+        };
+    }
+
+    rpc GetDepositOptions(RpcRequest) returns (FiatDepositOptListResp) {
+        option (google.api.http) = {
+            post: "/v1/cfs/deposit/get_options"
+            body: "*"
+        };
+    }
+
+    rpc DismissDepositOptionNotification(RpcRequest) returns (FiatDepostiOptResp) {
+        option (google.api.http) = {
+            post: "/v1/cfs/deposit/dismiss_option"
+            body: "*"
+        };
+    }
+
+    rpc GetGTRedeemInfo(GetGTRedeemInfoRequest) returns (GetGTRedeemInfoResponse) {
+        option (google.api.http) = {
+            post: "/v1/cfs/get_gt_redeem_info"
+            body: "*"
+        };
+    }
+
+    rpc CancelWithdrawal(CancelWithdrawalRequest) returns (CancelWithdrawalResponse) {
+        option (google.api.http) = {
+            post: "/v1/cfs/cancel_withdrawal"
+            body: "*"
+        };
+    }
+
+    // TODO need to be removed, no longer used
+    rpc GetWithdrawalDetail(GetWithdrawalDetailRequest) returns (GetWithdrawalDetailResponse) {
+        option (google.api.http) = {
+            post: "/v1/cfs/get_withdrawal_detail"
+            body: "*"
+        };
+    }
+ 
+    rpc GetWithdrawalConfirmationDetail(GetWithdrawalConfirmationDetailRequest) returns (GetWithdrawalConfirmationDetailResponse) {
+        option (google.api.http) = {
+            post: "/v1/cfs/get_withdrawal_confirmation_detail"
+            body: "*"
+        };
+    }
+
+    rpc DepositByMultiProviders(DepositByMultiProvidersRequest) returns (DepositByMultiProvidersResponse) {
+        option (google.api.http) = {
+            post: "/v1/cfs/deposit/multi_providers"
+            body: "*"
+        };
+    }
+
+    rpc GetWithdrawalKycStatus(GetWithdrawalKycStatusRequest) returns (GetWithdrawalKycStatusResponse){
+        option (google.api.http) = {
+            post: "/v1/cfs/get_withdrawal_kyc_status"
+            body: "*"
+        };
+    }
+}
+
+service Mobile {
+    // this api is for different order and different provider
+    // This method is for all deposit with only one step: Square, T1, Authnet, amazonpay
+    rpc DepositWithProvider(DepositWithProviderRequest) returns (DepositWithProviderResponse);
+
+    rpc CaptureDepositWithReceipt(CaptureDepositWithReceiptRequest) returns (CaptureDepositWithReceiptResponse);
+
+    rpc UpdateUserPhysicalAddress(UpdateUserPhysicalAddressRequest) returns (UpdateUserPhysicalAddressResponse);
+
+    rpc GetUserPhysicalAddress(GetUserPhysicalAddressRequest) returns (GetUserPhysicalAddressResponse);
+
+    // use WithdrawWithMethod is enough, should no longer use this api
+    rpc WithdrawWithCheck(WithdrawWithCheckRequest) returns (WithdrawWithCheckResponse);
+
+    rpc WithdrawWithMethod(WithdrawWithMethodRequest) returns (WithdrawWithMethodResponse);
+
+    rpc GetWithdrawalConfirmationInfo(GetWithdrawalConfirmationInfoRequest) returns (GetWithdrawalConfirmationInfoResponse);
+}
+
+service Bank {
+    rpc GetFiatTransactions(RpcRequest) returns (BankTxListResp) {
+        option (google.api.http) = {
+            post: "/v1/bank/fiat/get_txs"
+            body: "*"
+        };
+    }
+
+    rpc GetBankTransactions(GetBankTransactionsRequest) returns (GetBankTransactionsResponse) {
+        option (google.api.http) = {
+            post: "/v1/bank/get_bank_transactions"
+            body: "*"
+        };
+    }
+}
+
+// Next tag: 4
+message CaptureDepositWithReceiptRequest {
+    string jwt = 1;
+    string tx_id = 2;
+}
+
+// Next tag: 5
+message CaptureDepositWithReceiptResponse {
+    err.BackendError error = 1;
+    DepositResult deposit_result = 2;
+}
+
+message DepositWithProviderRequest {
+    string jwt = 1;
+    // now, only support one deposit option.
+    // in future, maybe more than one options should be supported.
+    // DEPOSIT_OPTION_TYPE_CAMPAIGN -> set campaign_option_id
+    // DEPOSIT_OPTION_TYPE_SALE -> set sale_option_id
+    // DEPOSIT_OPTION_TYPE_DEPOSIT_DISCOUNT -> set discount_option_id
+    DepositOptionType deposit_option_type = 2;
+    string campaign_option_id = 3;
+    int64 sale_option_id = 4;
+    int64 discount_option_id = 5;
+
+    // Next tag: 210
+    oneof provider {
+        StripeOrder stripe = 201;
+        SquareOrder square = 202;
+        AuthorizeNetOrder authorize = 203;
+        T1Order t1 = 204;
+        AmazonOrder amazon_order = 205;
+        PaypalOrderInfo paypal = 206;
+        SkrillOrder skrill = 207;
+        SkrillAchOrder skrill_ach = 208;
+        WyreOrder wyre = 209;
+    }
+}
+
+// mobile should finish the deposit by sending deposit_reservation directly to provider, then finished add balance by call capture with the tx id in deposit_result.
+message DepositWithProviderResponse {
+    err.BackendError error = 1;
+    // if it is a one-step deposit, then this result will be returned
+    // if it is two-step deposit, DepositResult will only contain tx id and ref id.
+    DepositResult deposit_result = 2;
+    // if it is a two-step deposit, the a reservation info will be returned to mobile for future capture.
+    oneof deposit_reservation {
+        string paypal_order_id = 101;
+        string skrill_sid = 102;
+    }
+}
+
+// if deposit success or capture success, this result will be returned to mobile
+message DepositResult {
+    string tx_id = 1;
+    string ref_id = 2;
+    common.TokenAmount amount = 3;
+    common.TokenAmount reward = 4;
+    repeated sale.SaleOrder orders = 5; // for deposit for sale
+}
+
+// Next tag: 4
+message GetWithdrawalConfirmationInfoRequest {
+    string jwt = 1;
+    double withdrawal_amount = 2;
+    WithdrawalMethod withdrawal_method = 3;
+}
+
+// Next tag: 3
+message GetWithdrawalConfirmationInfoResponse {
+    err.BackendError error = 1;
+    WithdrawalConfirmationDetail withdrawal_confirmation_detail = 2;
+}
+
+// Next tag: 7
+message WithdrawWithMethodRequest {
+    string jwt = 1;
+    int64 proof_ts = 2;
+    bytes proof = 3;
+    common.TokenTypeEnum token_type = 4;
+    double withdrawal_amount = 5;
+    WithdrawalMethod withdrawal_method = 6;
+}
+
+// Next tag: 2
+message WithdrawWithMethodResponse {
+    err.BackendError error = 1;
+}
+
+// Next tag: 3
+message UpdateUserPhysicalAddressRequest {
+    string jwt = 1;
+    UserPhysicalAddress address = 2;
+}
+
+// Next tag: 2
+message UpdateUserPhysicalAddressResponse {
+    err.BackendError error = 1;
+}
+
+// Next tag: 2
+message GetUserPhysicalAddressRequest {
+    string jwt = 1;
+}
+
+// Next tag: 3
+message GetUserPhysicalAddressResponse {
+    err.BackendError error = 1;
+    UserPhysicalAddress address = 2;
+}
+
+// Next tag: 6
+message WithdrawWithCheckRequest {
+    string jwt = 1;
+    int64 proof_ts = 2;
+    bytes proof = 3;
+    common.TokenTypeEnum token_type = 4;
+    double withdrawal_amount = 5;
+}
+
+// Next tag: 2
+message WithdrawWithCheckResponse {
+    err.BackendError error = 1;
+}
+
+// Next tag: 9
+message UserPhysicalAddress {
+    string first_name = 1;
+    string last_name = 2;
+    string address1 = 3;
+    string address2 = 4;
+    string iso_country_code = 5; // "cn", "jp" etc, iso 3166 alpha-2
+    string city = 6;
+    string administrative_area = 7; // state/province. e.g. CA
+    string postal_code = 8;
+}
+
+message GetWithdrawalKycStatusRequest {
+    string jwt = 1;
+    common.FiatValue amount_to_withdraw = 2;
+}
+
+message GetWithdrawalKycStatusResponse {
+    err.BackendError error = 1;
+    WithdrawalKycStatus withdrawal_kyc_status = 2;
+}
+
+enum WithdrawalKycStatus {
+    WITHDRAWAL_KYC_STATUS_UNDEFINED = 0;
+    WITHDRAWAL_KYC_STATUS_NOT_REQUIRED = 1;
+    WITHDRAWAL_KYC_STATUS_REQUIRED_UNCOMPLETED = 2;
+    WITHDRAWAL_KYC_STATUS_REQUIRED_PENDING = 3;
+    WITHDRAWAL_KYC_STATUS_REQUIRED_FAILED = 4;
+    WITHDRAWAL_KYC_STATUS_APPROVED = 5;
+}
+
+message GetWithdrawalDetailRequest {
+    string jwt = 1;
+    string transaction_id = 2;
+}
+
+message GetWithdrawalDetailResponse {
+    err.BackendError error = 1;
+    WithdrawalDetail withdrawal_detail = 2;
+}
+
+message WithdrawalDetail {
+    string transaction_id = 1;
+    common.FiatValue fee = 2;
+    common.FiatValue amount = 3; // total withdrawal amount
+    repeated PayoutNote payout_notes = 4; // how much does each provider use
+    WithdrawalStatus status = 5;
+    int64 initiated_ts = 6;
+    int64 canceled_ts = 7;
+    bool is_canceled = 8;
+    bool is_cancelable = 9;
+    int64 max_withdrawal_pending_time = 10; // please use millisecond
+    int64 max_withdrawal_cancelable_time = 11; // please use millisecond
+    UserPhysicalAddress physical_address = 12;
+}
+
+message PayoutNote {
+    ProviderType provider = 1;
+    common.FiatValue amount = 2;
+    string payment_service_account_id = 3; // paypal email account or card
+    CardType card_type = 4;
+}
+
+enum WithdrawalStatus {
+    WITHDRAWAL_STATUS_UNDEFINED = 0;
+    WITHDRAWAL_STATUS_CELER_PENDING = 1;
+    WITHDRAWAL_STATUS_REFUND_PENDING = 2;
+    WITHDRAWAL_STATUS_PAYPAL_PENDING = 3;
+    WITHDRAWAL_STATUS_CANCELLING = 4;
+    WITHDRAWAL_STATUS_CANCELLED = 5;
+    WITHDRAWAL_STATUS_SUCCEEDED = 6;
+    WITHDRAWAL_STATUS_FAILED = 7;
+}
+
+enum CardType {
+    CARD_TYPE_UNDEFINED = 0;
+    CARD_TYPE_VISA = 1;
+    CARD_TYPE_MASTER = 2;
+    CARD_TYPE_OTHER = 99;
+}
+
+enum ProviderType {
+    PROVIDER_TYPE_UNDEFINED = 0;
+    PROVIDER_TYPE_PAYPAL = 1;
+    PROVIDER_TYPE_APPLE_PAY = 2;
+    PROVIDER_TYPE_STRIPE = 3;
+    PROVIDER_TYPE_SKRILL = 4; // skrill wallet
+    PROVIDER_TYPE_AUTHORIZE_NET = 5;
+    PROVIDER_TYPE_WORLD_PAY = 6;
+    PROVIDER_TYPE_SQUARE = 7;
+    PROVIDER_TYPE_T1 = 8;
+    PROVIDER_TYPE_CHECK = 9;
+    PROVIDER_TYPE_SKRILL_ACH = 10; // skrill ACH, only "US" can see it
+}
+
+service GameFee {
+    rpc SendPrize (SendPrizeRequest) returns (SendPrizeResponse);
+}
+
+message BankAccount {
+    string eth_address = 1;
+    string symbol = 2;
+}
+
+// has to match https://github.com/celer-network/appservice/blob/master/rewardsvr/paypal.go#L28
+// so 0 is create order
+enum PaypalOrderOperation {
+    CREATE = 0;
+    APPROVE = 1;
+    CANCEL = 2;
+}
+// sent by client to fiat, must include all info required by paypal
+message PaypalOrderInfo {
+    common.Amount amount = 1;
+    PaypalApplicationContext appctx = 2;
+}
+// needed for paypal to redirect url so mobile can know after user complete pay
+// note currently we hardcode urls in sdk code, so in case future mobile apps change
+// it's still correct
+message PaypalApplicationContext {
+    string return_url = 1;
+    string cancel_url = 2;
+}
+
+// Next tag: 3
+message SkrillOrder {
+    string iso_country_code = 1; // Skrill need country code. Currently mobile will provide US, Skrill needs USA. Hence, server may do a mapping for country code
+}
+
+message SkrillAchOrder {
+    string iso_country_code = 1; // Skrill need country code. Currently mobile will provide US, Skrill needs USA. Hence, server may do a mapping for country code
+}
+
+// Next tag: 16
+message WyreOrder {
+    string card_number = 1;
+    string card_expiration_month = 2;
+    string card_expiration_year = 3;
+    string cvv = 4;
+    string zip_code = 5;
+    string first_name = 6;
+    string last_name = 7;
+    string address_1 = 8; // Street/Avenue
+    string address_2 = 9; // apt/suite optional
+    string city = 10;
+    string administrative_area = 11; // state/province. e.g. CA
+    string iso_country_code = 12;
+    string phone_number = 13;
+    string email = 14;
+}
+
+enum StripeOrderMethod {
+    INVALID = 0;
+    STRIPE = 1;
+    APPLE_PAY = 2;
+}
+
+message StripeOrder {
+    string card_token = 1;
+    common.Amount amount = 2 [deprecated=true]; // no longer need as amount is decided by campaign id
+    StripeOrderMethod method = 3;
+}
+
+message SquareOrder {
+    string nonce = 1;
+    bool is_apple_pay = 2;
+}
+
+message AuthorizeNetOrder {
+    string nonce = 1;
+    bool is_apple_pay = 2;
+}
+
+message T1Order {
+    string encrypted_payment = 1;
+    bool is_apple_pay = 2;
+    string zip_code = 3;
+    string first_name = 4;
+    string last_name = 5;
+    string address_1 = 6; // Street/Avenue
+    string address_2 = 7; // apt/suite optional
+    string city = 8;
+    string administrative_area = 9; // state/province. e.g. CA
+    string iso_country_code = 10;
+}
+
+message AmazonOrder {
+    string amazon_reference_id = 1;
+}
+
+message DepositReq{
+    common.BasicAuth auth = 1;
+    UserInfo user = 2; // must populate username and eth address
+    int64 campaign_id = 3; // which campaign the user claims for reward, should match CampaignDTO
+    oneof order {
+        PaypalOrderInfo paypal = 4;
+        StripeOrder stripe = 5;
+        SquareOrder square = 6;
+        AuthorizeNetOrder authorize = 7;
+        T1Order t1 = 8;
+        AmazonOrder amazon_order = 9;
+    }
+}
+
+message DepositByMultiProvidersRequest {
+    string jwt = 1; // include username and eth address
+    int64 deposit_option_id = 2; // which campaign the user claims for reward, should match CampaignDTO
+    repeated ProviderOrder provider_orders = 3; // backend will try deposit one after another in this list until deposit success.
+}
+
+message ProviderOrder {
+    ProviderType type = 1;
+    oneof order {
+        AuthorizeNetOrder authorize = 2;
+        T1Order t1 = 3;
+    }
+}
+
+message DepositByMultiProvidersResponse {
+    err.BackendError error = 1;
+    string transaction_id  = 2;
+    common.FiatValue amount = 3;
+    common.FiatValue reward = 4;
+}
+
+// DO NOT follow the re-use RpcRequest example!
+// It's generally preferred/encouraged to define rpc specific msg.
+
+// In oneof field, each field serves specific service rpc call. If oneof field is not set
+// correctly, the rpc call response would have Error field with none 0 error code. 
+// Rpc function comments after  each oneof field specify its corresponding rpc function. 
+// REMERBER TO SET related oneof field when calling functions described in comment.
+message RpcRequest {
+   common.BasicAuth auth = 1;
+   string username = 2;
+   oneof request {
+       string fiat_tx_id = 3;                               // Fiat.GetTransaction
+       string eth_address = 4;                              // Fiat.GetNotSuccessTransactions
+       FiatDepositOptionRequest  deposit_option_req = 5;    // Fiat.GetDepositOptions
+       string deposit_option_id = 6;                        // Fiat.DismissDepositOptionNotification
+       BankAccount bank_acct = 7;                           // Bank.GetFiatTransactions
+   }
+}
+
+message FiatTransaction {
+    string id = 1;
+    int32  type = 2;
+    string method = 3;
+    string addr = 4;
+    string email = 5;
+    string username = 6;
+    string currency = 7;
+    double amount = 8;
+    double reward = 9;
+    double fee = 10;
+    int32  status = 11;
+    int64  create_ts = 12;
+    string ref_id = 13;
+    WithdrawalInfo withdrawal_info = 14;
+}
+
+message WithdrawalInfo {
+    bool is_cancelable = 1;
+    int64 withdrawal_initiated_at = 2; // UTC timestamp in milliseconds
+    int64 withdrawal_canceled_at = 3; // UTC timestamp in milliseconds
+}
+
+message FiatTransactionList {
+    repeated FiatTransaction fiat_transaction_list = 1;
+}
+
+message FiatTxResp {
+    FiatTransaction fiat_tx = 1;
+    err.BackendError err = 2;
+}
+
+message FiatTxListResp {
+    FiatTransactionList fiat_tx_list = 1;
+    err.BackendError err = 2;
+}
+
+message FiatDepositOption {
+    campaign.DepositCampaignOffer campaign = 1;
+    bool should_notify = 2;
+
+    // amount of times this campaign has been claimed (deposited by users). Only set for time limited deposit option
+    int32 claim_times = 3;
+}
+
+message FiatDepositOptionList {
+    repeated FiatDepositOption fiat_deposit_option_list = 1;
+}
+
+message FiatDepostiOptResp {
+    FiatDepositOption deposit_option = 1;
+    err.BackendError err = 2;
+}
+
+message FiatDepositOptListResp {
+    FiatDepositOptionList deposit_option_list = 1;
+    err.BackendError err = 2;
+}
+
+message BankTxListResp {
+    BankTransactionList bank_tx_list = 1;
+    err.BackendError err = 2;
+}
+
+message Quantity {
+    double amount = 1;
+    double iou = 2;
+    double reward = 3;
+}
+
+message BankTransaction {
+    string tx_id = 1;
+    string symbol = 2;
+    Quantity quan = 3;
+    string ref_id = 4;
+    int64 ts = 5;
+}
+
+message BankTransactionList {
+    repeated BankTransaction bank_tx = 1;
+}
+
+
+message SendPrizeRequest {
+    Quantity amount = 1;
+    string token = 2;
+    string eth_address = 3;
+    string ref_id = 4;
+}
+
+message SendPrizeResponse {
+    err.BackendError error = 1;
+}
+
+message GetGTRedeemInfoRequest {
+    common.BasicAuth auth = 1;
+    string eth_address = 2;
+}
+
+message GetGTRedeemInfoResponse {
+    err.BackendError error = 1;
+    int64 last_redeem_time = 2;     // second
+    int64 next_redeem_time = 3;     // second
+    int64 server_current_time = 4;  // second
+}
+
+message CancelWithdrawalRequest {
+    common.BasicAuth auth = 1;
+    string fiat_tx_id = 2;
+}
+
+message CancelWithdrawalResponse {
+    err.BackendError error = 1;
+    FiatTransaction fiat_tx = 2;
+}
+
+enum BankTransactionType {
+    UNDEFINED = 0;
+    FIAT_ALL = 1;    // including deposit, withdraw, reward
+    FIAT_DEPOSIT = 2;
+    FIAT_WITHDRAW = 3;
+    FIAT_REWARD = 4;
+    REFUND = 5;
+}
+
+// Next Tag: 2
+message BankTransactionTypes {
+    repeated BankTransactionType types = 1;
+}
+
+// Next Tag: 5
+message GetBankTransactionsRequest {
+    common.BasicAuth auth = 1;
+    string eth_address = 2;
+    uint32 number_limit = 3; // limit for number of transactions returned
+    // token symbol -> type arrays
+    // This filters would perform a logical expression OR over all the token symbols in the map,
+    // filtering each token symbol by logical OR over all the transaction types listed.
+    // for example: {"usd": [ALL_FIAT], "8gt": [REFUND]} tells backend to returns all fiat transactions related with
+    // USD and all refund transactions related with GT.
+    map<string, BankTransactionTypes> filters = 4; 
+}
+
+// Next Tag: 3
+message GetBankTransactionsResponse {
+    err.BackendError error = 1;
+    repeated BankTransaction transactions = 2;
+}
+
+
+// structure log for fiat
+
+enum FiatEventType {
+    FIAT_EVENT_TYPE_UNDEFINED = 0;
+    FIAT_EVENT_TYPE_DEPOSIT = 1;
+    FIAT_EVENT_TYPE_WITHDRAW = 2;
+}
+
+message FiatEventMessage {
+    string addr = 1;
+    FiatEventType type = 2;
+    string tx_id = 3;
+    string method = 4;
+    int64 campaign_id = 5;
+    common.Amount amount = 6;
+    string ref_id = 7;
+    int64 start_ts_ns = 8;
+    int64 end_ts_ns = 9;
+    repeated string errors = 10;
+}
+
+message WithdrawalConfirmationDetail {
+    common.FiatValue fee = 1;
+    int64 max_withdrawal_pending_time = 2; // please use millisecond
+    int64 max_withdrawal_cancelable_time = 3; // please use millisecond
+    UserPhysicalAddress physical_address = 4;
+    WithdrawalMethod withdrawal_method = 5;
+    string email = 6;
+}
+
+message GetWithdrawalConfirmationDetailRequest {
+    string jwt = 1;
+    double withdrawal_amount = 2;
+}
+
+message GetWithdrawalConfirmationDetailResponse {
+    err.BackendError error = 1;
+    WithdrawalConfirmationDetail withdrawal_confirmation_detail = 2;
+}
+
+enum WithdrawalMethod {
+    WITHDRAWAL_METHOD_UNDEFINED = 0;
+    WITHDRAWAL_METHOD_PAYPAL = 1;
+    WITHDRAWAL_METHOD_CHECK = 2;
+    WITHDRAWAL_METHOD_SKRILL = 3;
+}
+
+message UserInfo {
+    string id = 1; //example: "f29447ef-b62a-4289-43a3-75b435033fbc"
+    string username = 2;
+    string eth_address = 3;
+    string visible_username = 4;
+    string full_name = 5;
+    string avatar_url = 6;
+    string email = 7;
+}
+
+message FiatDepositOptionRequest {
+    FiatDepositOptionFilter filter = 1;
+}
+
+enum FiatDepositOptionFilter {
+    UNDEFINED_FIAT_DEPOSIT_OPTION = 0;
+    ALL_ELIGIBLE = 1;
+    NOT_TIME_LIMITED = 2;
+    TIME_LIMITED = 3;
+    SHOULD_NOTIFY = 4;
+}
+
+enum DepositOptionType {
+    DEPOSIT_OPTION_TYPE_UNDEFINED = 0;
+    DEPOSIT_OPTION_TYPE_CAMPAIGN = 1;
+    DEPOSIT_OPTION_TYPE_SALE = 2;
+    DEPOSIT_OPTION_TYPE_DEPOSIT_DISCOUNT = 3;
+}

@@ -1,0 +1,67 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package se;
+
+import "common_backend.proto";
+import "league_mobile.proto";
+
+option java_package = "network.celer.proto.se";
+option java_outer_classname = "SystemEventInternal";
+option go_package = "github.com/celer-network/x-proto-go/se";
+
+// defines system triggered events like tournament and league lifecycle events
+
+enum EventType {
+  UNDEFINED_EVENT_TYPE = 0;
+  TOURNAMENT_ENDED = 1; // kafka topic: tournament_ended
+  LEAGUE_ENDED = 2; // kafka topic: league_ended
+  LOYALTY_HIDDEN_TASK_UPDATE = 3; // kafka topic: loyalty_hidden_task_update
+}
+
+message SystemEvent {
+  uint64 ts = 1; // must be millisecond since epoch
+  EventType type = 2;
+  oneof payload { // biz module defined event details
+    TournamentEnded tournament_ended = 3;
+    LeagueEnded league_ended = 4;
+    LoyaltyHiddenTaskUpdate loyalty_hidden_task_update = 5;
+  }
+}
+
+message TournamentRanking {
+  string username = 1;
+  string eth_addr = 2;
+  // # of times the user has played the game in this tournament
+  int32 num_entries = 3;
+  int32 rank = 4;
+  common.Amount prize = 5;
+}
+
+// per tournament when tournament's leaderboard solidifies
+message TournamentEnded {
+  int64 tournament_id = 1;
+  repeated TournamentRanking rankings = 2;
+  string tournament_title = 3;
+  string game_id = 4;
+}
+
+// per tournament when league's leaderboard solidifies
+message LeagueEnded {
+  league.League league = 1;
+  repeated league.LeaguePrize top_ten_prizes = 2;
+}
+
+enum LoyaltyHiddenTaskStatus {
+  HIDDEN_TASK_INVALID = 0;
+  HIDDEN_TASK_PENDING = 1; // not yet started (e.g. future start time)
+  HIDDEN_TASK_STARTED = 2; // task is active
+  HIDDEN_TASK_COMPLETED = 3; // task goal completed before deadline
+  HIDDEN_TASK_EXPIRED = 4; // task deadline reached before completion
+}
+
+message LoyaltyHiddenTaskUpdate {
+  string user_addr = 1;
+  uint64 user_task_id = 2;
+  LoyaltyHiddenTaskStatus status = 3;
+  uint32 progress = 4; // goal updates while task is active
+}

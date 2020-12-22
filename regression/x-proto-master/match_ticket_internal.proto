@@ -1,0 +1,68 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package match.ticket;
+
+import "error.proto";
+import "common_backend.proto";
+import "match_engine_internal.proto";
+
+option java_package = "network.celer.proto.ticket";
+option java_outer_classname = "MatchTicketInternal";
+option go_package = "github.com/celer-network/x-proto-go/matchticket";
+
+service TicketService {
+
+    rpc ReceiveNewlyMatchedTicketsV2 (ReceiveNewlyMatchedTicketsRequestV2) returns (ReceiveNewlyMatchedTicketsResponse) {
+    }
+
+    // for league to call
+    rpc PlayGameForBot (PlayGameForBotRequest) returns (PlayGameForBotResponse);
+
+    // for match engine to call
+    // when match engine want a bot to match with this ticket
+    rpc RequestForBot (RequestForBotRequest) returns (RequestForBotResponse);
+}
+
+message ReceiveNewlyMatchedTicketsRequestV2 {
+    repeated int64 ticket_id = 1;
+    string match_id = 2;
+}
+
+message ReceiveNewlyMatchedTicketsResponse {
+    err.BackendError error = 1;
+}
+
+message PlayGameForBotRequest {
+    string username = 1;
+    string eth_address = 2;
+    common.Amount prize_target = 3;
+}
+
+message PlayGameForBotResponse {
+    err.BackendError error = 1;
+}
+
+message RequestForBotRequest {
+    string game_id = 1;
+    string bucket_id = 2;
+    string match_id = 3;
+    common.Amount entry_fee = 4;
+    int64 player_ticket_id = 5;
+    int32 player_level = 6;
+    match.engine.PolicyPrefEnum player_pref = 7;
+    string player_username = 8;
+    int32 policy_num = 9;
+}
+
+message RequestForBotResponse {
+    // will have CELERX_NO_AVAILABLE_BOT error
+    err.BackendError error = 1;
+}
+
+enum TicketBotTypeEnum {
+    TICKET_BOT_TYPE_UNDEFINED = 0;
+    GT_FIRST_GAME_BOT = 1;
+    MATCH_BOT = 2;
+    LEAGUE_BOT = 3;
+    NO_BOT = 100;
+}

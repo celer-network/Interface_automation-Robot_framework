@@ -1,0 +1,55 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package config;
+
+import "error.proto";
+import "match_mobile.proto";
+
+option java_package = "network.celer.proto.config";
+option java_outer_classname = "ConfigInternal";
+option swift_prefix = "Config";
+
+service Internal {
+  rpc AddBucket (AddBucketRequest) returns (AddBucketResponse);
+  rpc GetBucket (GetBucketRequest) returns (GetBucketResponse);
+  rpc AddGameBucketRelation (AddGameBucketRelationRequest) returns (AddGameBucketRelationResponse);
+  rpc RemoveGameBucketRelation (RemoveGameBucketRelationRequest) returns (RemoveGameBucketRelationResponse);
+}
+
+message AddBucketRequest {
+  match.MatchBucket match_bucket = 1;
+}
+
+message AddBucketResponse {
+  err.BackendError error = 1;
+}
+
+message GetBucketRequest {
+  string division_id = 1;
+}
+
+message GetBucketResponse {
+  err.BackendError error = 1;
+  match.MatchBucket match_bucket = 2;
+}
+
+
+message AddGameBucketRelationRequest {
+  string game_id = 1;
+  string bucket_id = 2;
+  string min_version = 3;
+  string max_version = 4;
+}
+
+message AddGameBucketRelationResponse {
+  err.BackendError error = 1;
+}
+
+message RemoveGameBucketRelationRequest {
+  string game_id = 1;
+  string bucket_id = 2;
+}
+
+message RemoveGameBucketRelationResponse {
+  err.BackendError error = 1;
+}

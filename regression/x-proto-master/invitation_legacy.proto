@@ -1,0 +1,86 @@
+
+syntax = "proto3";
+package invite;
+
+import "error.proto";
+import "invitation_internal.proto";
+import "invitation_mobile.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/celer-network/x-proto-go/invite";
+
+service Invitation {
+  // Functions to be called by inviters.
+  rpc GetInvitationCodeV1(InvitationCodeRequestV1) returns (InvitationCodeResponseV1) {
+    option (google.api.http) = {
+      get: "/v1/invite/get_invitation_code/{inviter_username}"
+    };
+  }
+  rpc QueryInviterBonusV1(QueryInviterBonusRequestV1) returns (QueryInviterBonusResponseV1) {
+    option (google.api.http) = {
+      get: "/v1/invite/query_inviter_bonus/{inviter_username}"
+    };
+  }
+  // 华丽丽的分割线-----------------------------------------------------------------
+  // Functions to be called by invitees.
+  rpc QueryInviteeBonusV1(QueryInviteeBonusRequestV1) returns (QueryInviteeBonusResponseV1) {
+    option (google.api.http) = {
+      get: "/v1/invite/query_invitee_bonus/{invitee_username}"
+    };
+  }
+  rpc SubmitInvitationCodeV1(SubmitInvitationCodeRequestV1) returns (SubmitInvitationCodeResponseV1) {
+    option (google.api.http) = {
+      post: "/v1/invite/submit_invitation_code"
+      body: "*"
+    };
+  }
+  // To be replaced by the same func in invitation_internal.proto
+  rpc SendRCOnDepositIfEligible(SendRCOnDepositRequest) returns (SendRCOnDepositResponse) {}
+}
+
+// Next tag: 3
+message SubmitInvitationCodeRequestV1 {
+  string invitee_username = 1;
+  string invitation_code = 2;
+}
+// Next tag: 2
+message SubmitInvitationCodeResponseV1 {
+  err.BackendError error = 1;
+}
+// Next tag: 2
+message QueryInviteeBonusRequestV1 {
+  string invitee_username = 1;
+}
+// Next tag: 7
+message QueryInviteeBonusResponseV1 {
+  double bonus_amount = 1;
+  string currency = 2;
+  string inviter_username = 3;
+  string invitee_username = 4;
+  InvitationBonusStatus status = 5; 
+  err.BackendError error = 6;
+}
+
+// Next tag: 2
+message InvitationCodeRequestV1 {
+  string inviter_username = 1; //unique, never change username
+}
+
+// Next tag: 2
+message InvitationCodeResponseV1 {
+  // 6-digit invitation code
+  string invitation_code = 1;
+  err.BackendError error = 2;
+}
+
+// Next tag: 2
+message QueryInviterBonusRequestV1 {
+  string inviter_username = 1; //unique, never change username
+}
+// Next tag: 4
+message QueryInviterBonusResponseV1 {
+  // reward cash the inviter will get on every first deposit of invitees using the code.
+  double reward_cash_per_first_deposit = 1;
+  string currency = 2;
+  err.BackendError error = 3;
+}

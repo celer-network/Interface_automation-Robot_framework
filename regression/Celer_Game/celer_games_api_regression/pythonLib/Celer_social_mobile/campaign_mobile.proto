@@ -1,0 +1,196 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package campaign;
+
+import "error.proto";
+import "common_mobile.proto";
+import "common_backend.proto";
+
+option java_package = "network.celer.proto.campaign";
+option java_outer_classname = "CampaignMobile";
+option swift_prefix = "Campaign";
+option go_package = "github.com/celer-network/x-proto-go/campaign";
+
+service Mobile {
+    rpc GetDepositCampaignTaskOffer (GetDepositCampaignTaskOfferRequest) returns (GetDepositCampaignTaskOfferResponse) {
+    }
+
+    rpc QueryCampaignIsDepositable (QueryCampaignIsDepositableRequest) returns (QueryCampaignIsDepositableResponse) {
+    }
+
+    rpc DismissNotificationForCampaignOffer (DismissNotificationForCampaignOfferRequest) returns (DismissNotificationForCampaignOfferResponse) {
+    }
+
+    rpc MarkCampaignOfferPassed (MarkCampaignOfferPassedRequest) returns (MarkCampaignOfferPassedResponse) {
+    }
+
+    rpc GetTimeLimitedDepositOptions (GetTimeLimitedDepositOptionsRequest) returns (GetTimeLimitedDepositOptionsResponse) {
+    }
+
+    rpc GetNotTimeLimitedDepositOptions (GetNonTimeLimitedDepositOptionsRequest) returns (GetNonTimeLimitedDepositOptionsResponse) {
+    }
+
+    rpc GetAllEligibleDepositOptions (GetAllEligibleDepositOptionsRequest) returns (GetAllEligibleDepositOptionsResponse) {
+    }
+}
+
+// jwt token in meta data
+// Next tag: 1
+message GetTimeLimitedDepositOptionsRequest {
+
+}
+
+message GetTimeLimitedDepositOptionsResponse {
+    repeated CampaignDepositOption deposit_options = 1;
+}
+
+// Next tag: 1
+message GetNonTimeLimitedDepositOptionsRequest {
+
+}
+
+message GetNonTimeLimitedDepositOptionsResponse {
+    repeated CampaignDepositOption deposit_options = 1;
+}
+
+// Next tag: 1
+message GetAllEligibleDepositOptionsRequest {
+
+}
+
+message GetAllEligibleDepositOptionsResponse {
+    repeated CampaignDepositOption deposit_options = 1;
+}
+
+// jwt token in meta data
+message GetDepositCampaignTaskOfferRequest {
+}
+
+message GetDepositCampaignTaskOfferResponse {
+    err.BackendError err = 1;
+    DepositCampaignTaskOffer offer = 2;
+}
+
+// Next tag: 2
+message QueryCampaignIsDepositableRequest {
+    string campaign_id = 1;
+}
+
+// Next tag: 3
+message QueryCampaignIsDepositableResponse {
+    err.BackendError err = 1;
+    bool depositable = 2;
+}
+
+// Next tag: 2
+message DismissNotificationForCampaignOfferRequest {
+    string campaign_id = 1;
+}
+
+// Next tag: 3
+message DismissNotificationForCampaignOfferResponse {
+    err.BackendError err = 1;
+    string campaign_id = 2;
+}
+
+// Next tag: 2
+message MarkCampaignOfferPassedRequest {
+    string campaign_id = 1;
+}
+
+// Next tag: 3
+message MarkCampaignOfferPassedResponse {
+    err.BackendError err = 1;
+    string campaign_id = 2;
+}
+
+// Next tag: 9
+message DepositCampaignTaskOffer {
+    // To make system consistent, use string value just as deposit option.
+    string campaign_id = 1;
+    DepositCampaignTaskOfferStatusEnum status = 2;
+    string title = 3;
+    string subtitle = 4;
+    uint64 left_time_to_expire = 5;
+    common.TokenAmount deposit_amount = 6;
+    common.TokenAmount reward_amount = 7; // total rewards
+    repeated DepositCampaignTask tasks = 8;
+    bool today_task_has_completed = 9; //Backend always claims reward automatically when task is completed.
+    // If user has completed today task, today_task_has_completed would be true
+    bool should_notify = 10; // for one campaign, mobile should only alert once for the same user
+}
+
+// Next tag: 3
+enum DepositCampaignTaskOfferStatusEnum {
+    DEPOSIT_CAMPAIGN_TASK_OFFER_STATUS_UNDEFINED = 0;
+    DEPOSIT_CAMPAIGN_TASK_OFFER_STATUS_UNDETERMINED = 1;
+    DEPOSIT_CAMPAIGN_TASK_OFFER_STATUS_ACCEPTED = 2;
+}
+
+// ************* data *************//
+// Next tag: 9
+message DepositCampaignTask {
+    int32 task_sequence_number = 1; // -1 means 'Immediately After Deposit', 0 means Day 0 Task, 1 means Day 1 Task, etc
+    string name = 2;
+    string description = 3;
+    uint64 left_time_to_start = 4;
+    uint64 left_time_to_expire = 5;
+    repeated common.TokenAmount rewards = 6;
+    TaskCompletionStatus task_completion_status = 7;
+    TaskCompletionProgressNote progress = 8; //Only when TaskCompletionStatus is ongoing, we need to check TaskCompletionProgressNote.
+    //progress field is not needed when TaskCompletionStatus is either FAILED, COMPLETED or UPCOMING
+    bool is_today_task = 9; // tell mobile current task is which day
+}
+
+enum TaskCompletionStatus {
+    TASK_COMPLETION_STATUS_UNDEFINED = 0;
+    TASK_COMPLETION_STATUS_FAILED = 1;
+    TASK_COMPLETION_STATUS_COMPLETED = 2;
+    TASK_COMPLETION_STATUS_ONGOING = 3; //Only when TaskCompletionStatus is ongoing, we need to check TaskCompletionProgressNote
+    TASK_COMPLETION_STATUS_UPCOMING = 4;
+}
+
+// Next tag: 3
+message TaskCompletionProgressNote {
+    uint32 current_progress = 1;
+    uint32 goal = 2;
+}
+
+// Next tag: 9
+message CampaignDepositOption {
+    string campaign_id = 1;
+    common.TokenAmount deposit_amount = 2;
+    common.TokenAmount bonus_amount = 3;
+    string title = 4;
+    string description = 5;
+    string image_url = 6;
+    int64 expire_duration = 7; // will expire in expire_duration milliseconds.
+    int64 number_of_players_who_claimed = 8; // number of players who claimed
+    bool should_notify = 9; // for mobile pop up
+}
+
+// ************* data *************//
+// Next tag: 4
+message CampaignDisplayContent {
+    string title = 1;
+    string description = 2;
+    string image_url = 3;
+}
+
+// should be never use!, just for remove campaignDTO from fiat!!
+message DepositCampaignOffer {
+    int64 campaign_id = 1;
+    uint64 begin_time = 2;
+    uint64 end_time = 3;
+    common.Amount deposit_amount = 6;
+    common.Amount reward_amount = 7;
+    CampaignDisplayContent display_content = 8;
+}
+
+// to lower case equals tag name in db
+enum UserTaggingTypeEnum {
+    UNKNOWN = 0;
+    HAS_DEPOSITED_USD = 1;
+    HAS_USED_USD = 2;
+    SCHEMA = 3;
+}

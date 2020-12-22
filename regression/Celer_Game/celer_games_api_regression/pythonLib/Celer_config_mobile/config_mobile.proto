@@ -1,0 +1,163 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package config;
+
+import "error.proto";
+import "common_mobile.proto";
+import "match_mobile.proto";
+import "tournament_mobile.proto";
+
+option java_package = "network.celer.proto.config";
+option java_outer_classname = "ConfigMobile";
+option swift_prefix = "Config";
+
+
+service Mobile {
+    rpc IsBlockedByDevice(IsBlockedByDeviceRequest) returns (IsBlockedByDeviceResponse) {
+    }
+
+    rpc GetTournamentBuckets (GetTournamentBucketsRequest) returns (GetTournamentBucketsResponse);
+
+    rpc GetGameBucketList (GetGameBucketListRequest) returns (GetGameBucketListResponse);
+
+    // For mobile home page notifications, Avoid mobile calculate these fields from different APIs,
+    // return HomeNotificationResponse
+    rpc GetHomeNotifications(HomeNotificationRequest) returns (HomeNotificationResponse) {
+    }
+
+    rpc GetPracticeBucket(GetPracticeBucketRequest) returns (GetPracticeBucketResponse) {
+    }
+
+    rpc GetGameInfoByGameID(GetGameInfoByGameIDRequest) returns (GetGameInfoByGameIDResponse) {
+    }
+
+    rpc SetMarketingCampaignTag(SetMarketingCampaignTagRequest) returns (SetMarketingCampaignTagResponse){
+    }
+    
+    rpc GetGameActivePlayersCount (GetGameActivePlayersCountRequest) returns (GetGameActivePlayersCountResponse);
+    
+    //tag user based on abtesting group
+     rpc SetABTestingExperimentTag(SetABTestingExperimentTagRequest) returns (SetABTestingExperimentTagResponse) {}
+}
+
+message SetMarketingCampaignTagRequest {
+    string marketing_campaign_tag = 1;
+}
+
+message SetMarketingCampaignTagResponse {
+    err.BackendError error = 1;
+}
+
+// exp: setABTestingExperimentTag("TagName1", "2100_1"), only reserved tag will be accepted
+// experiment_tag_name: passthrough tagName form the config json file, might be "1", "2", "3"
+// experiment_user_tag: tag value consist of experiment name and groupname, 2100_1 is means experiment 2100 with group name 1
+message SetABTestingExperimentTagRequest {
+    string experiment_tag_name = 1;
+    string experiment_user_tag = 2;
+}
+
+message SetABTestingExperimentTagResponse {
+  err.BackendError error = 1;
+}
+
+message GetGameInfoByGameIDRequest {
+    string game_id = 1;
+}
+
+message GetGameInfoByGameIDResponse {
+    err.BackendError error = 1;
+    common.GameInfo game_info = 2;
+}
+
+message GetPracticeBucketRequest {
+    string game_id = 1;
+}
+
+message GetPracticeBucketResponse {
+    err.BackendError error = 1;
+    match.MatchBucket practice_bucket = 2;
+}
+
+message IsBlockedByDeviceRequest {
+    common.DeviceType device_type = 1;
+    string device_id = 2;
+}
+
+message IsBlockedByDeviceResponse {
+    err.BackendError error = 1;
+    bool is_blocked = 2;
+}
+
+message GetTournamentBucketsRequest {
+    string game_id = 1; //if this is not specified, return all tournaments for this app
+    common.PrimaryAccountType primary_account_type= 2;
+    repeated tournament.TournamentStatus tournament_status = 3;
+    // could be
+    // "celerx.app" for Android or  "network.celer.celerx" for iOS
+    // "celerx.app.solitaire"
+    // "celerx.app.fruitpunch"
+    // "celerx.app.cubematrix"
+    // "celerx.app.daubcash"
+    string app_id = 4;
+    string app_version = 5;
+    common.DeviceType device_type = 6;
+}
+
+message GetTournamentBucketsResponse {
+    err.BackendError error = 1;
+    repeated tournament.TournamentBucketDetail tournament_bucket_detail_list = 2;
+}
+
+message GetGameBucketListRequest {
+    string game_id = 1;
+    common.PrimaryAccountType primary_account_type= 2;
+    repeated tournament.TournamentStatus tournament_status = 3;
+    // could be
+    // "celerx.app" for Android or  "network.celer.celerx" for iOS
+    // "celerx.app.solitaire"
+    // "celerx.app.fruitpunch"
+    // "celerx.app.cubematrix"
+    // "celerx.app.daubcash"
+    string app_id = 4;
+    string app_version = 5;
+    common.DeviceType device_type = 6;
+    bool need_special_bucket = 7;
+}
+
+message GetGameBucketListResponse {
+    err.BackendError error = 1;
+    repeated match.MatchBucket match_buckets = 2;
+    repeated tournament.TournamentBucketDetail tournament_buckets = 3;
+    repeated match.MatchBucket special_buckets = 4;
+}
+
+message HomeNotificationRequest {
+    common.PrimaryAccountType primary_account_type= 1;
+}
+
+message HomeNotificationResponse {
+    err.BackendError error = 1;
+
+    // Need to display red dot on the history tab
+    bool exists_unread_history = 2;
+
+    // Need to display treasure box on the history tab
+    bool exists_unclaimed_prize = 3;
+}
+
+message GetGameActivePlayersCountRequest {
+    repeated string game_ids = 1;
+}
+
+message GetGameActivePlayersCountResponse {
+    repeated GameActivePlayers active_players = 1;
+}
+
+message GameActivePlayers {
+    string game_id = 1;
+    int32 active_players_count = 2;
+}
+
+message BucketRewards {
+    repeated common.BucketReward bucket_rewards = 1;
+}

@@ -1,0 +1,179 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package campaign;
+
+import "error.proto";
+
+option java_package = "network.celer.backend.rpcApi";
+option java_outer_classname = "UserTaggingPKG";
+option go_package = "github.com/celer-network/x-proto-go/campaign";
+
+service UserTaggingService {
+
+    // query all tag
+    rpc QueryUserTag (QueryUserTagRequest) returns (QueryUserTagResponse) {
+    }
+
+    // parse string format query expression to structured format
+    rpc ParseQueryExpression (ParseQueryExpressionRequest) returns (ParseQueryExpressionResponse) {
+    }
+
+    // decide whether the user is qualified for multiple QueryExpression each by each.
+    rpc EvaluateUserWithQueryExpression (EvaluateUserWithQueryExpressionRequest) returns (EvaluateUserWithQueryExpressionResponse) {
+    }
+
+    // query usernames list by sql, implemented through AWS athena
+    // one batch has 5000 users
+    rpc QueryUsernamesBySql (QueryUsernamesBySqlRequest) returns (stream QueryUsernamesBySqlResponse) {
+    }
+}
+
+// example for integer tag name. not all tags are listed in this enum.
+// see comment for more tag name template.
+// some tags will require replacing certain pattern in tag name template to splice the actual tag name.
+// All tags are lowercase.
+enum IntegerUserTaggingExampleTypeEnum {
+    UNKNOWN_INTEGER_USER_TAGGING_TYPE = 0;
+    // this is a real tag name: all_match_played_num
+    ALL_MATCH_PLAYED_NUM = 1;
+    // this is a real tag name: all_match_won_num
+    ALL_MATCH_WON_NUM = 2;
+    // below is an example for tag like: {token}_played_num, token can be GT or USD.
+    // real tag names are like gt_played_num
+    GT_PLAYED_NUM = 3;
+    // tag: {token}_won_num.
+    // real tag names are like gt_won_num
+    GT_WON_NUM = 4;
+    // below is NOT a real tag name
+    // tag: {gameID}_played_num, gameID is like "000064".
+    // real tag names are like 000064_played_num
+    GAME_ID_PLAYED_NUM = 5;
+    // below is NOT a real tag name
+    // tag: {gameID}_won_num, gameID is like "000064".
+    // real tag names are like 000064_won_num
+    GAME_ID_WON_NUM = 6;
+    // below is NOT a real tag name
+    // tag: {gameID}_{token}_played_num, gameID is like "000064", token can be GT or USD.
+    // real tag names are like 000064_gt_played_num
+    GAME_ID_TOKEN_PLAYED_NUM = 7;
+    // below is NOT a real tag name
+    // tag: {gameID}_{token}_won_num, gameID is like "000064", token can be GT or USD.
+    // real tag names are like 000064_gt_won_num
+    GAME_ID_TOKEN_WON_NUM = 8;
+    // tag: user_creation_time.
+    USER_CREATION_TIME = 9;
+    // tag: user_creation_time_mod_2.
+    // used for randomly classify
+    USER_CREATION_TIME_MOD_2 = 10;
+    // below is NOT a real tag name
+    // tag: {appId}_installed, appId is like "celerx_app", "celerx_app_daubcash", "celerx_app_solitaire".
+    // real tag names are like celerx_app_installed
+    APP_ID_INSTALLED = 11;
+}
+
+// example for decimal tag name. not all tags are listed in this enum.
+// see comment for more tag name template.
+// some tags will require replacing certain pattern in tag name template to splice the actual tag name.
+// All tags are lowercase.
+enum DecimalUserTaggingExampleTypeEnum {
+    UNKNOWN_DECIMAL_USER_TAGGING_TYPE = 0;
+    // below is an example for tag like: {token}_deposit_amount, token can be GT or USD.
+    // real tag names are like gt_deposit_amount
+    USD_DEPOSIT_AMOUNT = 1;
+}
+
+message QueryUserTagRequest {
+    repeated string username = 1;
+}
+
+message QueryUserTagResponse {
+    err.BackendError error = 1;
+    // key is username
+    map<string, UserTag> user_tag = 2;
+}
+
+// name must be the same in NumericUserTaggingTypeEnum ignore case.
+message UserTag {
+    // this map's key need special handle, see example in IntegerUserTaggingExampleTypeEnum
+    // key is integer type user tag name
+    map<string, int64> integer_user_tag = 1;
+    // this map's key need special handle, see example in DecimalUserTaggingExampleTypeEnum
+    // key is decimal(double) type user tag name
+    map<string, double> decimal_user_tag = 2;
+    // this map's key need special handle, see example in StringUserTaggingExampleTypeEnum
+    // key is string type user tag name
+    map<string, string> string_user_tag = 3;
+}
+
+message ParseQueryExpressionRequest {
+    string expression = 1;
+}
+
+message ParseQueryExpressionResponse {
+    QueryExpression expression = 1;
+    err.BackendError error = 2;
+}
+
+// structure for query expression
+// if type is set, means it's a logic layer, then it's a type_expression.
+// e.g. type is AND, means subsequent expressions is organized by and, only all true means true.
+// otherwise it's a actual expression.
+// e.g. operator is EQUAL, means tag equal values.
+message QueryExpression {
+    oneof payload {
+        TypeQueryExpression type_expression = 1;
+        OperatorQueryExpression operator_expression = 2;
+    }
+}
+
+message TypeQueryExpression {
+    QueryExpressionTypeEnum type = 1;
+    repeated QueryExpression sub_expressions = 2;
+}
+
+message OperatorQueryExpression {
+    QueryExpressionOperatorEnum operator = 1;
+    repeated string values = 2;
+    string tag_name = 3;
+}
+
+enum QueryExpressionTypeEnum {
+    UNDEFINED_QUERY_EXPRESSION_TYPE = 0;
+    AND = 1;
+    OR = 2;
+}
+
+enum QueryExpressionOperatorEnum {
+    UNDEFINED_QUERY_EXPRESSION_OPERATOR = 0;
+    EXIST = 1;
+    NOT_EXIST = 2;
+    EQUAL = 3;
+    NOT_EQUAL = 4;
+    LESS_THAN = 5;
+    LESS_THAN_EQUAL = 6;
+    GREATER_THAN = 7;
+    GREATER_THAN_EQUAL = 8;
+    IN = 9;
+    NOT_IN = 10;
+}
+
+message EvaluateUserWithQueryExpressionRequest {
+    string username = 1;
+    // key is unique integer corresponding to EvaluateUserWithQueryExpressionResponse results' key
+    map<int32, QueryExpression> expressions = 2;
+}
+
+message EvaluateUserWithQueryExpressionResponse {
+    err.BackendError error = 1;
+    // // key is unique integer corresponding to EvaluateUserWithQueryExpressionRequest expressions' key
+    map<int32, bool> results = 2;
+}
+
+message QueryUsernamesBySqlRequest {
+    string query_sql = 1;
+}
+
+message QueryUsernamesBySqlResponse {
+    err.BackendError error = 1;
+    repeated string usernames = 2;
+}

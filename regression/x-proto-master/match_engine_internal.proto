@@ -1,0 +1,122 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package match.engine;
+
+import "common_backend.proto";
+import "error.proto";
+
+option java_package = "network.celer.proto.match";
+option java_outer_classname = "MatchEngineInternal";
+option go_package = "github.com/celer-network/x-proto-go/matchengine";
+
+service FulfillEngine {
+    // add ticket to matching list
+    rpc StartMatch (StartMatchRequest) returns (StartMatchResponse) {
+    }
+
+    // delete ticket from matching list.
+    // typically when someone cancel his match.
+    rpc StopMatch (StopMatchRequest) returns (StopMatchResponse) {
+    }
+
+    // put ticket back to the pending list
+    // typically not involve user action, only happen when someone's opponent cancel his match
+    rpc RestartPendingMatch (RestartPendingMatchRequest) returns (RestartPendingMatchResponse) {
+    }
+
+    // delete ticket from pending list.
+    // typically when someone is ready time out.
+    rpc StopPendingMatch (StopPendingMatchRequest) returns (StopPendingMatchResponse) {
+    }
+}
+
+service PolicyEngine {
+    // get policy pref for new ticket, if error, treat pref as neutral
+    rpc GetPolicyPref (GetPolicyRequest) returns (GetPolicyResponse);
+}
+
+message GetPolicyRequest {
+    string ticket_id = 1;
+    string username = 2;
+    string game_id = 3;
+    common.Amount entry_fee = 4; // entry fee for this ticket, value and token_type enum must be set
+    bool all_fee_in_bonus = 5; // only true if all entry fee (100%) is paid in bonus cash
+}
+
+// we start with enum pref to simplify phase1 implementation. we'll add more enums or switch
+// to int pref directly in phase 2
+enum PolicyPrefEnum {
+    INVALID_PREF = 0;
+    MUST_LOSE = 1; // must lose, if no match, ok to cancel
+    reserved 2 to 24;
+    LOSE = 25; // prefer lose
+    reserved 26 to 49;
+    NEUTRAL = 50; // don't care, either win or lose is ok
+    reserved 51 to 74;
+    WIN = 75; // prefer win
+    reserved 76 to 99;
+    MUST_WIN = 100; // must win, may use bot
+    // this policy means ticket will match with each other regardless of his rating.
+    // currently tickets in special bucket and blacklist will fall into this policy.
+    // once Backend server found this ticket is in special bucket, Backend server won't ask Policy sever for his Pref,
+    // will set this ticket's Pref to IGNORE_RATING.
+    IGNORE_RATING = 1000;
+}
+
+message GetPolicyResponse {
+    err.BackendError error = 1;
+    PolicyPrefEnum pref = 2; // use enum for now, can be changed to int (back compatible) in the future
+    int32 policy_num = 3; // policy number that gives the pref. Note the num and its pref isn't stable, must check policy doc
+}
+
+message MatchmakingPlayer {
+    string username = 1;
+    int32 level = 2;
+}
+
+message StartMatchRequest {
+    int64 ticket_id = 1;
+    string game_id = 2;
+    string bucket_id = 3;
+    int32 maximum_player = 4;
+    int32 minimum_player = 5;
+    repeated MatchmakingPlayer players = 6;
+    reserved 7;
+    common.Amount entry_fee = 8;
+    bool all_fee_in_bonus = 9; // only true if all entry fee (100%) is paid in bonus cash
+    reserved 10;
+    bool special_bucket = 11;
+}
+
+message StartMatchResponse {
+    err.BackendError error = 1;
+}
+
+message StopMatchRequest {
+    int64 ticket_id = 1;
+}
+
+message StopMatchResponse {
+    err.BackendError error = 1;
+}
+
+message StopPendingMatchRequest {
+    string game_id = 1;
+    string bucket_id = 2;
+    int64 ticket_id = 3;
+    string username = 4;
+}
+
+message RestartPendingMatchRequest {
+    StartMatchRequest start_match_request = 1;
+    string match_id = 2;
+}
+
+message RestartPendingMatchResponse {
+    err.BackendError error = 1;
+}
+
+message StopPendingMatchResponse {
+    err.BackendError error = 1;
+}

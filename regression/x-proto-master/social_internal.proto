@@ -1,0 +1,151 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package social;
+
+import "error.proto";
+import "common_backend.proto";
+
+option java_package = "network.celer.proto.social";
+option java_outer_classname = "SocialInternal";
+option go_package = "github.com/celer-network/x-proto-go/social";
+
+service Internal {
+    // If any error occurs, client should use the unfiltered words.
+    // Any dirty words in the request will be replaced as *****. e.g. "I fuck you" -> "I**** you".
+    // Features:
+    // 1. It works for the dirty words separated by spaces, such as 's h it'.
+    // 2. It ignores word case, no matter Shit or sHit can be censored.
+    // 3. Word modification can be censored, such as shit -> sh1t, bitch -> bi+ch, boobs -> b00bs.
+    rpc FilterDirtyWords (FilterDirtyWordsRequest) returns (FilterDirtyWordsResponse) {
+    }
+}
+
+message FilterDirtyWordsRequest {
+    string words = 1;
+}
+
+message FilterDirtyWordsResponse {
+    err.BackendError error = 1;
+    string filtered_words = 2;
+}
+
+// kafka topic: add_social_live_feed
+message AddSocialLiveFeedEvent {
+    int64 last_updated = 1; //UTC millis
+    string game_id = 2;
+    string game_title = 3;
+    oneof live_feed_payload {
+        MatchWonLiveFeedEvent match_won_live_feed = 4;
+        TournamentEndedLiveFeedEvent tournament_ended_live_feed = 5;
+        TournamentPlacedLiveFeedEvent tournament_placed_live_feed = 6;
+        SocialChallengeCreatedLiveFeedEvent social_challenge_created_live_feed = 7;
+        SocialChallengeWonLiveFeedEvent social_challenge_won_live_feed = 8;
+        SocialChallengeFailedToAcceptLiveFeedEvent social_challenge_failed_to_accept_challenge_live_feed = 9;
+        LeaguePlacedLiveFeedEvent league_placed_live_feed = 10;
+        WinningStreakLiveFeedEvent winning_streak_live_feed = 11;
+    }
+}
+
+message MatchWonLiveFeedEvent {
+    string winner = 1;
+    string loser = 2;
+    common.Amount prize = 3;
+    bool should_show_challenge_button = 4;
+}
+
+message TournamentEndedLiveFeedEvent {
+    repeated string top_3_winner = 1;
+    int32 number_of_other_participants = 2;
+    string tournament_bucket_id = 3;
+    string tournament_bucket_title = 4;
+    common.Amount prize_pool = 5;
+}
+
+message TournamentPlacedLiveFeedEvent {
+    string participant = 1;
+    string rank_number = 2;
+    string tournament_bucket_id = 3;
+    string tournament_bucket_title = 4;
+}
+
+message SocialChallengeCreatedLiveFeedEvent {
+    string challenger = 1;
+    string defender = 2;
+}
+
+message SocialChallengeWonLiveFeedEvent {
+    string winner = 1;
+    string loser = 2;
+    common.Amount prize = 3;
+}
+
+message SocialChallengeFailedToAcceptLiveFeedEvent {
+    string defender = 1;
+    string challenger = 2;
+}
+
+message LeaguePlacedLiveFeedEvent {
+    string participant = 1;
+    string league_id = 2;
+    string league_title = 3;
+    int32 league_ranking = 4;
+}
+
+message WinningStreakLiveFeedEvent {
+    string username = 1;
+    bool won = 2;
+}
+
+// kafka topic: add_social_mega_wins_feed
+message AddSocialMegaWinsFeedEvent {
+    int64 last_updated = 1; //UTC millis
+    string game_id = 2;
+    string game_title = 3;
+    oneof mega_wins_feed_payload {
+        TodayWonMegaWinsFeedEvent today_won_feed = 4;
+        MatchWonMegaWinsFeedEvent match_won_feed = 5;
+        ChallengeWonMegaWinsFeedEvent challenge_won_feed = 6;
+        TournamentEndedMegaWinsFeedEvent tournament_ended_feed = 7;
+        LeagueEndedMegaWinsFeedEvent league_ended_feed = 8;
+        NewUserWonMegaWinsFeedEvent new_user_won_feed = 9;
+        HallOfFameMegaWinsFeedEvent hall_of_fame_feed = 10;
+    }
+}
+
+message TodayWonMegaWinsFeedEvent {
+    string winner = 1;
+    common.Amount prize = 2;
+}
+
+message MatchWonMegaWinsFeedEvent {
+    string winner = 1;
+    common.Amount prize = 2;
+}
+
+message ChallengeWonMegaWinsFeedEvent {
+    string winner = 1;
+    string loser = 2;
+    common.Amount prize = 3;
+}
+
+message TournamentEndedMegaWinsFeedEvent {
+    repeated string top_3_winner = 1;
+    int32 number_of_other_participants = 2;
+    string tournament_bucket_id = 3;
+    string tournament_bucket_title = 4;
+    common.Amount prize_pool = 5;
+}
+
+message LeagueEndedMegaWinsFeedEvent {
+    string participant = 1;
+    common.Amount prize = 3;
+}
+
+message NewUserWonMegaWinsFeedEvent {
+    string winner = 1;
+    common.Amount prize = 3;
+}
+
+message HallOfFameMegaWinsFeedEvent {
+    string winner = 1;
+}

@@ -1,0 +1,213 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package history;
+
+import "google/api/annotations.proto";
+import "error.proto";
+import "common_backend.proto";
+import "common_mobile.proto";
+import "league_mobile.proto";
+import "tournament_mobile.proto";
+import "match_mobile.proto";
+
+option java_package = "network.celer.proto.history";
+option java_outer_classname = "HistoryMobile";
+option swift_prefix = "History";
+option go_package = "github.com/celer-network/x-proto-go/history";
+
+service Mobile {
+    // new mobile native grpc
+    rpc GetGameHistory (GetGameHistoryRequest) returns (GetGameHistoryResponse) {
+    }
+}
+
+service HistoryService {
+
+    // Search history items by type, include ongoing/claims/ended
+    rpc GetGameHistoryItems (GetGameHistoryItemsRequest) returns (GetGameHistoryItemsResponse) {
+        option (google.api.http) = {
+            post: "/v1/history/get_game_history_items"
+            body: "*"
+        };
+    }
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Requests
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message GetGameHistoryRequest {
+    repeated GameHistoryPageParam page_request_list = 1;
+    common.PrimaryAccountType primary_account_type= 2;
+    bool needs_all_prize_claims = 3;
+    bool needs_top_acceptable_challenges = 4;
+    string game_id = 5;
+}
+
+message GetGameHistoryItemsRequest {
+    repeated GameHistoryItemPageParam page_request_list = 1;
+    string app_id = 2; // optional.
+    repeated string token_symbol = 3; // optional.
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Responses
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message GetGameHistoryResponse {
+    err.BackendError error = 1;
+    repeated GameHistoryPage page_list = 2;
+    repeated common.TokenAmount total_claim_prize = 3;
+    repeated MatchHistory top_acceptable_challenges = 4;
+}
+
+message GetGameHistoryItemsResponse {
+    repeated GameHistoryItemPage page_list = 1;
+    err.BackendError error = 2;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Enums
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+enum GameHistoryItemType {
+    GAME_HISTORY_ITEM_TYPE_UNDEFINED = 0;
+    GAME_HISTORY_ITEM_TYPE_MATCH = 1;
+    GAME_HISTORY_ITEM_TYPE_TOURNAMENT = 2;
+    GAME_HISTORY_ITEM_TYPE_LEAGUE = 3;
+    GAME_HISTORY_ITEM_TYPE_CHALLENGE = 4;
+}
+
+enum GameHistoryItemStatus {
+    GAME_HISTORY_ITEM_STATUS_UNDEFINED = 0;
+    GAME_HISTORY_ITEM_STATUS_ONGOING = 1;
+    GAME_HISTORY_ITEM_STATUS_CLAIM = 2;
+    GAME_HISTORY_ITEM_STATUS_ENDED = 3;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Data Models
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message TournamentHistoryDetail {
+    tournament.TournamentDetail tournament_detail = 1;
+    TournamentAchievement tournament_achievement = 2; // used to get from /tournament/getCurrentUserTournamentHistory?tournamentId=xxx
+    bool should_notify = 3;
+    bool has_unclaimed_prize = 4;
+}
+
+message LeagueHistoryDetail {
+    league.League league_detail = 1;
+    league.LeaguePrize league_prize = 2;
+    bool should_notify = 3;
+    bool has_unclaimed_prize = 4;
+}
+
+message GameHistoryItem {
+    oneof game_history_item_detail {
+        match.MatchDetail match_detail = 1; // Match and challenge share common.MatchDetail type, use is_challenge_match to distinguish.
+        TournamentHistoryDetail tournament_detail = 2;
+        LeagueHistoryDetail league_detail = 3;
+    }
+    GameHistoryItemType game_history_item_type = 4;
+}
+
+message GameHistoryItemPageParam {
+    int32 page_size = 1;
+    GameHistoryItemStatus status = 2;
+    string next_page_token = 3;
+}
+
+message GameHistoryItemPage {
+    repeated GameHistoryItem game_history_items = 1;
+    GameHistoryItemStatus status = 2;
+    string next_page_token = 3;
+}
+
+message EnrollLeagueDetail {
+    oneof league_bucket {
+        league.EnrolledLeague enrolled_league = 1;
+        league.BestResult best_result = 2;
+    }
+    league.LeagueTypeEnum league_type = 3;
+}
+
+
+message OngoingAndUpcomingTournamentBucketsInCurrentMode {
+    repeated tournament.TournamentBucket ongoing_tournament_buckets = 1;
+    repeated tournament.TournamentBucket upcoming_tournament_buckets = 2;
+}
+
+// from history-mobile.proto
+enum GameHistoryType {
+    GAME_HISTORY_TYPE_UNDEFINED = 0;
+    GAME_HISTORY_TYPE_MATCH = 1;
+    GAME_HISTORY_TYPE_TOURNAMENT = 2;
+    GAME_HISTORY_TYPE_LEAGUE = 3;
+    GAME_HISTORY_TYPE_CHALLENGE = 4;
+}
+
+enum GameHistoryStatus {
+    GAME_HISTORY_STATUS_UNDEFINED = 0;
+    GAME_HISTORY_STATUS_ONGOING = 1;
+    GAME_HISTORY_STATUS_CLAIM = 2;
+    GAME_HISTORY_STATUS_ENDED = 3;
+}
+
+// For H2H and challenge
+message MatchHistory {
+    match.MatchHistoryDetail match_detail = 1;
+}
+
+message TournamentHistory {
+    tournament.TournamentBucket tournament_bucket = 1;
+    tournament.TournamentAchievement tournament_achievement = 2;
+    bool should_notify = 3;
+    bool exists_unclaimed_prize = 4;
+    league.LeagueStarRewardNote league_star_reward_note = 5;
+}
+
+message LeagueHistory {
+    league.LeagueBucket league_bucket = 1;
+    league.LeaguePrize league_prize = 2;
+    bool should_notify = 3;
+    bool exists_unclaimed_prize = 4;
+}
+
+message GameHistory {
+    oneof game_history_detail {
+        MatchHistory match_history = 1;
+        TournamentHistory tournament_history = 2;
+        LeagueHistory league_history = 3;
+    }
+    GameHistoryType game_history_type = 4;
+}
+
+message GameHistoryPageParam {
+    int32 page_size = 1;
+    GameHistoryStatus status = 2;
+    repeated GameHistoryType types = 3;
+
+    string next_page_token = 99; // next page token
+}
+
+message GameHistoryPage {
+    repeated GameHistory game_history = 1;
+    GameHistoryStatus status = 2;
+
+    string next_page_token = 99; // next page token
+}
+
+message TournamentAchievement {
+    string user_name = 1;
+    string full_name = 2;
+    string visible_username = 3;
+    string eth_addr = 4;
+    string avatar_url = 5;
+    string tournament_id = 6;
+    int64 score = 7;
+    int64 ranking_number = 8;
+    common.Amount prize = 9;
+    tournament.TournamentPrizeStatus status = 10;
+    int64 last_updated = 11;
+    int64 ticket_id = 12;
+    int32 ticket_status = 13;
+}

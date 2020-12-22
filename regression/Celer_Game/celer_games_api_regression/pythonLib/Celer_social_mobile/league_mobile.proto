@@ -1,0 +1,301 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package league;
+
+import "google/protobuf/empty.proto";
+import "error.proto";
+import "common_backend.proto";
+import "common_mobile.proto";
+import "account_mobile.proto";
+import "campaign_mobile.proto";
+
+option java_package = "network.celer.proto.league";
+option java_outer_classname = "LeagueMobile";
+option swift_prefix = "League";
+option go_package = "github.com/celer-network/x-proto-go/league";
+
+// League Mobile API service
+service Mobile {
+    rpc GetActiveLeague (LeagueTypeRequest) returns (ActiveLeagueResponse);
+    rpc GetActiveLeagues (google.protobuf.Empty) returns (ActiveLeaguesResponse);
+    rpc GetActiveLeagueRankings (GetActiveLeagueRankingsRequest) returns (LeagueRankingsResponse);
+    rpc GetLeagueRankings (GetLeagueRankingsRequest) returns (LeagueRankingsResponse);
+    rpc GetMyActiveLeagueRanking (LeagueTypeRequest) returns (LeagueRankingResponse);
+    rpc GetMyLeagueRanking (LeagueIdStringRequest) returns (LeagueRankingResponse);
+    rpc GetLastLeagueResults (google.protobuf.Empty) returns (LastLeagueResultsResponse);
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Enums
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+// possible transitions
+// DRAFT -> INACTIVE (approval)
+// INACTIVE -> DRAFT (withdraw)
+// INACTIVE -> ACTIVE (when league's start_time is reached)
+// ACTIVE -> ENDED (when league's end_time is reached)
+enum LeagueStatusEnum {
+    UNKNOWN_LEAGUE_STATUS = 0;
+    DRAFT = 1;
+    INACTIVE = 2;
+    ACTIVE = 3;
+    ENDED = 4;
+}
+
+enum PrizeStatusEnum {
+    UNKNOWN_PRIZE_STATUS = 0;
+    UNPAID = 1; // league has ended and prize info has been generated, but prize hasn't been sent by admin
+    PAID = 2; // prize has been sent and received
+    PAYING = 3; // prize has been sent, but hasn't been received yet
+    CANCELLED = 4; // prize is rejected by admin
+    FAILED = 5; // attempted to send prize, but failed
+    NOT_ELIGIBLE = 6; // league has ended but user didn't win any prize
+}
+
+enum LeagueTypeEnum {
+    UNKNOWN_LEAGUE_TYPE = 0;
+    CASH_LEAGUE = 1;
+    PRACTICE_LEAGUE = 2;
+}
+
+enum LeagueStarRewardNoteStatus {
+    LEAGUE_STAR_REWARD_NOTE_STATUS_UNDEFINED = 0;
+    LEAGUE_STAR_REWARD_NOTE_STATUS_PENDING = 1;
+    LEAGUE_STAR_REWARD_NOTE_STATUS_FAILED_TO_SEND = 2;
+    LEAGUE_STAR_REWARD_NOTE_STATUS_COMPLETED = 3;
+    LEAGUE_STAR_REWARD_NOTE_STATUS_NOT_ELIGIBLE = 4;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Data Models
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message League {
+    int64 id = 1;
+    string title = 2;
+    int64 begin_time = 3; // unix epoch seconds
+    int64 end_time = 4; // unix epoch seconds
+    LeagueTypeEnum type = 5;
+    LeagueStatusEnum status = 6;
+
+    // when a user is qualified for multiple leagues, the user will be enrolled in
+    // the league with lowest priority number (e.g. highest priority)
+    int32 priority = 7;
+
+    // when trying to enroll a user into a league, one of these criteria is used
+    oneof qualification_criteria {
+        campaign.UserTaggingTypeEnum user_tag = 8; // for phase 2 and onwards
+        string user_tag_name = 9; // for phase 1
+    }
+
+    // only useful when numeric_user_tag is used
+    // the qualification assertion is "value >= qualification_criteria_value"
+    double qualification_criteria_value = 10;
+
+    repeated string game_ids = 11; // the games to play to gain league points
+
+    // a league can have a combination of tokens as rewards.
+    // e.g. 1000 GT + 1 ETH + 100 CP for 1st place
+    //      100 GT + 2000 CELR for 2nd place
+    //      ...
+    // this message is serialized then stored in MySQL directly
+    LeaguePrizeRules prize_rules = 12;
+
+
+    string description = 13;
+    string image_url = 14;
+
+    // derived from prize_rules. for mobile to display only
+    int32 prize_pool_usd_value = 15;
+
+    // only set for admin apis
+    string start_notification = 16;
+    string end_notification = 17;
+}
+
+message PrizeDistributionRule {
+    int32 from = 1; // from what rank
+    int32 to = 2; // to what rank
+    double percentage = 3; // each winner gets how many percent of the prize pool
+}
+
+message LeaguePrizeRule {
+    common.Amount amount = 1;
+    repeated PrizeDistributionRule prize_distribution_rules = 2;
+}
+
+// this message is serialized then stored in MySQL directly
+message LeaguePrizeRules {
+    repeated LeaguePrizeRule prize_rules = 1;
+}
+
+// for old api, may be deleted in future.
+message LeagueRanking {
+    option deprecated = true;
+
+    string username = 1;
+    int32 rank = 2;
+    double league_points = 3;
+    common.Amount prize_amount = 4;
+    // the following fields are only set for current player if league has ended
+    int64 last_updated = 5;
+    PrizeStatusEnum prize_status = 6;
+    bool is_prize_claimed = 7;
+}
+
+message LeagueAchievement {
+    string username = 1;
+    int32 rank = 2;
+    double league_points = 3;
+    common.TokenAmount prize_amount = 4;
+    string visible_username = 5;
+    string avatar_url = 6;
+    LeagueTypeEnum league_type = 7;
+    // the following fields are only set for current player if league has ended
+    int64 last_updated = 8;
+    PrizeStatusEnum prize_status = 9;
+    bool is_prize_claimed = 10;
+    account.Geolocation geolocation = 11;
+}
+
+message LeaguePrize {
+    int64 id = 1;
+    int64 league_id = 2;
+    string username = 3;
+    common.Amount amount = 4;
+    int64 high_league_points_time = 5;
+    double league_points = 6;
+    int64 league_end_time = 7;
+    PrizeStatusEnum prize_status = 8;
+    int32 rank = 9;
+    int64 last_updated = 10;
+    bool is_bot = 11;
+}
+
+message LeagueHistoryItem {
+    LeagueBucket league_bucket = 1;
+    LeagueAchievement league_achievement = 2;
+}
+
+message Leaderboard {
+    option deprecated = true;
+
+    LeagueRanking current_player_ranking = 1;
+    repeated LeagueRanking league_rankings = 2;
+}
+
+message LeagueBucket {
+    string id = 1;
+    string title = 2;
+    int64 begin_time = 3; // unix epoch milliseconds
+    int64 end_time = 4; // unix epoch milliseconds
+    LeagueTypeEnum type = 5;
+    common.AmountUsd prize_pool_deprecated = 6 [deprecated = true];
+    int32 num_remaining_matches_to_unlock = 7; // 0 means unlocked
+    common.TokenAmount prize_pool = 8;
+    LeagueStatusEnum status = 9;
+}
+
+message LeagueStarRewardNote {
+    LeagueStarRewardNoteStatus status = 1;
+    double stars_earned = 2;
+    LeagueBucket league_bucket = 3; // not set if match is cancelled
+    // duplicated field needed on match result page because league_bucket can be empty if match is cancelled
+    int32 num_remaining_matches_to_unlock = 4;
+}
+
+message EnrolledLeague {
+    League league = 1;
+    Leaderboard leaderboard = 2;
+}
+
+message LeagueResult {
+    LeagueTypeEnum type = 1;
+    LeagueAchievement current_player_ranking = 2;
+    repeated LeagueAchievement top3_league_rankings = 3;
+    int64 end_time = 4; // unix epoch milliseconds
+    string league_id = 5; // To avoid showing this result twice
+}
+
+// BestResult represents the closest league for the user to be qualified in.
+message BestResult {
+    option deprecated = true;
+
+    League league = 1;
+    double user_tag_value = 2; // in phase 1, this value means # of matches the user has played
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Request
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message LeagueIdRequest {
+    int64 league_id = 2;
+}
+
+message LeagueIdStringRequest {
+    string league_id = 1;
+}
+
+message LeagueTypeRequest {
+    LeagueTypeEnum league_type = 1;
+}
+
+message GetActiveLeagueRankingsRequest {
+    int32 limit = 1; // amount of entries to fetch per call
+    string next_page_token = 2; // populate this field with the token returned by the previous call to fetch next page. if ignored, then returns first page
+    LeagueTypeEnum league_type = 3;
+}
+
+message GetLeagueRankingsRequest {
+    int32 limit = 1;
+    string next_page_token = 2;
+    string league_id = 3;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Response
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+// returns error LEAGUE_NO_ACTIVE if no active league found with the given criteria
+message ActiveLeagueResponse {
+    err.BackendError error = 1;
+    LeagueBucket league_bucket = 2;
+}
+
+message LeagueRankingResponse {
+    err.BackendError error = 1;
+    LeagueAchievement ranking = 2;
+}
+
+// returns error LEAGUE_NO_ACTIVE if no active league found with the given criteria
+message ActiveLeaguesResponse {
+    err.BackendError error = 1;
+    repeated LeagueBucket league_buckets = 2;
+}
+
+message LeagueRankingsResponse {
+    err.BackendError error = 1;
+    LeagueBucket league_bucket = 2; // only set for first page
+
+    // if current player hasn't unlock league, the following fields are not set
+    LeagueAchievement current_player_ranking = 3; // only set for first page
+    repeated LeagueAchievement rankings = 4;
+    string next_page_token = 5;
+}
+
+message LastLeagueResultsResponse {
+    err.BackendError error = 1;
+    repeated LeagueResult results = 2;
+}
+
+/* below are deprecated */
+message GetEnrolledLeagueResponse {
+    option deprecated = true;
+    err.BackendError error = 1;
+    oneof response {
+        // present only if enrolled league is found
+        EnrolledLeague enrolled_league = 2;
+
+        // this message is only present if the user is not qualified for any league
+        // see above for message explanation
+        BestResult best_result = 3;
+    }
+}

@@ -1,0 +1,29 @@
+# when PR is closed in x-proto, try to delete the pushed topic branch in x-proto-go repo
+name: CleanUp
+
+on:
+  pull_request:
+    types: closed
+
+jobs:
+  deletebranch:
+    runs-on: ubuntu-latest
+    steps:
+    - name: it's ok if next step delete fails due to ref not found, it simply means no xproto-$PRID-$BRANCH in x-proto-go repo
+      run: echo "it's ok if next step delete fails due to ref not found, it simply means no xproto-$PRID-$BRANCH in x-proto-go repo"
+    - name: delete pushed branch in x-proto-go repo
+      uses: actions/github-script@v2
+      # pushed branch in x-proto-go repo is defined as TO_BRANCH in script.sh as xproto-$PRID-$BRANCH
+      # for github actions triggered by pull request, PRID is available as github.event.number and topic branch is github.event.pull_request.head.ref
+      # eg. TODELETE_BRANCH: xproto-${{ github.event.number }}-${{ github.event.pull_request.head.ref }}
+      # for github-script, event is available as context.payload https://github.com/actions/toolkit/blob/master/packages/github/src/context.ts#L10
+      # github delete ref api: https://developer.github.com/v3/git/refs/#delete-a-reference
+      # note unlike createRef, ref field MUST NOT include "refs/" prefix
+      with:
+        github-token: ${{ secrets.GH_TOKEN }} # GITHUB_TOKEN only works in this repo, need GH_TOKEN to access x-proto-go
+        script: |
+          github.git.deleteRef({
+            owner: context.repo.owner,
+            repo: 'x-proto-go',
+            ref: `heads/xproto-${context.payload.number}-${context.payload.pull_request.head.ref}`
+          })

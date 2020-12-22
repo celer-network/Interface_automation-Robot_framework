@@ -1,0 +1,300 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package social;
+
+import "google/protobuf/wrappers.proto"; // wrapper for scalar type like int, string
+import "google/api/annotations.proto";
+import "common_backend.proto";
+import "common_mobile.proto";
+import "account_mobile.proto";
+import "match_mobile.proto";
+import "error.proto";
+import "google/protobuf/empty.proto"; // empty as placeholder for APIs not require arg or return
+import "league_mobile.proto";
+
+option java_package = "network.celer.proto.social";
+option java_outer_classname = "SocialMobile";
+option go_package = "github.com/celer-network/x-proto-go/social";
+option swift_prefix = "Social";
+
+service SocialChallengeAPIs {
+
+    rpc CreateSocialChallengeRelation (CreateChallengeRelationRequest) returns (ChallengeRelationResponse) {
+        option (google.api.http) = {
+          post: "/v1/social/create_social_challenge_relation"
+          body: "*"
+        };
+    }
+
+    rpc DeclineSocialChallengeByMatchDetailId (google.protobuf.StringValue) returns (err.BackendError) {
+        option (google.api.http) = {
+          post: "/v1/social/decline_social_challenge"
+          body: "*"
+        };
+    }
+
+    rpc GetSocialChallengeNotification (GetSocialChallengeNotificationRequest) returns (GetSocialChallengeNotificationResponse) {
+        option (google.api.http) = {
+          post: "/v1/social/get_social_challenge_notification"
+          body: "*"
+        };
+    }
+
+}
+
+service Mobile {
+    //Get a list of proposed challenge shout out message options
+    rpc GetChallengeShoutOutMessageOptions (google.protobuf.Empty) returns (GetChallengeShoutOutMessageOptionsResponse) {
+    }
+
+    rpc GetLiveFeedByAppId (GetLiveFeedByAppIdRequest) returns (GetLiveFeedByAppIdResponse) {
+    }
+
+    rpc GetMegaWinsFeedItems (GetMegaWinsFeedItemsRequest) returns (GetMegaWinsFeedItemsResponse) {
+    }
+
+    //ERRORS: SOCIAL_INVALID_USERNAME
+    rpc GetUserFullProfile (GetUserFullProfileRequest) returns (GetUserFullProfileResponse) {
+    }
+
+    //ERRORS: SOCIAL_INVALID_USERNAME
+    rpc GetUserSocialProfile (GetUserSocialProfileRequest) returns (GetUserSocialProfileResponse) {
+    }
+
+}
+
+message GetUserFullProfileRequest {
+    string username = 1;
+    common.PrimaryAccountType primary_account_type= 2;
+    string app_id = 3;
+    common.DeviceType device_type = 4;
+}
+
+message GetUserFullProfileResponse {
+    err.BackendError error = 1;
+    UserSocialProfile user_social_profile = 2;
+    repeated LeagueLeaderboard league_preview = 3;
+    repeated GameHistoryRecord game_records = 4;
+    repeated RecentMatchResultItem match_flow_items = 5;
+}
+
+message GetUserSocialProfileRequest {
+    string username = 1;
+    common.PrimaryAccountType primary_account_type= 2;
+}
+
+message GetUserSocialProfileResponse {
+    err.BackendError error = 1;
+    UserSocialProfile user_social_profile = 2;
+}
+
+message UserSocialProfile {
+    string username = 1;
+    string visible_username = 2;
+    string avatar_url = 3;
+    string tier = 4;
+    string tier_icon = 5;
+    account.Geolocation geo_location = 6;
+    string personalized_signature = 7;
+    int64 viewers_count = 8;
+}
+
+message LeagueLeaderboard {
+    league.LeagueTypeEnum type = 1;
+    repeated league.LeagueHistoryItem league_prizes = 2;
+}
+
+message GameHistoryRecord {
+    string game_id = 1;
+    string game_title = 2;
+    string game_icon = 3;
+    int64 total_matches = 4;
+    string download_app_link = 5;
+}
+
+message RecentMatchResultItem {
+    match.MatchResultStatus match_result_status = 1;
+    int64 last_updated = 2; // unix epoch seconds
+}
+
+message GetChallengeShoutOutMessageOptionsResponse {
+    err.BackendError error = 1;
+    repeated ShoutOutMessage shout_out_messages = 2;
+}
+
+message ShoutOutMessage {
+    string id = 1; // used for localization when needed, should be configurable
+    string content = 2;
+}
+
+message CreateChallengeRelationRequest {
+    string opponent_username = 1;
+    string app_id = 2;
+    string match_bucket_id = 3;
+    string challenge_message = 4;
+    string challenge_message_id = 5;
+}
+
+message GetSocialChallengeNotificationRequest {
+    string app_id = 1; //if app_id is not specified, it means this is for platform app. Otherwise, only return response based on one app id
+}
+
+message ChallengeRelationResponse {
+    err.BackendError error = 1;
+    string room_id = 2;
+}
+
+
+message GetSocialChallengeNotificationResponse {
+    err.BackendError error = 1;
+    bool should_notify_social_challenge = 2;
+}
+
+message GetLiveFeedByAppIdRequest {
+    // Optional. The maximum number of LiveFeed to return in the response.
+    int32 max_count = 1;
+    string app_id = 2;
+    common.DeviceType device_type = 3;
+    string game_id = 4;
+}
+
+message GetLiveFeedByAppIdResponse {
+    err.BackendError error = 1;
+    repeated LiveFeed live_feeds = 2;
+}
+
+// minor difference between LiveFeed and LiveFeedItem is the returned "app_id" change to "game_id"
+message LiveFeed {
+    string download_app_link = 1;
+    reserved 2;
+    int64 last_updated = 3; //UTC millis
+    string game_id = 4;
+    string game_title = 5;
+    oneof live_feed_payload {
+        MatchWonLiveFeed match_won_live_feed = 6;
+        TournamentEndedLiveFeed tournament_ended_live_feed = 7;
+        TournamentPlacedLiveFeed tournament_placed_live_feed = 8;
+        SocialChallengeCreatedLiveFeed social_challenge_created_live_feed = 9;
+        SocialChallengeWonLiveFeed social_challenge_won_live_feed = 10;
+        SocialChallengeFailedToAcceptLiveFeed social_challenge_failed_to_accept_challenge_live_feed = 11;
+        LeaguePlacedLiveFeed league_placed_live_feed = 12;
+        WinningStreakLiveFeed winning_streak_live_feed = 13;
+    }
+}
+
+message MatchWonLiveFeed {
+    account.UserSnip winner = 1;
+    account.UserSnip loser = 2;
+    common.Amount prize = 3;
+    bool should_show_challenge_button = 4;
+}
+
+message TournamentEndedLiveFeed {
+    repeated account.UserSnip top_3_winners = 1;
+    int32 number_of_other_participants = 2;
+    string tournament_bucket_id = 3;
+    string tournament_bucket_title = 4;
+    common.Amount prize_pool = 5;
+}
+
+message TournamentPlacedLiveFeed {
+    account.UserSnip participant = 1;
+    string rank_number = 2;
+    string tournament_bucket_id = 3;
+    string tournament_bucket_title = 4;
+}
+
+message SocialChallengeCreatedLiveFeed {
+    account.UserSnip challenger = 1;
+    account.UserSnip defender = 2;
+}
+
+message SocialChallengeWonLiveFeed {
+    account.UserSnip winner = 1;
+    account.UserSnip loser = 2;
+    common.Amount prize = 3;
+}
+
+message SocialChallengeFailedToAcceptLiveFeed {
+    account.UserSnip defender = 1;
+    account.UserSnip challenger = 2;
+}
+
+message LeaguePlacedLiveFeed {
+    account.UserSnip participant = 1;
+    string league_id = 2;
+    string league_title = 3;
+    int32 league_ranking = 4;
+}
+
+message WinningStreakLiveFeed {
+    account.UserSnip winner = 1;
+    int32 matches_won = 2;
+}
+
+message GetMegaWinsFeedItemsRequest {
+    // Optional. The maximum number of LiveFeed to return in the response.
+    int32 max_count = 1;
+    string app_id = 2;
+    common.DeviceType device_type = 3;
+    string game_id = 4;
+}
+
+message GetMegaWinsFeedItemsResponse {
+    err.BackendError error = 1;
+    repeated MegaWinsFeedItem feed = 2;
+}
+
+message MegaWinsFeedItem {
+    string download_app_link = 1;
+    int64 last_updated = 2; //UTC millis
+    string game_id = 3;
+    string game_title = 4;
+    oneof mega_wins_feed_note {
+        TotalWonTodayMegaWinsFeedNote total_won_today_mega_wins_feed_note = 5;
+        MatchWonMegaWinsFeedNote match_won_mega_wins_feed_note = 6;
+        ChallengeWonMegaWinsFeedNote challenge_won_mega_wins_feed_note = 7;
+        TournamentEndedMegaWinsFeedNote tournament_ended_mega_wins_feed_note = 8;
+        LeagueEndedMegaWinsFeedNote league_ended_mega_wins_feed_note = 9;
+        NewUserWonMegaWinsFeedNote new_user_won_mega_wins_feed_note = 10;
+        HallOfFameMegaWinsFeedNote hall_of_fame_mega_wins_feed_note = 11;
+    }
+}
+
+message TotalWonTodayMegaWinsFeedNote {
+    account.UserSnip winner = 1;
+    common.Amount prize = 2;
+}
+
+message MatchWonMegaWinsFeedNote {
+    account.UserSnip winner = 1;
+    common.Amount prize = 2;
+}
+
+message ChallengeWonMegaWinsFeedNote {
+    account.UserSnip winner = 1;
+    account.UserSnip loser = 2;
+    common.Amount prize = 3;
+}
+
+message TournamentEndedMegaWinsFeedNote {
+    repeated account.UserSnip top_3_winners = 1;
+    int32 number_of_other_participants = 2;
+    string tournament_bucket_id = 3;
+    string tournament_bucket_title = 4;
+    common.Amount prize_pool = 5;
+}
+
+message LeagueEndedMegaWinsFeedNote {
+    account.UserSnip participant = 1;
+    common.Amount prize = 3;
+}
+
+message NewUserWonMegaWinsFeedNote {
+    account.UserSnip winner = 1;
+    common.Amount prize = 3;
+}
+
+message HallOfFameMegaWinsFeedNote {
+    account.UserSnip winner = 1;
+}

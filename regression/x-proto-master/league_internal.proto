@@ -1,0 +1,240 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package league;
+
+import "error.proto";
+import "league_mobile.proto";
+import "user_tagging.proto";
+import "common_backend.proto";
+import "common_mobile.proto";
+import "google/protobuf/empty.proto";
+import "campaign_mobile.proto";
+
+option java_package = "network.celer.proto.league";
+option java_outer_classname = "LeagueInternal";
+option go_package = "github.com/celer-network/x-proto-go/league";
+
+service LeagueAdminService {
+    rpc AdminGetLeague (LeagueIdRequest) returns (LeagueResponse);
+    rpc AdminGetLeagues (GetLeaguesRequest) returns (LeaguesResponse);
+
+    rpc AdminCreateLeague (LeagueInfo) returns (LeagueResponse);
+    rpc AdminUpdateLeague (UpdateLeagueRequest) returns (LeagueResponse);
+    rpc AdminApproveLeague (LeagueIdRequest) returns (LeagueResponse);
+    rpc AdminWithdrawLeague (LeagueIdRequest) returns (LeagueResponse);
+
+    rpc AdminGetPrizes (LeagueIdRequest) returns (GetPrizesResponse); // filters out NOT_ELIGIBLE prizes
+    rpc AdminSendPrizes (SendPrizesRequest) returns (SendPrizeResponse);
+    rpc AdminCancelPrize (CancelPrizeRequest) returns (PrizeResponse);
+    rpc AdminGetLeaderboard (LeaderboardRequest) returns (LeaderboardResponse);
+}
+
+service LeagueInternalService {
+    rpc InternalGetPrize (LeagueIdUsernameRequest) returns (PrizeResponse);
+    rpc InternalGetPrizes (LeagueIdRequest) returns (GetPrizesResponse);
+    rpc InternalGetLeague (LeagueIdRequest) returns (LeagueResponse);
+    rpc InternalGetEnrolledLeague (InternalGetEnrolledLeagueRequest) returns (GetEnrolledLeagueResponse);
+    rpc InternalGetLeaguePointsLog (GetLeaguePointsLogRequest) returns (GetLeaguePointsLogResponse);
+    rpc InternalGetLeagueBucket (GetLeagueBucketRequest) returns (GetLeagueBucketResponse);
+    rpc InternalGetLeagueStarRewardNote (GetLeagueStarRewardNoteRequest) returns (GetLeagueStarRewardNoteResponse);
+    rpc InternalGetUserLeagueHistory (GetUserLeagueHistoryRequest) returns (GetUserLeagueHistoryResponse);
+    rpc InternalGetUserLeagueNetWinning (GetUserLeagueNetWinningRequest) returns (UserLeagueNetWinningResponse);
+    rpc InternalGetBotUserList (google.protobuf.Empty) returns (BotUserListResponse);
+}
+
+// a source type defines the identity a business system.
+// this is used for various services to query league service for LeagueStarRewardNote
+enum LeaguePointSourceIdTypeEnum {
+    UNKNOWN_LEAGUE_POINT_SOURCE = 0;
+    MATCH_ID = 1;
+    TOURNAMENT_ID = 2;
+}
+
+enum GameResult {
+    UNKNOWN_GAME_RESULT = 0;
+    PENDING = 1;
+    WIN = 2;
+    LOSE = 3;
+    CANCEL = 4;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Data Models
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+// Used to create League. see League for field meanings
+message LeagueInfo {
+    string title = 1;
+    int64 begin_time = 2;
+    int64 end_time = 3;
+    LeagueTypeEnum type = 4;
+    int32 priority = 5;
+    // see comments in message League for explanation of qualification related fields
+    oneof qualification_criteria {
+        campaign.UserTaggingTypeEnum user_tag = 6;
+        string user_tag_name = 7;
+    }
+    double qualification_criteria_value = 8;
+    repeated string game_ids = 9;
+    LeaguePrizeRules prize_rules = 10;
+    string description = 11;
+    string image_url = 12;
+    // notifications to send to ALL users when the league status becomes ACTIVE/ENDED
+    string start_notification = 13;
+    string end_notification = 14;
+}
+
+message SendPrizeResult {
+    int64 prize_id = 1;
+    bool success = 2;
+}
+
+message LeaguePointsLog {
+    LeagueBucket league_bucket = 1;
+    double league_points = 2;
+    string username = 3;
+}
+
+message BotUser {
+    string username = 1;
+    string eth_address = 2;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Request
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message GetLeaguesRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    repeated LeagueStatusEnum status = 3;
+}
+
+message UpdateLeagueRequest {
+    int64 league_id = 1;
+    LeagueInfo league_info = 2;
+}
+
+message SendPrizesRequest {
+    repeated int64 prize_ids = 1;
+}
+
+message CancelPrizeRequest {
+    int64 prize_id = 1;
+
+    // set to true to restore cancelled prize to UNPAID. don't set or set to false to deny prize
+    bool restore = 2;
+}
+
+message LeagueIdUsernameRequest {
+    int64 league_id = 1;
+    string username = 2;
+}
+
+message InternalGetEnrolledLeagueRequest {
+    string username = 1;
+    string eth_address = 2;
+    LeagueTypeEnum league_type = 3;
+}
+
+message GetLeaguePointsLogRequest {
+    string username = 1;
+    LeaguePointSourceIdTypeEnum source_id_type = 2;
+    string source_id = 3;
+}
+
+message GetLeagueBucketRequest {
+    string username = 1;
+    LeagueTypeEnum league_type = 3;
+}
+
+message GetLeagueStarRewardNoteRequest {
+    string source_id = 1; // e.g. e666ef8a-e0c5-4625-85fa-8098b14cb13d, 123...
+    LeaguePointSourceIdTypeEnum source_type = 2; // match id, tournament id...
+    string username = 3;
+    string eth_address = 4;
+    GameResult result = 5; // used to determine the reward note's status
+    LeagueTypeEnum league_type = 6; // used to get remaining num to unlock
+}
+
+message LeaderboardRequest {
+    int32 limit = 1; // amount of entries to fetch per call
+    string next_page_token = 2; // populate this field with the token returned by the previous call to fetch next page. if ignored, then returns first page
+    int64 league_id = 3;
+}
+
+message GetUserLeagueHistoryRequest {
+    string username = 1;
+    int32 count = 2; // number of history items to return in each league type
+}
+
+message GetUserLeagueNetWinningRequest {
+    string username = 1;
+    common.TokenTypeEnum token_type = 2;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Response
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message LeaguesResponse {
+    err.BackendError error = 1;
+    repeated League leagues = 2;
+    int64 total = 3;
+}
+
+message LeagueResponse {
+    err.BackendError error = 1;
+    League league = 2;
+}
+
+message SendPrizeResponse {
+    err.BackendError error = 1;
+    repeated SendPrizeResult send_prize_result = 2;
+}
+
+message GetPrizesResponse {
+    err.BackendError error = 1;
+    repeated LeaguePrize prizes = 2;
+}
+
+message PrizeResponse {
+    err.BackendError error = 1;
+    LeaguePrize prize = 2;
+}
+
+message GetLeaguePointsLogResponse {
+    err.BackendError error = 1;
+    LeaguePointsLog league_points_log = 2;
+}
+
+message GetLeagueBucketResponse {
+    err.BackendError error = 1;
+    LeagueBucket league_bucket = 2;
+}
+
+message GetLeagueStarRewardNoteResponse {
+    err.BackendError error = 1;
+    LeagueStarRewardNote league_reward_note = 2;
+}
+
+message LeaderboardResponse {
+    err.BackendError error = 1;
+    repeated LeagueAchievement rankings = 2;
+    map<string, campaign.UserTag> user_tags = 3; // map{<username>:<user tags>}
+    string next_page_token = 4;
+}
+
+message GetUserLeagueHistoryResponse {
+    err.BackendError error = 1;
+    repeated LeagueHistoryItem cash_league_history = 2;
+    repeated LeagueHistoryItem practice_league_history = 3;
+}
+
+message UserLeagueNetWinningResponse {
+    err.BackendError error = 1;
+    common.Amount net_winning = 2;
+}
+
+message BotUserListResponse {
+    err.BackendError error = 1;
+    repeated BotUser bot_users = 2;
+}

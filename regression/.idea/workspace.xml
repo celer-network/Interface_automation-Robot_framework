@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="67a0f8f4-5711-4895-b1fe-30a7d2312061" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="JsFlowSettings">
+    <service-enabled>true</service-enabled>
+    <exe-path />
+    <other-services-enabled>true</other-services-enabled>
+    <auto-save>true</auto-save>
+  </component>
+  <component name="ProjectId" id="1itcQiuB43D03rhBk5DENT7vZmh" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_campaign_mobile" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="run.code.analysis.last.selected.profile" value="aDefault" />
+    <property name="settings.editor.selected.configurable" value="Errors" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_campaign_mobile" />
+      <recent name="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_bank_mobile" />
+      <recent name="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/Testdata" />
+      <recent name="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_tournament_mobile" />
+      <recent name="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_storage_mobile" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/x-proto-master" />
+      <recent name="$PROJECT_DIR$/Celer_Game/celer_games_api_regression" />
+      <recent name="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_account_mobile" />
+      <recent name="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib" />
+      <recent name="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/account_mobile" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.invitation-run">
+    <configuration name="bank-run" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="regression" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_bank_mobile" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_bank_mobile/bank-run.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="campaign-run" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="regression" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_campaign_mobile" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_campaign_mobile/campaign-run.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="config-run2" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="regression" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_config_mobile" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_config_mobile/config-run2.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="history-run" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="regression" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_history_mobile" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_history_mobile/history-run.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="invitation-run" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="regression" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_invitation_mobile" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_invitation_mobile/invitation-run.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.invitation-run" />
+        <item itemvalue="Python.history-run" />
+        <item itemvalue="Python.config-run2" />
+        <item itemvalue="Python.campaign-run" />
+        <item itemvalue="Python.bank-run" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration>$USER_HOME$/.subversion</configuration>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="67a0f8f4-5711-4895-b1fe-30a7d2312061" name="Default Changelist" comment="" />
+      <created>1602730314927</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1602730314927</updated>
+      <workItem from="1602730316301" duration="1530000" />
+      <workItem from="1602740246321" duration="2000" />
+      <workItem from="1602740272045" duration="3897000" />
+      <workItem from="1602747147847" duration="6248000" />
+      <workItem from="1602830785696" duration="79000" />
+      <workItem from="1602831051409" duration="1164000" />
+      <workItem from="1602832463347" duration="823000" />
+      <workItem from="1602833438064" duration="870000" />
+      <workItem from="1602834359143" duration="975000" />
+      <workItem from="1602835355072" duration="1082000" />
+      <workItem from="1602836473966" duration="2497000" />
+      <workItem from="1602839033311" duration="5165000" />
+      <workItem from="1602846601088" duration="121000" />
+      <workItem from="1603074119314" duration="6277000" />
+      <workItem from="1603088020403" duration="23720000" />
+      <workItem from="1603165355589" duration="2973000" />
+      <workItem from="1603170260013" duration="268000" />
+      <workItem from="1603170608010" duration="163000" />
+      <workItem from="1603170904617" duration="296000" />
+      <workItem from="1603171233116" duration="1814000" />
+      <workItem from="1603173170050" duration="266000" />
+      <workItem from="1603173498277" duration="1617000" />
+      <workItem from="1603175339011" duration="7380000" />
+      <workItem from="1603183584501" duration="1630000" />
+      <workItem from="1603245498181" duration="6509000" />
+      <workItem from="1603261788253" duration="382000" />
+      <workItem from="1603262358343" duration="5442000" />
+      <workItem from="1603275957788" duration="21943000" />
+      <workItem from="1603439979935" duration="5539000" />
+      <workItem from="1603447450409" duration="2410000" />
+      <workItem from="1603450476076" duration="66000" />
+      <workItem from="1603677206417" duration="8463000" />
+      <workItem from="1605064409947" duration="1203000" />
+      <workItem from="1605152851329" duration="22314000" />
+      <workItem from="1605236089184" duration="224000" />
+      <workItem from="1605236317275" duration="2310000" />
+      <workItem from="1605239412677" duration="1112000" />
+      <workItem from="1605251659867" duration="10180000" />
+      <workItem from="1605263252059" duration="2083000" />
+      <workItem from="1605577604947" duration="896000" />
+      <workItem from="1605663362034" duration="153000" />
+      <workItem from="1605669093103" duration="1060000" />
+      <workItem from="1605750256660" duration="323000" />
+      <workItem from="1605859912240" duration="5000" />
+      <workItem from="1606197980091" duration="20143000" />
+      <workItem from="1606269530397" duration="26615000" />
+      <workItem from="1606803075169" duration="1957000" />
+      <workItem from="1606805040033" duration="3407000" />
+      <workItem from="1606808671838" duration="9336000" />
+      <workItem from="1606888679305" duration="43486000" />
+      <workItem from="1607308530728" duration="13678000" />
+      <workItem from="1607334003489" duration="3502000" />
+      <workItem from="1607397155370" duration="9678000" />
+      <workItem from="1607415761438" duration="1063000" />
+      <workItem from="1607416829749" duration="9696000" />
+      <workItem from="1607482627459" duration="18239000" />
+      <workItem from="1607564211949" duration="24669000" />
+      <workItem from="1607655168365" duration="18607000" />
+      <workItem from="1607933029729" duration="3042000" />
+      <workItem from="1608619299572" duration="1275000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="0" y="-1256" key="#Inspections" timestamp="1606203511756">
+      <screen x="-569" y="-1440" width="2560" height="1440" />
+    </state>
+    <state x="0" y="-1256" key="#Inspections/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1606203511756" />
+    <state x="320" y="115" key="#Inspections/0.0.1440.900@0.0.1440.900" timestamp="1605174251444" />
+    <state x="320" y="127" key="#Inspections/0.23.1440.814@0.23.1440.814" timestamp="1602846344349" />
+    <state x="0" y="-1256" key="#Inspections/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1605172761577" />
+    <state x="320" y="115" key="#Notifications" timestamp="1602835662896">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="320" y="115" key="#Notifications/0.0.1440.900@0.0.1440.900" timestamp="1602835662896" />
+    <state x="222" y="-1024" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1606207065114">
+      <screen x="-569" y="-1440" width="2560" height="1440" />
+    </state>
+    <state x="222" y="-1024" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1606207065114" />
+    <state x="445" y="260" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1440.900@0.0.1440.900" timestamp="1603439456709" />
+    <state x="445" y="256" key="#com.intellij.fileTypes.FileTypeChooser/0.23.1440.808@0.23.1440.808" timestamp="1603179060454" />
+    <state x="355" y="224" key="#com.intellij.ide.fileTemplates.ui.ConfigureTemplatesDialog" timestamp="1602821200951">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="355" y="224" key="#com.intellij.ide.fileTemplates.ui.ConfigureTemplatesDialog/0.0.1440.900@0.0.1440.900" timestamp="1602821200951" />
+    <state x="557" y="188" key="#com.intellij.ide.macro.MacrosDialog" timestamp="1602743817156">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="557" y="188" key="#com.intellij.ide.macro.MacrosDialog/0.0.1440.900@0.0.1440.900" timestamp="1602743817156" />
+    <state x="449" y="-966" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1607417275130">
+      <screen x="-569" y="-1440" width="2560" height="1440" />
+    </state>
+    <state x="449" y="-966" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607417275130" />
+    <state x="449" y="-966" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1605167262078" />
+    <state x="532" y="313" key="#com.intellij.tools.ToolEditorDialog" timestamp="1602753676113">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="532" y="313" key="#com.intellij.tools.ToolEditorDialog/0.0.1440.900@0.0.1440.900" timestamp="1602753676113" />
+    <state x="624" y="-953" width="828" height="480" key="#xdebugger.XInspectDialog" timestamp="1606286372580">
+      <screen x="-569" y="-1440" width="2560" height="1440" />
+    </state>
+    <state x="624" y="-953" width="828" height="480" key="#xdebugger.XInspectDialog/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1606286372580" />
+    <state x="477" y="305" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1" timestamp="1603089940007">
+      <screen x="0" y="23" width="1440" height="808" />
+    </state>
+    <state x="477" y="305" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/0.23.1440.808@0.23.1440.808" timestamp="1603089940007" />
+    <state width="1440" height="438" key="DebuggerActiveHint" timestamp="1603348313312">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="1440" height="438" key="DebuggerActiveHint/0.0.1440.900@0.0.1440.900" timestamp="1603348313312" />
+    <state width="1398" height="307" key="GridCell.Tab.0.bottom" timestamp="1608620197175">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="2518" height="477" key="GridCell.Tab.0.bottom/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607936155235" />
+    <state width="1398" height="307" key="GridCell.Tab.0.bottom/0.0.1440.900@0.0.1440.900" timestamp="1608620197175" />
+    <state width="2518" height="314" key="GridCell.Tab.0.bottom/0.23.1440.808/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607051321128" />
+    <state width="1398" height="252" key="GridCell.Tab.0.bottom/0.23.1440.808@0.23.1440.808" timestamp="1605611336372" />
+    <state width="1398" height="434" key="GridCell.Tab.0.bottom/0.23.1440.811@0.23.1440.811" timestamp="1606219037110" />
+    <state width="1398" height="231" key="GridCell.Tab.0.bottom/0.23.1440.812@0.23.1440.812" timestamp="1606271366499" />
+    <state width="1398" height="231" key="GridCell.Tab.0.bottom/0.23.1440.814@0.23.1440.814" timestamp="1606270975525" />
+    <state width="2518" height="220" key="GridCell.Tab.0.bottom/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607595043722" />
+    <state width="1398" height="307" key="GridCell.Tab.0.center" timestamp="1608620197174">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="2518" height="477" key="GridCell.Tab.0.center/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607936155233" />
+    <state width="1398" height="307" key="GridCell.Tab.0.center/0.0.1440.900@0.0.1440.900" timestamp="1608620197174" />
+    <state width="2518" height="314" key="GridCell.Tab.0.center/0.23.1440.808/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607051321126" />
+    <state width="1398" height="252" key="GridCell.Tab.0.center/0.23.1440.808@0.23.1440.808" timestamp="1605611336371" />
+    <state width="1398" height="434" key="GridCell.Tab.0.center/0.23.1440.811@0.23.1440.811" timestamp="1606219037109" />
+    <state width="1398" height="231" key="GridCell.Tab.0.center/0.23.1440.812@0.23.1440.812" timestamp="1606271366498" />
+    <state width="1398" height="231" key="GridCell.Tab.0.center/0.23.1440.814@0.23.1440.814" timestamp="1606270975524" />
+    <state width="2518" height="220" key="GridCell.Tab.0.center/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607595043721" />
+    <state width="1398" height="307" key="GridCell.Tab.0.left" timestamp="1608620197174">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="2518" height="477" key="GridCell.Tab.0.left/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607936155232" />
+    <state width="1398" height="307" key="GridCell.Tab.0.left/0.0.1440.900@0.0.1440.900" timestamp="1608620197174" />
+    <state width="2518" height="314" key="GridCell.Tab.0.left/0.23.1440.808/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607051321125" />
+    <state width="1398" height="252" key="GridCell.Tab.0.left/0.23.1440.808@0.23.1440.808" timestamp="1605611336370" />
+    <state width="1398" height="434" key="GridCell.Tab.0.left/0.23.1440.811@0.23.1440.811" timestamp="1606219037108" />
+    <state width="1398" height="231" key="GridCell.Tab.0.left/0.23.1440.812@0.23.1440.812" timestamp="1606271366498" />
+    <state width="1398" height="231" key="GridCell.Tab.0.left/0.23.1440.814@0.23.1440.814" timestamp="1606270975523" />
+    <state width="2518" height="220" key="GridCell.Tab.0.left/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607595043720" />
+    <state width="1398" height="307" key="GridCell.Tab.0.right" timestamp="1608620197175">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="2518" height="477" key="GridCell.Tab.0.right/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607936155234" />
+    <state width="1398" height="307" key="GridCell.Tab.0.right/0.0.1440.900@0.0.1440.900" timestamp="1608620197175" />
+    <state width="2518" height="314" key="GridCell.Tab.0.right/0.23.1440.808/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607051321127" />
+    <state width="1398" height="252" key="GridCell.Tab.0.right/0.23.1440.808@0.23.1440.808" timestamp="1605611336371" />
+    <state width="1398" height="434" key="GridCell.Tab.0.right/0.23.1440.811@0.23.1440.811" timestamp="1606219037109" />
+    <state width="1398" height="231" key="GridCell.Tab.0.right/0.23.1440.812@0.23.1440.812" timestamp="1606271366498" />
+    <state width="1398" height="231" key="GridCell.Tab.0.right/0.23.1440.814@0.23.1440.814" timestamp="1606270975524" />
+    <state width="2518" height="220" key="GridCell.Tab.0.right/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607595043722" />
+    <state width="2518" height="301" key="GridCell.Tab.1.bottom" timestamp="1607598208840">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="2518" height="301" key="GridCell.Tab.1.bottom/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607595995843" />
+    <state width="2518" height="301" key="GridCell.Tab.1.bottom/0.0.1440.900@0.0.1440.900" timestamp="1607598208840" />
+    <state width="1398" height="258" key="GridCell.Tab.1.bottom/0.23.1440.808@0.23.1440.808" timestamp="1603165332293" />
+    <state width="2518" height="301" key="GridCell.Tab.1.bottom/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607594478647" />
+    <state width="2518" height="301" key="GridCell.Tab.1.center" timestamp="1607598208840">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="2518" height="301" key="GridCell.Tab.1.center/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607595995840" />
+    <state width="2518" height="301" key="GridCell.Tab.1.center/0.0.1440.900@0.0.1440.900" timestamp="1607598208840" />
+    <state width="1398" height="258" key="GridCell.Tab.1.center/0.23.1440.808@0.23.1440.808" timestamp="1603165332292" />
+    <state width="2518" height="301" key="GridCell.Tab.1.center/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607594478646" />
+    <state width="2518" height="301" key="GridCell.Tab.1.left" timestamp="1607598208839">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="2518" height="301" key="GridCell.Tab.1.left/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607595995839" />
+    <state width="2518" height="301" key="GridCell.Tab.1.left/0.0.1440.900@0.0.1440.900" timestamp="1607598208839" />
+    <state width="1398" height="258" key="GridCell.Tab.1.left/0.23.1440.808@0.23.1440.808" timestamp="1603165332292" />
+    <state width="2518" height="301" key="GridCell.Tab.1.left/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607594478646" />
+    <state width="2518" height="301" key="GridCell.Tab.1.right" timestamp="1607598208840">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="2518" height="301" key="GridCell.Tab.1.right/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607595995841" />
+    <state width="2518" height="301" key="GridCell.Tab.1.right/0.0.1440.900@0.0.1440.900" timestamp="1607598208840" />
+    <state width="1398" height="258" key="GridCell.Tab.1.right/0.23.1440.808@0.23.1440.808" timestamp="1603165332293" />
+    <state width="2518" height="301" key="GridCell.Tab.1.right/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607594478647" />
+    <state x="308" y="192" key="IDE.errors.dialog" timestamp="1607508435674">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="308" y="192" key="IDE.errors.dialog/0.0.1440.900@0.0.1440.900" timestamp="1607508435674" />
+    <state x="308" y="195" key="IDE.errors.dialog/0.23.1440.808@0.23.1440.808" timestamp="1603276028702" />
+    <state x="308" y="196" key="IDE.errors.dialog/0.23.1440.812@0.23.1440.812" timestamp="1602845989280" />
+    <state x="-176" y="-1298" key="SettingsEditor" timestamp="1607483279334">
+      <screen x="-569" y="-1440" width="2560" height="1440" />
+    </state>
+    <state x="-176" y="-1298" key="SettingsEditor/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607483279334" />
+    <state x="221" y="89" key="SettingsEditor/0.0.1440.900@0.0.1440.900" timestamp="1605265352754" />
+    <state x="-176" y="-1298" key="SettingsEditor/0.23.1440.808/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1605166132985" />
+    <state width="1280" height="720" key="XDebugger.FullValuePopup" timestamp="1607062927192">
+      <screen x="-569" y="-1440" width="2560" height="1440" />
+    </state>
+    <state width="1280" height="720" key="XDebugger.FullValuePopup/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607062927192" />
+    <state x="56" y="63" width="1328" height="775" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1607589616901">
+      <screen x="0" y="23" width="1440" height="808" />
+    </state>
+    <state x="-469" y="-1340" width="2360" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607506203605" />
+    <state x="56" y="63" width="1328" height="775" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.23.1440.808@0.23.1440.808" timestamp="1607589616901" />
+    <state x="397" y="276" key="com.intellij.ide.util.TipDialog" timestamp="1608619300824">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="137" y="-989" key="com.intellij.ide.util.TipDialog/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607482628042" />
+    <state x="397" y="276" key="com.intellij.ide.util.TipDialog/0.0.1440.900/-569.-1440.2560.1440@0.0.1440.900" timestamp="1607655170123" />
+    <state x="397" y="276" key="com.intellij.ide.util.TipDialog/0.0.1440.900@0.0.1440.900" timestamp="1608619300824" />
+    <state x="397" y="282" key="com.intellij.ide.util.TipDialog/0.23.1440.808/-569.-1417.2560.1417@0.23.1440.808" timestamp="1606888682380" />
+    <state x="397" y="276" key="com.intellij.ide.util.TipDialog/0.23.1440.808@0.23.1440.808" timestamp="1606269531164" />
+    <state x="204" y="14" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1603677789229">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="204" y="14" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.0.1440.900@0.0.1440.900" timestamp="1603677789229" />
+    <state x="204" y="36" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.23.1440.808@0.23.1440.808" timestamp="1603260192204" />
+    <state x="-130" y="-1071" width="1215" height="579" key="find.popup" timestamp="1606207758774">
+      <screen x="-569" y="-1440" width="2560" height="1440" />
+    </state>
+    <state x="-130" y="-1071" width="1215" height="579" key="find.popup/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1606207758774" />
+    <state x="378" y="85" width="683" height="729" key="find.popup/0.0.1440.900@0.0.1440.900" timestamp="1603437541991" />
+    <state width="1067" height="679" key="javadoc.popup" timestamp="1607506019184">
+      <screen x="-569" y="-1440" width="2560" height="1440" />
+    </state>
+    <state width="1067" height="679" key="javadoc.popup/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607506019184" />
+    <state width="600" height="424" key="javadoc.popup/0.0.1440.900@0.0.1440.900" timestamp="1603360888730" />
+    <state x="619" y="-966" width="670" height="676" key="search.everywhere.popup" timestamp="1607594157966">
+      <screen x="-569" y="-1440" width="2560" height="1440" />
+    </state>
+    <state x="619" y="-966" width="670" height="676" key="search.everywhere.popup/0.0.1440.900/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607504469276" />
+    <state x="356" y="387" width="670" height="423" key="search.everywhere.popup/0.0.1440.900@0.0.1440.900" timestamp="1605265369473" />
+    <state x="619" y="-966" width="670" height="676" key="search.everywhere.popup/0.23.1440.877/-569.-1440.2560.1440@-569.-1440.2560.1440" timestamp="1607594157966" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_config_mobile/tournament_mobile_pb2_grpc.py</url>
+          <line>2</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_history_mobile/common_backend_pb2.py</url>
+          <line>4</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../lovely_python/practice_day1.py</url>
+          <line>4</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="resud['statuscode']" />
+        <watch expression="resud['statuscode']" />
+        <watch expression="resud['message']" />
+        <watch expression="__py_debug_temp_var_2076197974" language="Python" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/regression$_channel.coverage" NAME="_channel Coverage Results" MODIFIED="1603078309295" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/venv/lib/python3.8/site-packages/grpc" />
+    <SUITE FILE_PATH="coverage/regression$campaign_run.coverage" NAME="campaign-run Coverage Results" MODIFIED="1608619850085" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_campaign_mobile" />
+    <SUITE FILE_PATH="coverage/regression$helloworld_pb2.coverage" NAME="helloworld_pb2 Coverage Results" MODIFIED="1602838519831" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/x-proto-master" />
+    <SUITE FILE_PATH="coverage/regression$config_run.coverage" NAME="config-run Coverage Results" MODIFIED="1606986064506" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_config_mobile" />
+    <SUITE FILE_PATH="coverage/regression$history_run.coverage" NAME="history-run Coverage Results" MODIFIED="1608620054405" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_history_mobile" />
+    <SUITE FILE_PATH="coverage/regression$invitation_run.coverage" NAME="invitation-run Coverage Results" MODIFIED="1608620197164" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_invitation_mobile" />
+    <SUITE FILE_PATH="coverage/regression$test001.coverage" NAME="test001 Coverage Results" MODIFIED="1603434568541" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/x-proto-master" />
+    <SUITE FILE_PATH="coverage/regression$account_mobile_channel.coverage" NAME="account_mobile_channel Coverage Results" MODIFIED="1603182460129" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/x-proto-master" />
+    <SUITE FILE_PATH="coverage/regression$match_ticket_run.coverage" NAME="match_ticket-run Coverage Results" MODIFIED="1607936104662" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_match_ticket_mobile" />
+    <SUITE FILE_PATH="coverage/regression$unittest_run__1_.coverage" NAME="bank-run Coverage Results" MODIFIED="1606813515222" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_bank_mobile" />
+    <SUITE FILE_PATH="coverage/regression$bank_mobile_pb2.coverage" NAME="bank_mobile_pb2 Coverage Results" MODIFIED="1606813758592" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_bank_mobile" />
+    <SUITE FILE_PATH="coverage/regression$bank_run__1_.coverage" NAME="bank-run (1) Coverage Results" MODIFIED="1607935825675" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_bank_mobile" />
+    <SUITE FILE_PATH="coverage/regression$account_mobile_run.coverage" NAME="account_mobile_run Coverage Results" MODIFIED="1608619505847" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_account_mobile" />
+    <SUITE FILE_PATH="coverage/regression$account_mobile_run__1_.coverage" NAME="account_mobile_run (1) Coverage Results" MODIFIED="1606299696746" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/x-proto-master" />
+    <SUITE FILE_PATH="coverage/regression$account_mobile_grpc_server.coverage" NAME="account_mobile_grpc_server Coverage Results" MODIFIED="1603271038852" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/x-proto-master" />
+    <SUITE FILE_PATH="coverage/regression$test002.coverage" NAME="test002 Coverage Results" MODIFIED="1603420619382" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/x-proto-master" />
+    <SUITE FILE_PATH="coverage/regression$account_mobile_pb2_grpc.coverage" NAME="account_mobile_pb2_grpc Coverage Results" MODIFIED="1606813775831" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_account_mobile" />
+    <SUITE FILE_PATH="coverage/regression$storage_run.coverage" NAME="storage-run Coverage Results" MODIFIED="1607676285240" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_storage_mobile" />
+    <SUITE FILE_PATH="coverage/regression$sale_mobile_run.coverage" NAME="sale_mobile-run Coverage Results" MODIFIED="1607671979492" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_sale_mobile" />
+    <SUITE FILE_PATH="coverage/regression$helloworld_pb2_grpc.coverage" NAME="helloworld_pb2_grpc Coverage Results" MODIFIED="1602838622597" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/x-proto-master" />
+    <SUITE FILE_PATH="coverage/regression$practice_day1.coverage" NAME="practice_day1 Coverage Results" MODIFIED="1607407471429" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../lovely_python" />
+    <SUITE FILE_PATH="coverage/regression$league_run.coverage" NAME="league-run Coverage Results" MODIFIED="1607936011087" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_league_mobile" />
+    <SUITE FILE_PATH="coverage/regression$unittest_run.coverage" NAME="robot_login_run Coverage Results" MODIFIED="1607494408736" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_account_mobile" />
+    <SUITE FILE_PATH="coverage/regression$tournament_run.coverage" NAME="tournament-run Coverage Results" MODIFIED="1607680078708" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_tournament_mobile" />
+    <SUITE FILE_PATH="coverage/regression$annotations_pb2.coverage" NAME="annotations_pb2 Coverage Results" MODIFIED="1607414693818" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/google/api" />
+    <SUITE FILE_PATH="coverage/regression$social_mobile_run.coverage" NAME="social_mobile-run Coverage Results" MODIFIED="1607675158959" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_social_mobile" />
+    <SUITE FILE_PATH="coverage/regression$loyalty_run__1_.coverage" NAME="match_ticket-run Coverage Results" MODIFIED="1607658936694" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_match_ticket_mobile" />
+    <SUITE FILE_PATH="coverage/regression$notification_mobile_run.coverage" NAME="notification_mobile-run Coverage Results" MODIFIED="1607936155222" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_notification_mobile" />
+    <SUITE FILE_PATH="coverage/regression$account_mobile_run__2_.coverage" NAME="account_mobile_run (2) Coverage Results" MODIFIED="1606201771253" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_account_mobile" />
+    <SUITE FILE_PATH="coverage/regression$robot_login_run.coverage" NAME="robot_login_run Coverage Results" MODIFIED="1608619556787" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_account_mobile" />
+    <SUITE FILE_PATH="coverage/regression$account_mobile_pb2.coverage" NAME="account_mobile_pb2 Coverage Results" MODIFIED="1606813771782" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_account_mobile" />
+    <SUITE FILE_PATH="coverage/regression$loyalty_run.coverage" NAME="loyalty-run Coverage Results" MODIFIED="1607936044415" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_loyalty_mobile" />
+    <SUITE FILE_PATH="coverage/regression$yy123123.coverage" NAME="yy123123 Coverage Results" MODIFIED="1603347554270" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/x-proto-master" />
+    <SUITE FILE_PATH="coverage/regression$23123.coverage" NAME="b_23123 Coverage Results" MODIFIED="1603691625476" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib" />
+    <SUITE FILE_PATH="coverage/regression$bank_mobile_pb2_grpc.coverage" NAME="bank_mobile_pb2_grpc Coverage Results" MODIFIED="1606813763167" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_bank_mobile" />
+    <SUITE FILE_PATH="coverage/regression$bank_run.coverage" NAME="bank-run Coverage Results" MODIFIED="1608619757431" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_bank_mobile" />
+    <SUITE FILE_PATH="coverage/regression$config_run2.coverage" NAME="config-run2 Coverage Results" MODIFIED="1608619972129" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Celer_Game/celer_games_api_regression/pythonLib/Celer_config_mobile" />
+  </component>
+</project>

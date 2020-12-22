@@ -1,0 +1,64 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package discount;
+
+import "error.proto";
+import "common_mobile.proto";
+import "discount_mobile.proto";
+
+option java_package = "network.celer.proto.discount";
+option java_outer_classname = "DiscountInternal";
+option swift_prefix = "Discount";
+
+service Internal {
+  // for admin portal
+  rpc AddDiscountActivity(AddDiscountActivityRequest) returns (AddDiscountActivityResponse);
+  rpc GetDiscountActivity(GetDiscountActivityRequest) returns (GetDiscountActivityResponse);
+
+  // for internal api
+  rpc GetDiscountDetail(GetDiscountDetailRequest) returns (GetDiscountDetailResponse);
+  rpc AddDiscountReward(AddDiscountRewardRequest) returns (AddDiscountRewardResponse);
+}
+
+// Next tag: 2
+message AddDiscountRewardRequest {
+  uint64 order_id = 1;
+}
+
+// Next tag: 4
+message AddDiscountRewardResponse {
+  err.BackendError error = 1;
+  common.TokenAmount reward = 2;
+}
+
+// Next tag: 2
+message AddDiscountActivityRequest {
+  DiscountActivity deposit_discount_activity = 1;
+}
+
+// Next tag: 2
+message AddDiscountActivityResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 2
+message GetDiscountActivityRequest {
+  string id = 1;
+}
+
+// Next tag: 3
+message GetDiscountActivityResponse {
+  err.BackendError error = 1;
+  DiscountActivity discount_activity = 2;
+}
+
+// Next tag: 2
+message GetDiscountDetailRequest {
+  uint64 id = 1;
+}
+
+// Next tag: 4
+message GetDiscountDetailResponse {
+  err.BackendError error = 1;
+  common.TokenAmount amount = 2;
+}

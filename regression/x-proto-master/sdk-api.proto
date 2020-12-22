@@ -1,0 +1,1408 @@
+// This file defines SDK APIs and expected input/return needed by mobile team.
+// NOTE: we use grpc schema but uses our own protoc-gen-api to create golang API stub code
+// All data cross the API layer is either serialized protobuf message bytes or scalar type like int, bool
+
+syntax = "proto3";
+package sdk;
+import "sdk-data.proto";
+import "google/protobuf/wrappers.proto"; // wrapper for scalar type like int, string
+import "google/protobuf/empty.proto"; // empty as placeholder for APIs not require arg or return
+
+import "google/protobuf/descriptor.proto"; // so we can define our own rpc option
+extend google.protobuf.MethodOptions {
+    bool rootapi = 12345; // pick our own extension number, must match gen-api
+    bool api_category_geolocation = 883000;
+    bool api_category_account = 883001;
+    bool api_category_token = 883002;
+    bool api_category_fiat_transaction = 883003;
+    bool api_category_game = 883004;
+    bool api_category_match = 883005;
+    bool api_category_tournament = 883006;
+    bool api_category_league = 883007;
+    bool api_category_history = 883008;
+    bool api_category_feed = 883009;
+    bool api_category_log = 883010;
+    bool api_category_challenge = 883011;
+    bool api_category_task = 883012;
+    bool api_category_check_in = 883013;
+    bool api_category_invite = 883015;
+    bool api_category_gem = 883016;
+    bool api_category_loyalty = 883017;
+}
+
+extend google.protobuf.ServiceOptions {
+    bool callback_category_account = 993000;
+    bool callback_category_token = 993001;
+    bool callback_category_history = 993002;
+    bool callback_category_log = 993004;
+    bool callback_category_match = 993005;
+}
+
+// Examples and doc for how to add APIs
+service ExampleApis {
+    // generated API is Example(token string), return string. both strings are JSON string
+    rpc Example (Token) returns (ChannelInfo) {
+    }
+    // scalar arg and return example, this api takes a string arg (not json), and returns bool
+    rpc ScalarExample (google.protobuf.StringValue) returns (google.protobuf.BoolValue) {
+    }
+    // generated API is EmptyExample(), and no return
+    rpc EmptyExample (google.protobuf.Empty) returns (google.protobuf.Empty) {
+    }
+    // root level api that doesn't belong to celerclient
+    rpc RootExample (google.protobuf.Empty) returns (google.protobuf.Empty) {
+        option (rootapi) = true;
+    }
+}
+
+// If a service ends with Callback, our gen-api will treat it as interface and add func like
+// RegisterXXXCallback. All rpc defined in the service block should use google.protobuf.Empty for return as
+// we don't support callback func to return anything for now.
+// for below example, gen-api will define an ExampleCallback interface which includes 
+// OnTokenChanged, OnScalarExample and OnEmptyExample, plus a func RegisterExampleCallback(cb ExampleCallback)
+// to register callback from mobile.
+service ExampleCallback {
+    rpc OnTokenChanged (Token) returns (google.protobuf.Empty) {
+    }
+    rpc OnScalarExample (google.protobuf.BoolValue) returns (google.protobuf.Empty) {
+    }
+    rpc OnEmptyExample (google.protobuf.Empty) returns (google.protobuf.Empty) {
+    }
+}
+// End examples
+
+/* 1/31 Batch-1 APIs
+
+  Tasks:
+
+ - GoCeler r0.16
+ -  Fiat related APIs and Reward phase-2 APIs
+
+ SDK task owner: Yilun,Yunjia
+
+ Benefit for mobile dev:
+
+ Upon this release, mobile dev,
+ while developing UI features,
+ will also be able to start adapting to r0.16,
+ can test the phase-2 reward APIs,
+ and can implement the whole dev ops process for protobuf on both XCode and Android Studio
+*/
+
+service Batch1APIs {
+    // DepositWithPaypal uses Paypal to create a order with order id encoded in fiat transaction id,
+    // API caller extracts order id and use it to generate payment webpage to user.
+    // To capture payment from user using Paypal, API caller calls GetFiatTransaction to notify backend
+    // to capture payment with the same fiat transaction id.
+    //TODO: ERRORS: APP_BLOCKED_GEOLOCATION
+    rpc DepositWithPaypal (PaypalDepositRequest) returns (FiatTransaction) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    // GetFiatTransaction returns a fiat transaction details for specific transaction id
+    // INPUT: string -> transaction ID
+    rpc GetFiatTransaction (google.protobuf.StringValue) returns (FiatTransaction) {
+        option (api_category_fiat_transaction) = true;
+    }
+    // GetFiatDepositOptions returns a fiat deposit option list for current user
+    rpc GetFiatDepositOptions (FiatDepositOptionRequest) returns (FiatDepositOptions) {
+        option (api_category_fiat_transaction) = true;
+    }
+    // DismissNotificationForFiatDepositOption returns a fiat deposit option with should_notify field set to false
+    // INPUT: string -> deposit option ID
+    rpc DismissNotificationForFiatDepositOption (google.protobuf.StringValue) returns (FiatDepositOption) {
+        option (api_category_fiat_transaction) = true;
+    }
+    // GetFiatDepositOptionById returns a fiat deposit option.
+    // Otherwise, it will throw error saying the deposit option is not valid. This is used for checking if this deposit option is still valid.
+    // INPUT: string -> deposit option ID
+    //TODO: ERRORS: APP_BLOCKED_GEOLOCATION, APP_GEOLOCATION_NOT_SET
+    rpc GetFiatDepositOptionById (google.protobuf.StringValue) returns (FiatDepositOption) {
+        option (api_category_fiat_transaction) = true;
+    }
+    // GetInvitationBonusNotification returns a UserAsInviteeBonusNote.
+    rpc GetUserAsInviteeBonusNotification (google.protobuf.Empty) returns (UserAsInviteeBonusNotification) {
+        option (api_category_invite) = true;
+    }
+    //TODO: ERRORS: APP_INVALID_CODE_ENTERED
+    rpc EnterInvitationCodeAsInvitee (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+        option (api_category_invite) = true;
+    }
+    rpc GetInvitationCodeAsInviter (google.protobuf.Empty) returns (google.protobuf.StringValue) {
+        option (api_category_invite) = true;
+    }
+    rpc GetUserAsInviterBonusUsdAmount (google.protobuf.Empty) returns (google.protobuf.DoubleValue) {
+        option (api_category_invite) = true;
+    }
+}
+
+/* 2/4 Batch-2 APIs
+
+Tasks:
+
+- APIs related to UserInfo and AccountDetail
+- Tokens APIs without callback
+
+SDK task owner: Yunjia
+
+Benefit for mobile dev:
+Both batch-2 and batch-3 will enable easy-to-develop crypto/USD balance display (home top balance bar)
+and home bottom bar notifications in both crypto and USD mode
+ */
+
+service Batch2APIs {
+
+    // GetAllTokens returns a list of supported token on CelerX platform, with all the updated details such as BalanceInfo and ChannelInfo
+    rpc GetAllTokens (google.protobuf.Empty) returns (Tokens) {
+        option (api_category_token) = true;
+    }
+
+    // GetTokensInCurrentMode returns a list of tokens in current mode.
+    // For Crypto mode, return crypto tokens + GT
+    // For USD mode, return USD + GT
+    rpc GetTokensInCurrentMode (google.protobuf.Empty) returns (Tokens) {
+        option (api_category_token) = true;
+    }
+
+    // GetCryptoTokens returns a list of crypto token supported by CelerX
+    rpc GetCryptoTokens (google.protobuf.Empty) returns (Tokens) {
+        option (api_category_token) = true;
+    }
+
+    // GetToken returns a Token
+    // INPUT: token symbol
+    rpc GetToken (google.protobuf.StringValue) returns (Token) {
+        option (api_category_token) = true;
+    }
+
+    // getUsdValueInCurrentMode returns the combined USD value for either USD or Crypto mode. Depending on user's current mode, the combinedUsdValue is different
+    rpc GetCombinedUsdValueInCurrentMode (google.protobuf.Empty) returns (google.protobuf.DoubleValue) {
+        option (api_category_token) = true;
+    }
+
+    // getCombinedRestUsdValueToClaimInCurrentMode gets the combined USD value that user has not claimed for current mode
+    rpc GetCombinedRestUsdValueToClaimInCurrentMode (google.protobuf.Empty) returns (google.protobuf.DoubleValue) {
+        option (api_category_token) = true;
+    }
+
+    // getCombinedUsdValueInCryptoMode returns the combined USD value for user's combined on-chain and off-chain crypto tokens
+    rpc GetCombinedUsdValueInCryptoMode (google.protobuf.Empty) returns (google.protobuf.DoubleValue) {
+        option (api_category_token) = true;
+    }
+
+    // getCombinedUsdValueForOnchainTokens returns the combined USD value for user's on-chain crypto tokens
+    rpc GetCombinedUsdValueForOnchainCryptoTokens (google.protobuf.Empty) returns (google.protobuf.DoubleValue) {
+        option (api_category_token) = true;
+    }
+
+    // getCombinedUsdValueForOffchainTokens returns the combined USD value for user's combined on-chain and off-chain crypto tokens
+    rpc GetCombinedUsdValueForOffchainCryptoTokens (google.protobuf.Empty) returns (google.protobuf.DoubleValue) {
+        option (api_category_token) = true;
+    }
+    // fill gap solution before we have more reliable provider
+    // charge user card similar to stripe
+    //TODO: ERRORS: APP_BLOCKED_GEOLOCATION
+    rpc DepositWithSquare (SquareDepositRequest) returns (FiatDepositResult) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    // fill gap solution before we have more reliable provider
+    // charge user card similar to square
+    //TODO: ERRORS: APP_BLOCKED_GEOLOCATION
+    rpc DepositWithStripe (StripeDepositRequest) returns (FiatDepositResult) {
+        option (api_category_fiat_transaction) = true;
+    }
+}
+
+////////////////////////////////////
+/* 2/6 Batch-3 APIs
+
+Tasks:
+- Token callback related APIs and polling strategy
+
+SDK task owner: Yunjia
+
+Benefit for mobile dev:
+Both batch-2 and batch-3 will enable easy-to-develop crypto/USD balance display (home top balance bar)
+and home bottom bar notifications in both crypto and USD mode.
+
+*/
+
+
+service Batch3APIs {
+
+    rpc GetBalanceBannerInfoInCurrentMode (google.protobuf.Empty) returns (BalanceBannerInfo) {
+        option (api_category_token) = true;
+    }
+
+    // getPrizeClaimInCurrentMode returns PrizeClaim.
+    // If the primary account is crypto, PrizeClaim has a list of Crypto Token claims and Gem Claims
+    // If the primary account is USD, PrizeClaim has a list of USD, Gem and GT claims
+    rpc GetAllPrizeClaimInCurrentMode (google.protobuf.Empty) returns (PrizeClaim) {
+        option (api_category_history) = true;
+    }
+}
+
+service TokenCallback {
+    option (callback_category_token) = true;
+    // OnTokenUsdValueChanged is triggered when a new token price is detected which is different from the last polled token price, based on the token price polling strategy
+    rpc OnTokenUsdValueChanged (TokenCallbackResultForOnTokenUsdValueChanged) returns (google.protobuf.Empty) {
+    }
+
+    // OnTokenAmountChanged is triggered when a new token amount (which is different from the previous token amount) is detected
+    rpc OnTokenAmountChanged (TokenCallbackResultForOnTokenAmountChanged) returns (google.protobuf.Empty) {
+    }
+
+    // OnTokenChannelStateChanged is triggered when a new token channel state (which is different from the previous token channel state) is detected
+    rpc OnTokenChannelStateChanged (Token) returns (google.protobuf.Empty) {
+    }
+
+    // OnCombinedUsdValueInCurrentModeChanged is triggered when the total USD value in current mode (USD/Crypto) has changed
+    rpc OnCombinedUsdValueInCurrentModeChanged (google.protobuf.DoubleValue) returns (google.protobuf.Empty) {
+    }
+
+}
+
+service PrizeClaimInfoCallback {
+    option (callback_category_history) = true;
+    // OnTokenRestAmountToClaimChanged is triggered when a new token rest amount to claim (which is different from the previous token rest amount to claim) is detected
+    rpc OnTokenRestAmountToClaimChanged (Token) returns (google.protobuf.Empty) {
+    }
+    // OnCombinedRestUsdValueToClaimInCurrentModeChanged is triggered when the total rest USD value to claim in current mode (USD/Crypto) has changed
+    // when user switches PrimaryAccount between FIAT<>CRYPTO, this should be triggered too
+    rpc OnCombinedRestUsdValueToClaimInCurrentModeChanged (google.protobuf.DoubleValue) returns (google.protobuf.Empty) {
+    }
+    // This function will be triggered when user switches PrimaryAccount between FIAT<>CRYPTO,
+    // or when some of the unclaimed amount of the 3 tokens has changed
+    // such as Gem amount, combined USD value in current mode, or GT balance.
+    rpc OnPrizeClaimChanged (PrizeClaim) returns (google.protobuf.Empty) {
+    }
+}
+
+service BalanceBannerInfoCallback {
+    option (callback_category_token) = true;
+    // This function will be triggered when user switches PrimaryAccount between FIAT<>CRYPTO,
+    // or when some balance of the 3 has changed
+    // such as Gem amount, combined USD value in current mode, or GT balance.
+    rpc OnBalanceBannerInfoChanged (BalanceBannerInfo) returns (google.protobuf.Empty) {
+    }
+}
+
+////////////////////////////////////
+/* 2/10 Batch-4 APIs
+
+Tasks:
+- Game related APIs
+- Tournament banner and bucket list related APIs
+- Match detail and match ticket related APIs
+- Match history items related APIs
+- Prize claim related APIs
+
+SDK task owner: Yunjia
+
+Benefit for mobile dev:
+Easy-to-use home tournament banner for platform app
+Easy-to-use home tournament bucket list for platform app
+Easy-to-use game
+Easy-to-use game history items list for both crypto and USD mode
+
+*/
+
+service Batch4APIs {
+
+    // GetGamesForAndroid returns a list of Games for Android devices
+    rpc GetGamesForAndroid (google.protobuf.Empty) returns (Games) {
+        option (api_category_game) = true;
+    }
+
+    // GetGamesForIOS returns a list of Games for iOS devices
+    rpc GetGamesForIOS (google.protobuf.Empty) returns (Games) {
+        option (api_category_game) = true;
+    }
+
+    // GetGameByAppId returns game info for a specific App ID
+    // INPUT: string -> App ID
+    rpc GetGameByAppId (google.protobuf.StringValue) returns (Game) {
+        option (api_category_game) = true;
+    }
+
+    // StartTestingGame returns game info for a specific sandbox URL,
+    // and the field testing_mode_enabled in GameInfo should be true,
+    // also, SDK layer should now set a boolean testing_mode_enabled=true in memory,
+    // until app calls StopTestingMode, the boolean should be set to true.
+    // INPUT: string -> string content read from QRCode, a sandbox URL in our case:
+
+    rpc StartTestingMode (google.protobuf.StringValue) returns (Game) {
+        option (api_category_game) = true;
+    }
+
+    // StopTestingGame exits from development mode
+    rpc StopTestingMode (google.protobuf.Empty) returns (google.protobuf.Empty) {
+        option (api_category_game) = true;
+    }
+
+    // GetTournamentBannerInCurrentMode returns TournamentBannerInCurrentMode, filling information in a general tournament notification on games tab
+    // UI: https://projects.invisionapp.com/freehand/document/mO9jMkmkZ
+    rpc GetTournamentBannerInCurrentMode (GetTournamentBannerInCurrentModeRequest) returns (TournamentBannerInCurrentMode) {
+        option (api_category_tournament) = true;
+    }
+
+    // GetOngoingAndUpcomingTournamentBucketsInCurrentMode returns OngoingAndUpcomingTournamentBuckets
+    // UI: https://projects.invisionapp.com/freehand/document/mO9jMkmkZ
+    rpc GetOngoingAndUpcomingTournamentBucketsInCurrentMode (GetOngoingAndUpcomingTournamentBucketsRequest) returns (OngoingAndUpcomingTournamentBucketsInCurrentMode) {
+        option (api_category_tournament) = true;
+    }
+
+    // GetGameHistoryItems returns GetGameHistoryItems in currentMode (USD or Crypto)
+    // In crypto mode, do not return any USD match / tournament history
+    // In usd mode, return only USD and GT game history
+    // UI: https://projects.invisionapp.com/freehand/document/mO9jMkmkZ
+    rpc GetGameHistoryItemsInCurrentMode (GetGameHistoryItemsRequest) returns (GetGameHistoryItemsResponse) {
+        option (api_category_history) = true;
+    }
+
+    // GetMatchTicketByTicketId returns match ticket for a specific Match Ticket ID
+    // INPUT: string -> Match Ticket ID
+    rpc GetMatchTicketByTicketId (google.protobuf.StringValue) returns (MatchTicket) {
+        option (api_category_match) = true;
+    }
+
+    // GetMatchDetailByMatchDetailId returns match ticket for a specific MatchDetail ID
+    // INPUT: string -> MatchDetail ID
+    rpc GetMatchDetailByMatchDetailId (google.protobuf.StringValue) returns (MatchDetail) {
+        option (api_category_match) = true;
+    }
+
+    // DismissMatchHistoryNotificationByMatchDetailId returns match ticket for a specific Match Detail ID
+    // INPUT: string -> Match Detail ID
+    rpc DismissGameHistoryNotificationByMatchDetailId (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+        option (api_category_history) = true;
+    }
+
+    // GetMatchDetailByMatchTicketId returns MatchDetail for a specific MatchTicketId
+    // INPUT: string -> MatchTicketId
+    rpc GetMatchDetailByMatchTicketId (google.protobuf.StringValue) returns (MatchDetail) {
+        option (api_category_match) = true;
+    }
+
+    // ClaimPrizeByMatchDetailId returns PrizeClaim.
+    // INPUT: string -> MatchDetailId
+    // If the primary account is crypto, PrizeClaim has a list of crypto claims
+    // If the primary account is USD, PrizeClaim has a list of USD and GT claims
+    rpc ClaimPrizeByMatchDetailId (google.protobuf.StringValue) returns (PrizeClaim) {
+        option (api_category_match) = true;
+    }
+
+    // ClaimPrizeByTournamentBucketId returns PrizeClaim.
+    // INPUT: string -> TournamentBucketId
+    // If the primary account is crypto, PrizeClaim has a list of Crypto Claims
+    // If the primary account is USD, PrizeClaim is a list of USD and GT claims
+    rpc ClaimPrizeByTournamentBucketId (google.protobuf.StringValue) returns (PrizeClaim) {
+        option (api_category_tournament) = true;
+    }
+
+    // ClaimAllPrizesInCurrentMode returns PrizeClaim.
+    // If the primary account is crypto, PrizeClaim has a list of Crypto Token claims
+    // If the primary account is USD, PrizeClaim has a list of USD and GT claims
+    rpc ClaimAllPrizesInCurrentMode (google.protobuf.Empty) returns (PrizeClaim) {
+        option (api_category_history) = true;
+    }
+
+    // GetFreeGT returns a PrizeClaim. PrizeClaim will contain only GT info. Hard code 10 GT in SDK layer
+    rpc GetFreeGT (google.protobuf.Empty) returns (PrizeClaim) {
+        option (api_category_token) = true;
+    }
+
+    // DismissGameHistoryNotificationByTournamentBucketId returns match ticket for a specific TournamentBucketId
+    // INPUT: string -> Tournament Bucket ID
+    rpc DismissGameHistoryNotificationByTournamentBucketId (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+        option (api_category_history) = true;
+    }
+
+    // GetTournamentDetailByTournamentBucketId returns TournamentDetail for a specific TournamentBucketId
+    // INPUT: string -> Tournament Bucket ID
+    rpc GetTournamentDetailByTournamentBucketId (google.protobuf.StringValue) returns (TournamentDetail) {
+        option (api_category_tournament) = true;
+    }
+
+    // DismissAllGameHistoryNotificationsInCurrentMode will remove the red dots everywhere in the history tab in currentMode (USD/Crypto)
+    rpc DismissAllGameHistoryNotificationsInCurrentMode (google.protobuf.Empty) returns (google.protobuf.Empty) {
+        option (api_category_history) = true;
+    }
+
+}
+
+////////////////////////////////////
+/* 2/13 Batch-5 APIs
+
+Tasks:
+- Tournament APIs
+- Match and Tournament callback related APIs
+
+SDK task owner: Yunjia
+
+Benefit for mobile dev:
+Easy-to-use Tournament APIs and Match callback
+
+*/
+
+service Batch5APIs {
+
+    // GetTournamentLeaderboardByTournamentBucketId returns TournamentLeaderBoard for a specific Tournament Bucket ID
+    // INPUT: string -> Tournament Bucket ID
+    rpc GetTournamentLeaderboardByTournamentBucketId (google.protobuf.StringValue) returns (TournamentLeaderBoard) {
+        option (api_category_tournament) = true;
+    }
+
+    // GetTournamentTicketByTournamentTicketId returns TournamentTicket for a specific Tournament Bucket ID
+    // INPUT: string -> TournamentTicketId
+    rpc GetTournamentTicketByTournamentTicketId (google.protobuf.StringValue) returns (TournamentTicket) {
+        option (api_category_tournament) = true;
+    }
+
+    // GetTournamentAchievementForCurrentUser returns TournamentAchievement for a specific Tournament Bucket ID
+    // INPUT: string -> Tournament Bucket ID
+    rpc GetTournamentAchievementForCurrentUser (google.protobuf.StringValue) returns (TournamentAchievement) {
+        option (api_category_tournament) = true;
+    }
+
+    // GetTournamentTicketsByTournamentBucketId returns TournamentTickets for a specific Tournament Bucket ID
+    // INPUT: string -> Tournament Bucket ID
+    rpc GetTournamentTicketsByTournamentBucketId (google.protobuf.StringValue) returns (TournamentTickets) {
+        option (api_category_tournament) = true;
+    }
+
+    // CreateTournamentTicket returns TournamentTicket for a specific Tournament Bucket ID
+    // INPUT: string -> Tournament Bucket ID
+    //TODO: ERRORS: APP_BLOCKED_GEOLOCATION; APP_INSUFFICIENT_BALANCE; APP_INSUFFICIENT_NON_BONUS_CASH_BALANCE;
+    //TODO: APP_NO_WALLET_BACKUP; APP_NO_WALLET_CLOUD_BACKUP; APP_GEOLOCATION_NOT_SET
+    //If the token is crypto (ETH or ERC20), check if the backup status in AccountDetail is smaller than APP_NO_WALLET_BACKUP, if so, throw APP_NO_WALLET_BACKUP
+    //SdkError Spec: https://celernetwork.atlassian.net/browse/XB-272
+    rpc CreateTournamentTicket (google.protobuf.StringValue) returns (TournamentTicket) {
+        option (api_category_tournament) = true;
+    }
+
+    // SubmitScoreForTournamentTicket returns TournamentTicketId
+    // INPUT: SubmitScoreForTournamentTicketRequest -> submitScoreForTournamentTicketRequest
+    //TODO: ERRORS: APP_PLAY_GAME_TIME_LIMIT_REACHED
+    rpc SubmitScoreForTournamentTicket (SubmitScoreForTournamentTicketRequest) returns (google.protobuf.StringValue) {
+        option (api_category_tournament) = true;
+    }
+
+    // CancelTournamentTicket returns TournamentTicketId
+    // INPUT: string -> tournamentTicketId
+    rpc CancelTournamentTicket (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_tournament) = true;
+    }
+
+    // SurrenderForTournamentTicket returns TournamentTicket
+    // INPUT: string -> tournamentTicketId
+    rpc SurrenderForTournamentTicket (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_tournament) = true;
+    }
+
+    // GetLatestTournamentTicketByTournamentBucketId returns TournamentTicket
+    // INPUT: string -> tournamentBucketId
+    rpc GetLatestTournamentTicketByTournamentBucketId (google.protobuf.StringValue) returns (TournamentTicket) {
+        option (api_category_tournament) = true;
+    }
+
+    // ConfirmReadyForTournamentTicket returns TournamentTicketId for a tournamentTicketId
+    // INPUT: string -> tournamentTicketId
+    //TODO: ERRORS: APP_PLAY_GAME_TIME_LIMIT_REACHED
+    rpc ConfirmReadyForTournamentTicket (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_tournament) = true;
+    }
+
+    // requestQuickMatch returns ticket Id for a specific app ID and a specific Match Bucket ID
+    // INPUT: RequestQuickMatchRequest -> requestQuickMatchRequest
+    //TODO: ERRORS: APP_BLOCKED_GEOLOCATION; APP_INSUFFICIENT_BALANCE; APP_INSUFFICIENT_NON_BONUS_CASH_BALANCE;
+    //TODO: APP_NO_WALLET_CLOUD_BACKUP; APP_NO_WALLET_BACKUP;APP_GEOLOCATION_NOT_SET
+    //If the token is crypto (ETH or ERC20), check if the backup status in AccountDetail is smaller than APP_NO_WALLET_BACKUP, if so, throw APP_NO_WALLET_BACKUP
+    //SdkError Spec: https://celernetwork.atlassian.net/browse/XB-272
+    rpc RequestQuickMatch (RequestQuickMatchRequest) returns (google.protobuf.StringValue) {
+        option (api_category_match) = true;
+    }
+    //ConfirmMatchReady returns MatchId for a specific MatchTicketId
+    // INPUT: string -> MatchTicketId
+    //TODO: ERRORS: APP_CONFIRM_READY_TIME_LIMIT_REACHED
+    rpc ConfirmMatchReadyByMatchTicketId (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_match) = true;
+    }
+
+    // CancelMatchTicket returns MatchId for a specific MatchTicketId
+    // INPUT: string -> MatchTicketId
+    rpc CancelMatchTicketByMatchTicketId (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_match) = true;
+    }
+
+    // SubmitScoreForMatchTicketTicket returns MatchId
+    // INPUT: SubmitScoreForMatchTicketRequest -> submitScoreForMatchTicketRequest
+    //TODO: ERRORS: APP_PLAY_GAME_TIME_LIMIT_REACHED
+    rpc SubmitScoreForMatchTicket (SubmitScoreForMatchTicketRequest) returns (google.protobuf.StringValue) {
+        option (api_category_match) = true;
+    }
+
+    // SurrenderForMatchTicket returns MatchId
+    // INPUT: string -> MatchTicketId
+    rpc SurrenderForMatchTicket (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_match) = true;
+    }
+
+    // WinForMatchTicket returns MatchDetail
+    // INPUT: string -> MatchTicketId
+    //TODO: ERRORS: APP_PLAY_GAME_TIME_LIMIT_REACHED
+    rpc WinForMatchTicket (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_match) = true;
+    }
+    // LoseForMatchTicket returns MatchDetail
+    // INPUT: string -> MatchTicketId
+    //TODO: ERRORS: APP_PLAY_GAME_TIME_LIMIT_REACHED
+    rpc LoseForMatchTicket (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_match) = true;
+    }
+
+    // DrawForMatchTicket returns MatchDetail
+    // INPUT: string -> MatchTicketId
+    //TODO: ERRORS: APP_PLAY_GAME_TIME_LIMIT_REACHED
+    rpc DrawForMatchTicket (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_match) = true;
+    }
+
+    //This API is for Gomoku which is of low priority
+    //sendNewMatchState sends data to svr which then sends to players joining the same match
+    // Note SendNewMatchStateOnLatestTicket supports opcode. for gomoku use case, sendNewMatchState is opcode 1, ack is 2
+    //TODO: ERRORS: APP_PLAY_GAME_TIME_LIMIT_REACHED
+    rpc SendNewMatchStateOnLatestMatchTicket (OutboundMatchStateRequest) returns (google.protobuf.Empty) {
+        option (api_category_match) = true;
+    }
+
+    //This API is for Gomoku which is of low priority
+    //AckReceivedMatchStateOnLatestTicket sends data to svr which then sends to players joining the same match
+    // Note AckReceivedMatchStateOnLatestTicket supports opcode. for gomoku use case, sendNewMatchState is opcode 1, ack is 2
+    rpc AckReceivedMatchStateOnLatestMatchTicket (OutboundMatchStateRequest) returns (google.protobuf.Empty) {
+        option (api_category_match) = true;
+    }
+
+}
+
+// Because this service ends with Callback, our gen-api will treat it as interface and add function like
+// RegisterMatchCallback. All rpc defined in the service block should use google.protobuf.Empty for return as
+// we don't support callback func to return anything for now.
+service MatchCallback {
+    option (callback_category_match) = true;
+    /**
+    * SDK starts to count time when a new MatchTicket is created,
+    * onMatchNotFound is called when timePassed > = celerXParameters.quickMatchTimeout
+    * when this happens, SDK should cancel match automatically
+    * Argument: MatchId
+    */
+    rpc OnMatchNotFound (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+    }
+
+    // OnMatchMakingError is called when there is an error in the match making process
+    rpc OnMatchMakingError (MatchMakingError) returns (google.protobuf.Empty) {
+    }
+
+    /**
+     * OnMatchJoined is called when a match is created
+     */
+    rpc OnMatchJoined (MatchInfo) returns (google.protobuf.Empty) {
+    }
+
+    // OnMatchCanceledByOpponent is called when a match is canceled. MatchId
+    //Argument: MatchId
+    rpc OnMatchCanceledByOpponent (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+    }
+
+    // MatchInfo is called when all the players are ready and the game can be started
+    // Argument: MatchId
+    rpc OnMatchReadyToStart (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+    }
+
+    //OnMatchStateReceived is called when a state is received (for turn-based game)
+    rpc OnMatchStateReceived (MatchState) returns (google.protobuf.Empty) {
+    }
+
+    //OnDisconnected is called when the client is disconnected from the sendState server (for turn-based games)
+    rpc OnDisconnected (SdkError) returns (google.protobuf.Empty) {
+    }
+
+}
+
+////////////////////////////////////
+/* 2/11 Batch-6 APIs
+
+Tasks:
+- Migrate account-related APIs
+- Migrate withdrawal related APIs
+- 4 APIs on SDK level for account management (not CelerXClient level, to be specified on Google Doc)
+
+SDK task owner: Yunjia
+
+Benefit for mobile dev:
+Can refactor all other account related data during onboarding process to get rid of the old UserInfo class
+Finish refactoring Withdrawal data
+
+*/
+
+service Batch6APIs {
+
+    // setPrimaryAccountType returns the detailed information about atheuser account
+    // INPUT: SetPrimaryAccountTypeRequest -> specify the type crypto or fiat
+    rpc SetPrimaryAccountType (SetPrimaryAccountTypeRequest) returns (AccountDetail) {
+        option (api_category_account) = true;
+    }
+
+    // This API should be on the root level of CelerX SDK and is not a function of CelerXClient
+    // Throws SdkError if the password is not correct
+    // This should not be a network call to avoid sensitive information being exposed to the Internet.
+    // It should be a local helper function.
+    // INPUT: string -> password
+    //TODO: ERRORS: APP_INVALID_PASSWORD_ENTERED
+    rpc CheckPasswordValidity (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+        option (rootapi) = true;
+        option (api_category_account) = true;
+    }
+
+    // This API should be on the root level of CelerX SDK and is not a function of CelerXClient
+    // Throws SdkError if the email format is not correct
+    // INPUT: string -> email
+    //TODO: ERRORS: APP_INVALID_EMAIL_ENTERED
+    rpc CheckEmailFormatValidity (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+        option (rootapi) = true;
+        option (api_category_account) = true;
+    }
+
+    // SetPassword returns the detailed information about the user account
+    // INPUT: string -> password to be set
+    //TODO: ERRORS: APP_INVALID_PASSWORD_ENTERED
+    rpc SetPassword (google.protobuf.StringValue) returns (AccountDetail) {
+        option (api_category_account) = true;
+    }
+
+    // EnterEmail returns the detailed information about the user account
+    // INPUT: string -> email to be set
+    //    Once successful, the AccountDetail will have 2 extra fields: “email” and “hasVerifiedEmail”
+    //    “hasVerifiedEmail” should be true
+    //    Example:
+    //
+    //    “email”:”yan@celer.network” ,
+    //    “hasVerifiedEmail”:false
+    //
+    //    Throws Exception with reason
+    //
+    //    Once the email is set and verified, we should not be able to modify it, unless we have the password. Updating email API is possible, but will not be in the scope of this doc.
+    //
+    //    Note that this API will update the email field in user profile, which will be shown in the user account page.
+    //    In the account page, if “hasVerifiedEmail” is true, we do not allow user to change the email;
+    //    if “hasVerifiedEmail” is false, we allow the user to change the email (but will not trigger email validation in the current version if user updates email in the account page)
+    //TODO: ERRORS: APP_INVALID_EMAIL_ENTERED, APP_CANNOT_CHANGE_ALREADY_VERIFIED_EMAIL
+    rpc EnterEmail (google.protobuf.StringValue) returns (AccountDetail) {
+        option (api_category_account) = true;
+    }
+
+    // verifyEmail returns the detailed information about the user account
+    // INPUT: string -> code
+    // “hasVerifiedEmail” should be true
+    //TODO: ERRORS: APP_INVALID_CODE_ENTERED
+    rpc VerifyEmailWithCode (google.protobuf.StringValue) returns (AccountDetail) {
+        option (api_category_account) = true;
+    }
+
+    // encryptBackupPhrase returns the encrypted backup phrase
+    // INPUT: string -> backup phrase
+    //TODO: CHANGE RESPONSE DATA
+    rpc EncryptBackupPhrase (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_account) = true;
+    }
+
+    // This API should be on the root level of CelerX SDK and is not a function of CelerXClient
+    // Throws SdkError
+    // RestoreBackupPhraseWithPassword returns the decrypted backup phrase
+    // On backend, compare the hashed password with the hashed password in user profile.
+    // If the 2 values match, it will return success.
+    // Then locally the API will use the hashedPassword to decrypt the encryptedBackupPhrase.
+    // The returned value is a string: backup phrase
+    // Exception is thrown if the password does not match.
+    //TODO: ERRORS: APP_INVALID_PASSWORD_ENTERED
+    rpc RestoreBackupPhraseWithPassword (RestoreBackupPhraseWithPasswordRequest) returns (google.protobuf.StringValue) {
+        option (rootapi) = true;
+        option (api_category_account) = true;
+    }
+
+    // This API should be on the root level of CelerX SDK and is not a function of CelerXClient
+    // Throws SdkError
+    // RestoreBackupPhraseWithCode returns the decrypted backup phrase
+    // “hasVerifiedEmail” should be true
+    // However, “hasPassword” should still be false.
+    // The returned value is a string: backup phrase
+    //TODO: ERRORS: APP_INVALID_CODE_ENTERED
+    rpc RestoreBackupPhraseWithCode (RestoreBackupPhraseWithCodeRequest) returns (google.protobuf.StringValue) {
+        option (rootapi) = true;
+        option (api_category_account) = true;
+    }
+
+    // This API should be on the root level of CelerX SDK and is not a function of CelerXClient
+    // Throws SdkError
+    // This will trigger backend to send an email,
+    // “hasPassword” on backend user profile will be set to false.
+    // Also, if the input email is not matched with the email in user profile or “hasVerifiedEmail” is false, an exception will be thrown.
+    // INPUT: string -> ForgotPasswordRequest which includes username and email
+    //TODO: ERRORS: APP_INVALID_EMAIL_ENTERED
+    rpc ForgotPassword (ForgotPasswordRequest) returns (google.protobuf.Empty) {
+        option (rootapi) = true;
+        option (api_category_account) = true;
+    }
+
+    // SetBackedUpWithGoogleDrive returns the detailed information about the user account
+    rpc SetBackedUpWithGoogleDrive (google.protobuf.Empty) returns (AccountDetail) {
+        option (api_category_account) = true;
+    }
+
+    // SetBackedUpWithICloud returns the detailed information about the user account
+    rpc SetBackedUpWithICloud (google.protobuf.Empty) returns (AccountDetail) {
+        option (api_category_account) = true;
+    }
+
+    // SetBackedUpManually returns the detailed information about the user account
+    rpc SetBackedUpManually (google.protobuf.Empty) returns (AccountDetail) {
+        option (api_category_account) = true;
+    }
+
+    // SendPayPalEmailVerificationCode is used to send a code to verify user's PayPal account
+    // INPUT: string -> PayPal email
+    //TODO: ERRORS: APP_INVALID_EMAIL_ENTERED
+    rpc SendPayPalEmailVerificationCode (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    // VerifyPayPalEmail is for verifying user's PayPal account
+    // INPUT: string -> PayPal verification code
+    // This one throws a special error if verification failed
+    //TODO: ERRORS: APP_INVALID_CODE_ENTERED
+    rpc VerifyPayPalEmail (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    // SetFullName returns the detailed information about the user account
+    /*
+    READ this doc to understand how to upload an image: https://docs.google.com/document/d/1cOsK404mcpL-bjSv9Xku7ZqNR1hWe84wzHl1o7RFyho/edit#
+    */
+    //INPUT: string -> full name
+    rpc SetFullName (google.protobuf.StringValue) returns (AccountDetail) {
+        option (api_category_account) = true;
+    }
+
+    // SetAvatar returns the detailed information about the user account
+    //INPUT: SetAvatarRequest, where the image data in byte array should be given
+    rpc SetAvatar (SetAvatarRequest) returns (AccountDetail) {
+        option (api_category_account) = true;
+    }
+
+    // SetVisibleUsername returns the detailed information about the user account
+    //INPUT: string -> visibleUsername
+    //TODO: ERRORS: APP_INVALID_USERNAME_ENTERED
+    rpc SetVisibleUsername (google.protobuf.StringValue) returns (AccountDetail) {
+        option (api_category_account) = true;
+    }
+
+    // This API should be on the root level of CelerX SDK and is not a function of CelerXClient
+    rpc GetUserInfosByUsernames (GetUserInfosByUsernamesRequest) returns (GetUserInfosByUsernamesResponse) {
+        option (rootapi) = true;
+        option (api_category_account) = true;
+    }
+
+    // This API should be on the root level of CelerX SDK and is not a function of CelerXClient
+    rpc GetUserInfosByEthAddresses (GetUserInfosByEthAddressesRequest) returns (GetUserInfosByEthAddressesResponse) {
+        option (rootapi) = true;
+        option (api_category_account) = true;
+    }
+
+    // This API should be on the root level of CelerX SDK and is not a function of CelerXClient
+    // INPUT: string -> ethAddress
+    rpc GetUserInfoByEthAddress (google.protobuf.StringValue) returns (UserInfo) {
+        option (rootapi) = true;
+        option (api_category_account) = true;
+    }
+
+    // GetWithdrawalFeeByWithdrawalAmount returns a double value representing the fee amount in USD
+    // INPUT: double -> WithdrawalAmount the user has entered
+    rpc GetWithdrawalFeeByWithdrawalAmount (google.protobuf.DoubleValue) returns (google.protobuf.DoubleValue) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    // GetWithdrawabilityStatus allows user to check the withdrawability status
+    rpc GetWithdrawabilityStatus (google.protobuf.Empty) returns (GetWithdrawabilityStatusResponse) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    // WithdrawWithPayPal starts PayPal fiat off-ramp and returns a FiatTransaction
+    // INPUT: string email, double amtfiat, String currency
+    //TODO: ERRORS: APP_INVALID_EMAIL_ENTERED, APP_BLOCKED_ACCOUNT, APP_UNSUPPORTED_TOKEN, APP_INSUFFICIENT_BALANCE
+    rpc WithdrawWithPayPal (WithdrawWithPayPalRequest) returns (FiatTransaction) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    rpc GetProof (GetProofRequest) returns (GetProofResponse) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    rpc GetDisplayedWithdrawalMethods (GetDisplayedWithdrawalMethodsRequest) returns (GetDisplayedWithdrawalMethodsResponse) {
+        option (api_category_fiat_transaction) = true;
+    }
+}
+
+/*Batch-7 APIs
+//For 3/9 release
+Tasks:
+- API for Registering device to receive Push Notifications
+- Loyalty points APIs
+- Replay API
+
+// SDK developer will estimate the workload based on individual delivery capacity, check with PM on the priorities, determine ETA, and fill the date here
+// ETA for finalized APIs with real data:
+// Nice-to-have: If delivered by small steps, list the ETA and what could be done for each step. This could help mobile team plan accordingly. If not possible, it's ok.
+// Mobile team will use these ETAs to determine the feature release date
+
+Benefit for mobile dev: internal app release for QA on 3/2
+*/
+service Batch7APIs {
+
+    // GetGemRedeemOptions returns a list of redeemGemOptions
+    rpc GetRedeemGemOptions (google.protobuf.Empty) returns (RedeemGemOptions) {
+        option (api_category_gem) = true;
+    }
+
+    // GetGemHistoryItems returns a list of GemHistoryItems
+    rpc GetGemHistoryItems (google.protobuf.Empty) returns (GemHistoryItems) {
+        option (api_category_gem) = true;
+    }
+
+    // RedeemGemWithRedeemGemOptionId returns a RedeemGemResponse
+    //INPUT: string-> RedeemGemOptionId
+    //TODO: ERRORS: check APP_BLOCKED_GEOLOCATION only when the RedeemGemOption has USD or Bonus Cash
+    //TODO: OTHER POSSIBLE ERRORS: APP_INSUFFICIENT_BALANCE, APP_NO_WALLET_CLOUD_BACKUP if the redeemGemOption is of a physical good type
+    rpc RedeemGemWithRedeemGemOptionId (google.protobuf.StringValue) returns (RedeemGemResponse) {
+        option (api_category_gem) = true;
+    }
+
+    // GetDailyCheckInBoard returns a DailyCheckInBoard
+    rpc GetDailyCheckInBoard (google.protobuf.Empty) returns (DailyCheckInBoard) {
+        option (api_category_check_in) = true;
+    }
+
+    // ResetDailyCheckIn returns a DailyCheckInBoard
+    //ERRORS: APP_DAILY_CHECK_IN_UNAVAILABLE
+    rpc ResetDailyCheckIn (google.protobuf.Empty) returns (DailyCheckInBoard) {
+        option (api_category_check_in) = true;
+    }
+
+    // MakeUpDailyCheckIn returns a ConfirmOrMakeUpDailyCheckInResponse
+    //ERRORS: APP_DAILY_CHECK_IN_UNAVAILABLE
+    rpc MakeUpDailyCheckIn (google.protobuf.Empty) returns (ConfirmOrMakeUpDailyCheckInResponse) {
+        option (api_category_check_in) = true;
+    }
+
+    // ConfirmDailyCheckIn returns a ConfirmOrMakeUpDailyCheckInResponse
+    //ERRORS: APP_DAILY_CHECK_IN_UNAVAILABLE
+    rpc ConfirmDailyCheckIn (google.protobuf.Empty) returns (ConfirmOrMakeUpDailyCheckInResponse) {
+        option (api_category_check_in) = true;
+    }
+
+    // RecordFrameForTournamentTicket
+    /*
+    This will use local_data_path appended by /SCREEN_RECORDINGS/TOURNAMENT_TICKET_ID/
+    Inside this folder, we will have: timestamp1.data, timestamp2.data, etc.
+    The data (png byte array data) will be converted to jpg files with height = 640 px and compressing quality 70%, and these files will be streamed to server.
+    Each file with a size of 20k - 30k.
+    Once frame 1 has been uploaded, the timestamp1.data should be immediately deleted on local disk.
+    Server will stop receiving frames when submitScoreForTournamentTicket or surrender (this submits score too) is triggered.
+    If no score has been uploaded after match timeout or tournament ticket is canceled/aborted, server frames should be deleted.
+    If it is user's best score in the tournament, server will start generating video for the tournament ticket.
+    Server can use ffmpeg script to generate video from the received frames.
+    If it is not the best score, server will delete all the received frames in this tournament ticket.
+    Some helpful APIs:
+    https://medium.com/@daetam/converting-jpeg-to-png-with-golang-85905105cf47
+    https://golang.org/pkg/image/jpeg/#Encode
+    */
+    rpc RecordFrameForTournamentTicket (RecordFrameForTournamentTicketRequest) returns (google.protobuf.Empty) {
+        option (api_category_tournament) = true;
+    }
+
+    // GetAllTrainingCampTasks returns a TrainingCampTasksBoard
+    rpc GetAllTrainingCampTasks (google.protobuf.Empty) returns (TrainingCampTasksBoard) {
+        option (api_category_task) = true;
+    }
+
+    // AcceptTrainingCampTaskByTaskId returns a TrainingCampTasksBoard
+    //INPUT: string-> training camp task id
+    rpc AcceptTrainingCampTaskByTaskId (google.protobuf.StringValue) returns (TrainingCampTasksBoard) {
+        option (api_category_task) = true;
+    }
+
+    // AcceptAllAvailableTrainingCampTasks returns a TrainingCampTasksBoard
+    rpc AcceptAllAvailableTrainingCampTasks (google.protobuf.Empty) returns (TrainingCampTasksBoard) {
+        option (api_category_task) = true;
+    }
+
+    // ClaimPrizeForTrainingCampTaskPrizeByTaskId returns a ClaimTrainingCampTaskRewardResponse
+    //INPUT: string-> training camp task id
+    rpc ClaimTrainingCampTaskRewardByTaskId (google.protobuf.StringValue) returns (ClaimTrainingCampTaskRewardResponse) {
+        option (api_category_task) = true;
+    }
+
+    // ClaimPrizeForTrainingCampTaskPrizeByTaskId returns a ClaimTrainingCampTaskRewardResponse
+    rpc ClaimRewardsForAllTrainingCampTasks (google.protobuf.Empty) returns (ClaimTrainingCampTaskRewardResponse) {
+        option (api_category_task) = true;
+    }
+
+    //Paginated API for training camp history feature
+    rpc GetRewardClaimedTrainingCampTasks (GetRewardClaimedTrainingCampTasksRequest) returns (GetRewardClaimedTrainingCampTasksResponse) {
+        option (api_category_task) = true;
+    }
+
+    //CapturePayPalDepositResultByFiatTransactionId
+    /*
+    After the user has successfully deposited using paypal,
+    there is a balance increase animation page showing the newly added USD amount
+    This API is similar to getFreeGT but this one is only about USD.
+    The way to fill the information in this API follows the similar way as in getFreeGT API.
+    This API will give app the necessary information to be able to display a balance increase animation
+    */
+    //INPUT: string-> a deposit fiat transaction id
+    rpc CapturePayPalDepositResultByFiatTransactionId (google.protobuf.StringValue) returns (FiatDepositResult) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    rpc ClaimFreeLootBox (ClaimFreeLootBoxRequest) returns (ClaimFreeLootBoxResponse) {
+        option (api_category_task) = true;
+    }
+}
+
+////////////////////////////////////
+//For end of march release
+// Social Challenge Related APIs
+// SDK developer should estimate the workload, check with PM on the priorities, and determine ETA, and fill the date here
+// APIs with mock data ETA:
+// APIs with real data ETA:
+// Mobile team will use these ETAs to determine the feature release date
+//////////////////////////////////
+
+service SocialChallengeAPIs {
+    // CreateSocialChallenge returns MatchInfo
+    // INPUT: string -> username of the opponent
+    // TODO: ERRORS: APP_INELIGIBLE_SOCIAL_CHALLENGE; APP_BLOCKED_GEOLOCATION;APP_INSUFFICIENT_BALANCE; APP_NO_WALLET_CLOUD_BACKUP; APP_NO_WALLET_CLOUD_BACKUP;
+    // Returns MatchInfo
+    rpc CreateSocialChallenge (CreateSocialChallengeRequest) returns (MatchInfo) {
+        option (api_category_challenge) = true;
+    }
+
+    // DeclineSocialChallengeByMatchDetailId: click dismiss will decline the challenge and this card will disappear
+    // INPUT: string -> MatchDetailId
+    rpc DeclineSocialChallengeByMatchDetailId (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+        option (api_category_challenge) = true;
+    }
+
+    // GetSocialChallengeNotification: use app_id to filter the response. If app does not specify the app_id, it means it is for the platform app
+    // A boolean value "should_notify_social_challenge" should be cached for current session.
+    // When the session starts, the cached value should be the backend value,
+    // but it should always return false after user has called DismissSocialChallengeNotificationForCurrentSession or CheckSocialChallenge
+    // Note that this API is fiat/USD mode sensitive
+    rpc GetSocialChallengeNotification (GetSocialChallengeNotificationRequest) returns (GetSocialChallengeNotificationResponse) {
+        option (api_category_challenge) = true;
+    }
+
+    // DismissSocialChallengeNotification sets the cached boolean value should_notify_social_challenge to false
+    // But this should not be network request thus does not affect backend data
+    rpc DismissSocialChallengeNotification (google.protobuf.Empty) returns (google.protobuf.Empty) {
+        option (api_category_challenge) = true;
+    }
+
+    // CheckSocialChallenge sets the cached boolean value should_notify_social_challenge to false (not a network request)
+    // Also this automatically switches the primary account to USD mode because social challenge only exists in USD mode
+    rpc CheckSocialChallenge (google.protobuf.Empty) returns (google.protobuf.Empty) {
+        option (api_category_challenge) = true;
+    }
+}
+
+//For 3/23 release
+service GameHistoryCallback {
+    option (callback_category_history) = true;
+    //OnGameHistoryItemRemoved could be triggered by any removal from backend, such as when the user has declined a social challenge
+    //Note that the minimum info required in GameHistoryItem for OnGameHistoryItemRemoved is just the type, id and app_id
+    //Note that this API is fiat/USD mode sensitive
+    rpc OnGameHistoryItemRemoved (GameHistoryItem) returns (google.protobuf.Empty) {
+    }
+    //OnGameHistoryItemAdded could be triggered by any newly added history item for the user, such as when the user finished a match on another device, while having this device on
+    //Or when another user challenges the current user, while the user is viewing the history page
+    //All the detailed fields in the GameHistoryItem should be filled
+    //Note that this API is fiat/USD mode sensitive
+    rpc OnGameHistoryItemAdded (GameHistoryItem) returns (google.protobuf.Empty) {
+    }
+    //OnGameHistoryItemChanged could be triggered by any modified history item for the user, such as one of the opponents just finished the match
+    //All the detailed fields in the GameHistoryItem should be filled
+    //Note that this API is Fiat/USD mode sensitive
+    rpc OnGameHistoryItemChanged (GameHistoryItem) returns (google.protobuf.Empty) {
+    }
+}
+
+////////////////////////////////////
+// This is an API design playground for crypto APIs enhancement. It will not be treated as high priority before March.
+//////////////////////////////////
+
+service CryptoRelatedAPIsLowPriority {
+
+    // This API should be on the root level of CelerX SDK and is not a function of CelerXClient
+    rpc Login (LoginRequest) returns (LoginResponse) {
+        option (rootapi) = true;
+        option (api_category_account) = true;
+    }
+
+    // This API should be on the root level of CelerX SDK and is not a function of CelerXClient
+    // Delete all data
+    rpc Logout (google.protobuf.Empty) returns (google.protobuf.Empty) {
+        option (rootapi) = true;
+    }
+
+    // DepositToLayer2 returns an InterLayerTransaction
+    // If the channel has not been opened, open channel. Else, perform normal deposit operation
+    // This can throw a list of different SdkErrors
+    rpc DepositToLayer2 (DepositToLayer2Request) returns (InterLayerTransaction) {
+    }
+
+    // WithdrawFromLayer2 returns an InterLayerTransaction
+    rpc WithdrawFromLayer2 (WithdrawFromLayer2Request) returns (InterLayerTransaction) {
+    }
+
+    //TODO: other crypto-related APIs
+
+}
+
+////////////////////////////////////
+// This is an API design playground for league + history features.
+// For 3/23 release
+//////////////////////////////////
+service LeagueAPIs {
+
+    // If player matches great or equal to four times, then It can be called.
+    // GetLeagueGoldLeaderBoard returns league rank list for current user with usd
+    rpc GetGoldLeagueLeaderBoard (google.protobuf.Empty) returns (LeagueLeaderBoard) {
+        option (api_category_league) = true;
+    }
+
+    // GetLeagueSilverLeaderBoard returns league rank list for current user with gt
+    rpc GetSilverLeagueLeaderBoard (google.protobuf.Empty) returns (LeagueLeaderBoard) {
+        option (api_category_league) = true;
+    }
+
+    // GetOnGoingLeagueBuckets returns usd and gt prize pool
+    // display prize information when entering league page first time,
+    // client needs to save first enter league status locally.
+    rpc GetOngoingLeagueBuckets (google.protobuf.Empty) returns (GetOngoingLeagueBucketsResponse) {
+        option (api_category_league) = true;
+    }
+
+}
+
+////////////////////////////////////
+// Some APIs for further removing direct http requests
+//For 3/9 release
+//////////////////////////////////
+service SDKImprovementAPIs {
+    // CreateNewUser creates a new user and returns an AccountDetail
+    // TODO: APP_USER_EXISTS_ALREADY  (when eth_address or username already exists)
+    rpc CreateNewUser (CreateNewUserRequest) returns (UserInfo) {
+        option (rootapi) = true;
+        option (api_category_account) = true;
+    }
+}
+
+//For 3/9 release
+service AccountDetailCallback {
+    option (callback_category_account) = true;
+    /**
+    * OnAccountDetailChanged should be triggered when or when any of the field has a new value
+    * for example, when the primary account has been switched,
+    * or when a notification has been dismissed,
+    * or a notification has been added after an update in the match history items
+    */
+    rpc OnAccountDetailChanged (AccountDetail) returns (google.protobuf.Empty) {
+    }
+
+}
+
+//For 3/23 release
+service SomeNewHistoryOptimizationAPIs {
+
+    // GetOngoingGameHistoryItemsInCurrentMode returns GetOngoingGameHistoryItemsResponse in currentMode (USD or Crypto)
+    // In crypto mode, do not return any USD match / tournament history
+    // In usd mode, return only USD and GT game history
+    // UI: https://projects.invisionapp.com/freehand/document/mO9jMkmkZ
+    rpc GetOngoingGameHistoryItemsInCurrentMode (GetOngoingGameHistoryItemsRequest) returns (GetOngoingGameHistoryItemsResponse) {
+        option (api_category_history) = true;
+    }
+
+    // GetGameHistoryItemsWithPrizeToClaimInCurrentMode returns GetGameHistoryItemsWithPrizeToClaimResponse in currentMode (USD or Crypto)
+    // In crypto mode, do not return any USD match / tournament history
+    // In usd mode, return only USD and GT game history
+    // UI: https://projects.invisionapp.com/freehand/document/mO9jMkmkZ
+    rpc GetGameHistoryItemsWithPrizeToClaimInCurrentMode (GetGameHistoryItemsWithPrizeToClaimRequest) returns (GetGameHistoryItemsWithPrizeToClaimResponse) {
+        option (api_category_history) = true;
+    }
+
+    // DismissGameHistoryNotificationById
+    // INPUT: string -> Game History Item ID
+    rpc DismissGameHistoryNotificationById (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+        option (api_category_history) = true;
+    }
+}
+
+//For 3/23 release
+service LeagueAPIImprovement {
+    // ClaimPrizeByLeagueBucketId returns PrizeClaim.
+    // INPUT: string -> LeagueBucketId
+    // Note that this API response is Fiat/Crypto mode sensitive
+    rpc ClaimPrizeByLeagueBucketId (google.protobuf.StringValue) returns (PrizeClaim) {
+        option (api_category_history) = true;
+    }
+}
+
+//For 3/9 release
+service GameAssetAPIs {
+    // GetGameAssetsByAppId returns game assets for a specific App ID
+    // If the cached testing_mode_enabled is true, use testing mode URLs to fetch game assets
+    // Testing mode example
+    // https://fuxme37fh1.execute-api.us-west-2.amazonaws.com/beta/v1/testing/game/000372/assets
+    // Normal mode examples
+    // https://fuxme37fh1.execute-api.us-west-2.amazonaws.com/beta/v1/game/000372/assets
+    // https://fuxme37fh1.execute-api.us-west-2.amazonaws.com/beta/v1/testing/game/000009/assets
+    // INPUT: string -> App ID
+    rpc GetGameAssetsByAppId (google.protobuf.StringValue) returns (GetGameAssetsResponse) {
+        option (api_category_game) = true;
+    }
+
+    // getWebGameUrl returns https://games.celer.app/game/package/xxx/y/index.html
+    //or error if cert fails amazon ca check or network unavailable
+    //note if cert is not issued by amazon, the error will be like: "certificate signed by unknown authority"
+    rpc GetWebGameUrl (GetWebGameUrlRequest) returns (google.protobuf.StringValue) {
+        option (rootapi) = true;
+        option (api_category_game) = true;
+    }
+}
+
+//For 3/23 release
+service FiatTransactionMethodRemoteConfig {
+    // GetSupportedFiatTransactionMethods returns a list of supported FiatTransaction methods.
+    rpc GetSupportedFiatTransactionMethods (GetSupportedFiatTransactionMethodsRequest) returns (GetSupportedFiatTransactionMethodsResponse) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    // DepositWithAuthorizeNet uses AuthorizeNet token and fiat deposit option id
+    rpc DepositWithAuthorizeNet (AuthorizeNetDepositRequest) returns (FiatDepositResult) {
+        option (api_category_fiat_transaction) = true;
+    }
+}
+
+//For 3/23 release
+service LeagueAPIPatch {
+    // GetLeagueLeaderboardByLeagueBucketId returns LeagueLeaderBoard.
+    // INPUT: string -> LeagueBucketId
+    // Note that this API response is Fiat/Crypto mode sensitive
+    rpc GetLeagueLeaderboardByLeagueBucketId (google.protobuf.StringValue) returns (LeagueLeaderBoard) {
+        option (api_category_league) = true;
+    }
+
+    // GetLeagueDetailByLeagueBucketId returns LeagueDetail.
+    // INPUT: string -> LeagueBucketId
+    // Note that this API response is Fiat/Crypto mode sensitive
+    rpc GetLeagueDetailByLeagueBucketId (google.protobuf.StringValue) returns (LeagueDetail) {
+        option (api_category_league) = true;
+    }
+
+    // DismissGameHistoryNotificationByLeagueBucketId
+    // INPUT: string -> league Bucket ID (which is League id)
+    rpc DismissGameHistoryNotificationByLeagueBucketId (google.protobuf.StringValue) returns (google.protobuf.Empty) {
+        option (api_category_history) = true;
+    }
+}
+
+//For 4/6 release
+//Deprecated since mobile need separate API to get/set geoBlockStatus
+service ReleaseApril6th {
+    // CheckGeoBlockStatus will set the geolocation in SDK cache when necessary
+    // INPUT: CheckGeoBlockStatusRequest which has Administrative Area and Country Code
+    rpc CheckGeoBlockStatus (CheckGeoBlockStatusRequest) returns (CheckGeoBlockStatusResponse) {
+        option (api_category_geolocation) = true;
+    }
+}
+
+//For 4/6 release
+service LogCallback {
+    option (callback_category_log) = true;
+    /**
+    * OnLog should be triggered when SDK wants to pass some log to mobile app.
+    * for example, in the matching process, mobile app will receive from SDK some logs
+    * describing important debugging info, and upload to Instabug.
+    */
+    rpc OnLog (SdkLog) returns (google.protobuf.Empty) {
+    }
+}
+
+//Android and iOS single native game
+service SingleNativeAPIs {
+    /**
+    * Input: Android Package name
+    */
+    rpc GetGameByAndroidPackageName (google.protobuf.StringValue) returns (Game) {
+        option (rootapi) = true;
+        option (api_category_game) = true;
+    }
+    /**
+    * Input: iOS bundle id
+    */
+    rpc GetGameByIosBundleId (google.protobuf.StringValue) returns (Game) {
+        option (rootapi) = true;
+        option (api_category_game) = true;
+    }
+}
+
+//social challenge update
+service SocialChallengeUpdate {
+    // AcceptSocialChallenge returns MatchInfo
+    rpc AcceptSocialChallenge (AcceptSocialChallengeRequest) returns (MatchInfo) {
+        option (api_category_challenge) = true;
+    }
+
+    // RematchByMatchDetailId returns MatchInfo
+    // TODO: ERRORS: APP_INELIGIBLE_SOCIAL_CHALLENGE
+    rpc Rematch (RematchRequest) returns (MatchInfo) {
+        option (api_category_challenge) = true;
+    }
+}
+
+service RefundHistory {
+    // GetFiatTransactionHistoryItems returns a fiat transaction list for current user
+    // INPUT: no input arguments
+    rpc GetFiatTransactions (google.protobuf.Empty) returns (GetFiatTransactionsResponse) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    // GetRefundDetail returns the RefundDetail in which there is the reason of the refund
+    // INPUT: refund id
+    rpc GetRefundDetail (google.protobuf.StringValue) returns (RefundDetail) {
+        option (api_category_fiat_transaction) = true;
+    }
+}
+
+service ReportGameCrashAPIs {
+    // ReportCrashForMatchTicketId
+    // INPUT: MatchTicketId
+    rpc ReportCrashForMatchTicketId (ReportCrashForMatchTicketIdRequest) returns (google.protobuf.Empty) {
+        option (api_category_match) = true;
+    }
+
+    // ReportCrashForTournamentTicketId
+    // INPUT: TournamentTicketId
+    rpc ReportCrashForTournamentTicketId (ReportCrashForTournamentTicketIdRequest) returns (google.protobuf.Empty) {
+        option (api_category_tournament) = true;
+    }
+}
+
+service GetAccountDetailPatch {
+    // GetAccountDetail returns the detailed information about the user account
+    rpc GetAccountDetail (google.protobuf.Empty) returns (GetAccountDetailResponse) {
+        option (api_category_account) = true;
+    }
+}
+
+service CancelWithdrawalPatch {
+    // CancelWithdrawal returns the FiatTransaction with a WithdrawalNote
+    // INPUT: String FiatTransaction id
+    rpc CancelWithdrawal (google.protobuf.StringValue) returns (FiatTransaction) {
+        option (api_category_fiat_transaction) = true;
+    }
+}
+service AutoRefundPatch {
+    // AutoRefundForTicketId returns the ticketId
+    // It can throw errors:
+    // APP_AUTO_REFUND_GLOBAL_REFUND_LIMIT_REACHED = 142;
+    // APP_AUTO_REFUND_PER_USER_REFUND_LIMIT_REACHED = 143;
+    // APP_AUTO_REFUND_REFUSED = 144;
+    rpc AutoRefundForTicketId (google.protobuf.StringValue) returns (google.protobuf.StringValue) {
+        option (api_category_match) = true;
+    }
+}
+
+service MatchReplay {
+    // RecordFrameForMatchTicket
+    /*
+    This will use local_data_path appended by /SCREEN_RECORDINGS/MATCH/MATCH_TICKET_ID/
+    */
+    rpc RecordFrameForMatchTicket (RecordFrameForMatchTicketRequest) returns (google.protobuf.Empty) {
+        option (api_category_match) = true;
+    }
+}
+
+service T1FiatTransaction {
+    // DepositWithT1 uses T1 card and fiat deposit option id
+    rpc DepositWithT1 (T1DepositRequest) returns (FiatDepositResult) {
+        option (api_category_fiat_transaction) = true;
+    }
+}
+
+service AmazonFiatTransaction {
+    // DepositWithAmazon uses amazon order id and fiat deposit option id
+    rpc DepositWithAmazon (DepositWithAmazonRequest) returns (FiatDepositResult) {
+        option (api_category_fiat_transaction) = true;
+    }
+}
+
+service MultiFiatTransaction {
+    // DepositWithT1 uses T1 card and fiat deposit option id
+    rpc DepositByMultiProviders (DepositByMultiProvidersRequest) returns (FiatDepositResult) {
+        option (api_category_fiat_transaction) = true;
+    }
+}
+
+service WithdrawalPatchService {
+    // Get withdrawal transaction detail
+    // INPUT: Withdrawal transactionId
+    rpc GetWithdrawalDetail (google.protobuf.StringValue) returns (WithdrawalDetail) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    // Get withdrawal confirm detail
+    // INPUT: Withdrawal confirm
+    rpc GetWithdrawalConfirmationDetail (google.protobuf.DoubleValue) returns (WithdrawalConfirmationDetail) {
+        option (api_category_fiat_transaction) = true;
+    }
+
+    // Get withdrawal kyc status
+    // INPUT: Withdrawal info
+    rpc GetWithdrawalKycStatus (google.protobuf.DoubleValue) returns (WithdrawalKycStatusResponse) {
+        option (api_category_fiat_transaction) = true;
+    }
+}
+
+service GeoBlockStatusService {
+    // SetGeoBlockStatus will set the geolocation in SDK cache when necessary
+    // INPUT: SetGeoBlockStatusRequest which has Administrative Area and Country Code
+    rpc SetGeoBlockStatus (SetGeoBlockStatusRequest) returns (SetGeoBlockStatusResponse) {
+        option (api_category_geolocation) = true;
+    }
+    // GetGeoBlockStatus will return geolocation status according to SDK cache
+    rpc GetGeoBlockStatus (GetGeoBlockStatusRequest) returns (GetGeoBlockStatusResponse) {
+        option (api_category_geolocation) = true;
+    }
+}
+
+service ConstructPrizeService {
+    // the type of reward in grpc response is common.TokenAmount
+    // and the claim animation in mobile just supports sdk.PrizeClaim data because "user balance" is required for the animation
+    // thus backend cannot give sdk.PrizeClaim back to mobile
+    // So we need this API to let SDK help mobile construct sdk.PrizeClaim from common.TokenAmount.
+    rpc ConstructPrizeFromRewards(ConstructPrizeRequest) returns (ConstructPrizeResponse) {
+        option (api_category_loyalty) = true;
+    }
+}

@@ -1,0 +1,392 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package notification;
+
+import "google/protobuf/wrappers.proto"; // wrapper for scalar type like int, string
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "common_mobile.proto";
+import "notification_mobile.proto";
+import "error.proto";
+import "user_tagging.proto";
+
+option java_package = "network.celer.proto.notification";
+option java_outer_classname = "NotificationInternal";
+option go_package = "github.com/celer-network/x-proto-go/notification";
+
+// Notification metadata management service for admin portal
+service NotificationMetadataService {
+    rpc CreateNotification (NotificationMetadataDTO) returns (NotificationDTOResponse) {
+    }
+
+    // set NotificationMetadataDTO's delete to true will delete the draft notification
+    rpc UpdateNotification (NotificationMetadataDTO) returns (NotificationDTOResponse) {
+    }
+
+    rpc PaginateNotifications (PaginateNotificationRequest) returns (PaginateNotificationResponse) {
+    }
+
+    rpc SetEventTriggeredNotificationPerUserSendingInterval (google.protobuf.Int32Value) returns (google.protobuf.Empty) {
+    }
+
+    rpc GetEventTriggeredNotificationPerUserSendingInterval (google.protobuf.Empty) returns (google.protobuf.Int32Value) {
+    }
+
+    rpc SentTestNotification (SentTestNotificationRequest) returns (NotificationResult) {
+    }
+
+    // get historical fcm relationship bind in notification system.
+    // Noted that notification system does not remember all the bind relationship, just subset of it, due to original design goal not including this feature.
+    rpc GetHistoricalFcmRelationshipForUser (GetHistoricalFcmRelationForUserRequest) returns (GetHistoricalFcmRelationForUserResponse) {
+    }
+}
+
+// Notification for backend service, no need to authenticate
+service NotificationBackendService {
+    // send notification.
+    // must provide notification_metadata_id for statistics use and message template control
+    rpc SendNotification (SendNotificationRequest) returns (SendNotificationResponse) {
+    }
+
+    // send notification to all.
+    // must provide notification_metadata_id for statistics use and message template control
+    // won't return any NotificationResult in SendNotificationResponse, result can be looked up in db.
+    rpc SendNotificationToAll (SendNotificationToAllRequest) returns (SendNotificationResponse) {
+    }
+
+    // send email by aws ses.
+    rpc SendEmail (SendEmailRequest) returns (SendEmailResponse) {
+    }
+
+    rpc BatchSendFcmDataMessage (BatchSendFcmDataMessageRequest) returns (BatchSendFcmDataMessageResponse) {
+    }
+
+    // set or clear one kind of app badge
+    rpc BatchSetAppBadge (BatchSetAppBadgeRequest) returns (BatchSetAppBadgeResponse) {
+    }
+}
+
+message SendNotificationRequest {
+    // indicate which specific instance of notification to send, in order to apply rate limit and statistics.
+    // linked to table notification_metadata's primary id.
+    // send message must have notification_metadata_id before being sent out.
+    int64 notification_metadata_id = 1;
+    // lists of messages one want to send. List size must be less than 2000
+    repeated NotificationRequestParam notification_request_param = 2;
+}
+
+message NotificationRequestParam {
+    string username = 1;
+    // if message template is like "${gameTitle} tournament is live now! ${tournamentEntryFee} entry and ${tournamentTotalPrize} prize pool!"
+    // so message_template_param should have 3 entries which keys are "gameTitle", "tournamentEntryFee" and "tournamentTotalPrize"
+    map<string, string> message_template_param = 2;
+    // url when click the push
+    string url = 3;
+    // destination appIds upstream want to send to, will eventually try to send one message to user's app
+    repeated string destination_app_id = 4;
+}
+
+// err.BackendError will tell if whole request went fatal.
+// If it is just one or two message sent fail, err.BackendError will not be set.
+// the repeated NotificationResult will show each one of NotificationRequestParam's result
+message SendNotificationResponse {
+    err.BackendError error = 1;
+    // NotificationResult will be the same order as SendNotificationRequest's NotificationRequestParam
+    repeated NotificationResult notification_result = 2;
+}
+
+message NotificationResult {
+    int64 notification_log_id = 1;
+    SendNotificationResultStatusEnum send_result_status = 2;
+}
+
+enum SendNotificationResultStatusEnum {
+    SEND_NOTIFICATION_RESULT_STATUS_UNDEFINED = 0;
+    SEND_SUCCESS = 1;
+    UNKNOWN_ERROR = 2;
+    THROTTLED = 3;
+    USER_ARN_NOT_FOUND = 4;
+    ILLEGAL_REQUEST_ARGUMENT = 5;
+    SNS_SEND_FAIL = 6;
+    MESSAGE_TEMPLATE_PARAM_INVALID = 7;
+    APP_VERSION_UNQUALIFIED = 8;
+    USER_PUSH_PERMISSION_NOT_GRANTED = 9;
+    USER_IN_FOREGROUND = 10;
+    IN_APP_MESSAGE_HAS_BEEN_SEEN = 11;
+}
+
+message SendNotificationToAllRequest {
+    // indicate which specific instance of notification to send, in order to apply rate limit and statistics.
+    // linked to table notification_metadata's primary id.
+    // send message must have notification_metadata_id before being sent out.
+    int64 notification_metadata_id = 1;
+    // if message template is like "${gameTitle} tournament is live now! ${tournamentEntryFee} entry and ${tournamentTotalPrize} prize pool!"
+    // so message_template_param should have 3 entries which keys are "gameTitle", "tournamentEntryFee" and "tournamentTotalPrize"
+    map<string, string> message_template_param = 2;
+    // url when click the push
+    string url = 3;
+    // destination appIds upstream want to send to, will eventually try to send one message to user's app
+    repeated string destination_app_id = 4;
+}
+
+enum NotificationStatusEnum {
+    NOTIFICATION_STATUS_UNDEFINED = 0;
+    DRAFT = 1;
+    INACTIVE = 2;
+    ACTIVE = 3;
+    ENDED = 4;
+}
+
+enum NotificationTypeEnum {
+    NOTIFICATION_TYPE_UNDEFINED = 0;
+    EVENT_TRIGGERED = 1;
+    ONE_TIME = 2;
+    RECURRING = 3;
+}
+
+enum OneTimeNotificationTypeEnum {
+    ONE_TIME_NOTIFICATION_TYPE_UNDEFINED = 0;
+    ONE_TIME_PUSH_NOTIFICATION = 1;
+    ONE_TIME_BANNER_GAMES_PAGE = 2;
+    ONE_TIME_POPUP_BUCKET_PAGE = 3;
+}
+
+enum RecurringNotificationTypeEnum {
+    RECURRING_NOTIFICATION_TYPE_UNDEFINED = 0;
+    //    RECURRING_PUSH_NOTIFICATION = 1;
+    RECURRING_BANNER_GAMES_PAGE = 2;
+    RECURRING_POPUP_BUCKET_PAGE = 3;
+}
+
+message PaginateNotificationRequest {
+    // start from 1 as first page
+    int32 page = 1;
+    int32 page_size = 2;
+    repeated NotificationStatusEnum notification_status = 3;
+    repeated NotificationTypeEnum notification_type = 4;
+}
+
+message NotificationMetadataDTO {
+    // when create, there is no need to set notification_id
+    int64 notification_id = 1;
+    // title use to demonstrate in admin portal as well as used in notification title
+    string title = 2;
+    NotificationStatusEnum notification_status = 3;
+    NotificationTypeEnum notification_type = 4;
+    // sent and opened is deprecated due to our granularity of notification track is per user.
+    // if one wants to see notification open log, he need to query in AWS Athena.
+    reserved 5, 6;
+    uint64 last_edited_time = 7;
+    // set to true will delete the draft notification
+    bool delete = 8;
+    reserved 9, 10;
+    TargetAppInfoDummy target_app_info = 14;
+    oneof notification_type_payload {
+        EventTriggeredNotificationMetadataDTO event_triggered_metadata = 11;
+        OneTimeNotificationMetadataDTO one_time_metadata = 12;
+        RecurringNotificationMetadataDTO recurring_metadata = 13;
+    }
+}
+
+message TargetAppInfoDummy {
+    repeated TargetAppInfo target_app_info = 1;
+}
+
+message TargetAppInfo {
+    // required
+    string target_app_id = 1;
+    // required, if target_device_type is set,
+    // only the corresponding deviceType been sent and version been verified
+    repeated common.DeviceType target_device_type = 6;
+    // optional
+    string android_min_send_version = 2;
+    // optional
+    string android_max_send_version = 3;
+    // optional
+    string ios_min_send_version = 4;
+    // optional
+    string ios_max_send_version = 5;
+}
+
+message EventTriggeredNotificationMetadataDTO {
+    // receive limit per unit time
+    int32 receive_limit = 1;
+    // unit time for receive limit (Unit: hour)
+    int32 receive_cool_down = 2;
+    PushNotificationMetadataDTO push_notification_metadata = 3;
+}
+
+message OneTimeNotificationMetadataDTO {
+    OneTimeNotificationTypeEnum one_time_notification_type = 1;
+    // expect push time for one-time notification
+    uint64 one_time_notification_push_time = 2;
+    // sql query to batch extract qualified users
+    string sql_query = 3;
+    string deep_link = 4;
+    oneof one_time_notification_type_payload {
+        PushNotificationMetadataDTO push_notification_metadata = 5;
+        PopupInAppMessageMetadataDTO popup_in_app_message_metadata = 6;
+        BannerInAppMessageMetadataDTO banner_in_app_message_metadata = 7;
+    }
+}
+
+message RecurringNotificationMetadataDTO {
+    RecurringNotificationTypeEnum recurring_notification_type = 1;
+    //    // receive limit per unit time
+    //    int32 receive_limit = 2;
+    //    // unit time for receive limit (Unit: hour)
+    //    int32 receive_cool_down = 3;
+    uint64 start_time = 4;
+    uint64 end_time = 5;
+    string user_tagging_schema = 6;
+    campaign.QueryExpression user_tagging_expression = 7;
+    string deep_link = 8;
+    oneof recurring_notification_type_payload {
+        //        PushNotificationMetadataDTO push_notification_metadata = 9;
+        PopupInAppMessageMetadataDTO popup_in_app_message_metadata = 10;
+        BannerInAppMessageMetadataDTO banner_in_app_message_metadata = 11;
+    }
+}
+
+message PushNotificationMetadataDTO {
+    // message template for this type of notification. use ${} to quote the template param.
+    // you will need to put the corresponding parameter entries to the message_template_param in rpc service SendNotification
+    // message_template example: You have a new match result ready for ${gameTitle}. Come and check it out!
+    // in the example below, your message_template_param should have a entry which key is "gameTitle"
+    string message_template = 1;
+}
+
+message PopupInAppMessageMetadataDTO {
+    string image_url = 1;
+    string description = 2;
+    string button_text = 3;
+    repeated string game_id = 4;
+}
+
+message BannerInAppMessageMetadataDTO {
+    string image_url = 1;
+    string description = 2;
+    string button_text = 3;
+    // duration of notification showing to users at Banner in Games Page in millisecond
+    int64 display_duration = 4;
+}
+
+message PaginateNotificationResponse {
+    err.BackendError error = 1;
+    repeated NotificationMetadataDTO notification = 2;
+    int32 total = 3;
+}
+
+message NotificationDTOResponse {
+    err.BackendError error = 1;
+    NotificationMetadataDTO notification = 2;
+}
+
+message SendEmailRequest {
+    string to_addresses = 1;
+    string subject = 2;
+    string html_body = 3;
+}
+
+message SendEmailResponse {
+    err.BackendError error = 1;
+}
+
+message BatchSendFcmDataMessageRequest {
+    // no more than 1000 request one time is preferred due to network consideration
+    repeated SendFcmDataMessageRequest request = 1;
+}
+
+message SendFcmDataMessageRequest {
+    string username = 1;
+    oneof payload {
+        // whenever this payload is set, means there is a history item to claim for this user in history page.
+        NewHistoryItem new_history = 2;
+    }
+    // destination appIds upstream want to send to, will eventually try to send to all user's app
+    repeated string destination_app_id = 3;
+}
+
+message BatchSendFcmDataMessageResponse {
+    err.BackendError error = 1;
+}
+
+message BatchSetAppBadgeRequest {
+    // no more than 1000 request one time is preferred due to network consideration
+    repeated SetAppBadgeRequest request = 1;
+    // timeout timestamp for setting badge request to be count as valid. After then badge request is regarded as expired.
+    // set to 0 means no expiration.
+    google.protobuf.Timestamp timeout = 2;
+}
+
+message SetAppBadgeRequest {
+    string username = 1;
+    // destination appIds upstream want to send to, will try to send to any appIds listed
+    repeated string destination_app_id = 2;
+    // only one of repeated set_action or repeated clear_action about the same BadgeActionEnum is allowed here, having both is ambiguous.
+    // set when new unread or unclaimed items came up from zero. If it is already set, no need to set it again.
+    repeated BadgeActionEnum set_action = 3;
+    // set when all of unread or unclaimed items are read or claimed.
+    repeated BadgeActionEnum clear_action = 4;
+}
+
+enum BadgeActionEnum {
+    BADGE_ACTION_ENUM_UNDEFINED = 0;
+    // If the user has unclaimed prizes or unread lost/draw match history in the history tab
+    BADGE_ACTION_HISTORY = 1;
+    // If the user hasn’t claimed today’s check-in reward
+    BADGE_ACTION_CHECK_IN_REWARD = 2;
+    // If the user has any available task to accept
+    BADGE_ACTION_TASK = 3;
+    // If the user has any available free loot box to accept
+    BADGE_ACTION_FREE_LOOT_BOX = 4;
+}
+
+message BatchSetAppBadgeResponse {
+    err.BackendError error = 1;
+}
+
+message SentTestNotificationRequest {
+    string username = 1;
+    // message template for this type of notification. use ${} to quote the template param.
+    // you will need to put the corresponding parameter entries to the message_template_param in rpc service SendNotification
+    // message_template example: You have a new match result ready for ${gameTitle}. Come and check it out!
+    // in the example below, your message_template_param should have a entry which key is "gameTitle"
+    string message_template = 2;
+    // if message template is like "${gameTitle} tournament is live now! ${tournamentEntryFee} entry and ${tournamentTotalPrize} prize pool!"
+    // so message_template_param should have 3 entries which keys are "gameTitle", "tournamentEntryFee" and "tournamentTotalPrize"
+    repeated JsKeyValue message_template_param = 3;
+    // url when click the push
+    string url = 4;
+    string title = 5;
+    int64 notification_metadata_id = 6;
+    // destination appId upstream want to send to
+    string destination_app_id = 7;
+}
+
+message JsKeyValue {
+    string key = 1;
+    string value = 2;
+}
+
+message GetHistoricalFcmRelationForUserRequest {
+    string username = 1;
+}
+
+message GetHistoricalFcmRelationForUserResponse {
+    err.BackendError error = 1;
+    repeated UserFcmRelation relation = 2;
+}
+
+message UserFcmRelation {
+    string username = 1;
+    uint64 create_time = 2;
+    uint64 update_time = 3;
+    string app_id = 4;
+    string device_id = 5;
+    string endpoint_arn = 6;
+    string fcm_token = 7;
+    string app_version = 8;
+    common.DeviceType device_type = 9;
+    bool push_permission_granted = 10;
+}

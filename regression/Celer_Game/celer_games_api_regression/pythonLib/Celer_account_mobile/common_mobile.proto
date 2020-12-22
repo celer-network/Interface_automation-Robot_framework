@@ -1,0 +1,188 @@
+// Copyright 2020 Celer Network
+// Enum/Message exposed to mobile and common across modules
+
+syntax = "proto3";
+package common;
+
+option java_package = "network.celer.proto.common";
+option java_outer_classname = "CommonMobile";
+option go_package = "github.com/celer-network/x-proto-go/common";
+option swift_prefix = "Common";
+
+//********** enums ***********//
+// Defines an exhaustive list of all the tokens symbols that are
+// used in celerx system
+// note: not to be confused with the enum TokenType in sdk package
+enum TokenTypeEnum {
+    UNKNOWN_TOKEN_TYPE = 0;
+    GT = 1; //Game Token
+    USD = 2; //Fiat
+    CELR = 3; //Crypto ERC20
+    DAI = 4; //Crypto ERC20
+    ETH = 5; //Crypto ETH
+    GEM = 6; //Loyalty Points
+}
+
+message FiatValue {
+    TokenTypeEnum fiat_type = 1;//this can only take fiat token types such as USD, EUR etc.
+    double value = 2;
+}
+
+enum PrimaryAccountType {
+    UNDEFINED_PRIMARY_ACCOUNT_TYPE = 0;
+    PRIMARY_ACCOUNT_TYPE_FIAT = 1;
+    PRIMARY_ACCOUNT_TYPE_CRYPTO = 2;
+}
+
+enum GemRewardNoteStatus {
+    GEM_REWARD_NOTE_STATUS_UNDEFINED = 0;
+    GEM_REWARD_NOTE_STATUS_PENDING = 1;
+    GEM_REWARD_NOTE_STATUS_FAILED_TO_SEND = 2;
+    GEM_REWARD_NOTE_STATUS_COMPLETED = 3;
+    GEM_REWARD_NOTE_STATUS_NOT_ELIGIBLE = 4;
+}
+
+// can not add prefix, has been used in  database
+enum PlayerRoleType {
+    UNKNOWN_ROLE_TYPE = 0;
+    CHALLENGER = 1;
+    DEFENDER = 2;
+}
+
+enum TicketStatus {
+    TICKET_STATUS_UNDEFINED = 0;
+    TICKET_STATUS_UNPAID = 1;
+    TICKET_STATUS_PAID = 2;
+    TICKET_STATUS_PAY_TIMEOUT = 3;
+    TICKET_STATUS_MATCHED = 4;
+    TICKET_STATUS_REFUNDING = 5;
+    TICKET_STATUS_REFUND_FAILED = 6;
+    TICKET_STATUS_REFUND_SUCCEEDED = 7;
+    TICKET_STATUS_READY = 8;
+    TICKET_STATUS_SCORE_SUBMITTED = 9;
+    TICKET_STATUS_RANK_DETERMINED = 10;
+    TICKET_STATUS_PRIZE_SENDING_FAILED = 11;
+    TICKET_STATUS_PRIZE_SENDING_SUCCEEDED = 12;
+}
+
+enum BucketRewardType {
+    BUCKET_REWARD_TYPE_UNDEFINED = 0;
+    BUCKET_REWARD_TYPE_GEM = 1;
+    BUCKET_REWARD_TYPE_GOLD_STAR = 2;
+    BUCKET_REWARD_TYPE_SILVER_STAR = 3;
+}
+
+enum GameScreenOrientation {
+    UNDEFINED_GAME_SCREEN_ORIENTATION = 0;
+    GAME_SCREEN_ORIENTATION_PORTRAIT = 1;
+    GAME_SCREEN_ORIENTATION_LANDSCAPE = 2;
+}
+
+//********** data ***********//
+message TokenAmount {
+    TokenTypeEnum token_type = 1;
+    double token_value = 2;
+    double token_usd_value = 3 [deprecated = true]; //field 4 will be used to replace usd value
+    // Field 4 is only optional when field 1 is a fiat type
+    // Field 4 is mandatory when field 1 is a crypto type
+    // Field 4 describes the exact value in fiat of this token, for example: if field 1 is ETH,	    // Field 4 describes the exact value in fiat of this token, for example: if field 1 is ETH,
+    // field 4 show user how much fiat this amount of ETH would worth. As far as UX is concerned,	    // field 4 show user how much fiat this amount of ETH would worth. As far as UX is concerned,
+    // it is friendly to give user perceivable value	    // it is friendly to give user perceivable value
+    // in a fiat-centric world, even if the token in question is a non-fiat token.	    // in a fiat-centric world, even if the token in question is a non-fiat token.
+    // For a user in the US, field 4 could the ETH price in USD * amount of ETH (value of field 2)	    // For a user in the US, field 4 could the ETH price in USD * amount of ETH (value of field 2)
+    // Depending on what fiat currency the user is using, the token type enum in field 4 can be changed to EUR, or JPY	    // Depending on what fiat currency the user is using, the token type enum in field 4 can be changed to EUR, or JPY
+    //E.g.: field 4 could also be the ETH price in EUR * amount of ETH (value of field 2)	    //E.g.: field 4 could also be the ETH price in EUR * amount of ETH (value of field 2)
+    FiatValue fiat_value = 4;
+}
+
+message UserInfo {
+    string id = 1; //example: "f29447ef-b62a-4289-43a3-75b435033fbc"
+    string username = 2;
+    string eth_address = 3;
+    string visible_username = 4;
+    string full_name = 5;
+    string avatar_url = 6;
+    string email = 7;
+}
+
+//this is for match and tournament
+message GemRewardNote {
+    GemRewardNoteStatus status = 1;
+    TokenAmount gems_earned = 2;
+}
+
+message BucketReward {
+    BucketRewardType type = 1;
+    double amount = 2;
+    string image_url = 3;
+}
+
+message GameInfo {
+    string game_id = 1;
+    string title = 2;
+    string subtitle = 3;
+    string description = 4;
+    string primary_color = 5;
+    string icon_url = 6;
+    string image_url = 7;
+    string poster_url = 8;
+    GameScreenOrientation orientation = 9;
+    string video_url = 10;
+}
+
+//Ranking could be used for both tournament and match leaderboard
+message UserRanking {
+    UserInfo user_info = 1;
+    int64 score = 2;
+    int32 rank_number = 3;
+}
+
+message ReplayItem {
+    UserInfo user_info = 1;
+    string video_url = 2;
+    int32 rank_number = 3;
+}
+
+message ReplayBoard {
+    ReplayItem my_replay_item = 2;
+    ReplayItem opponent_replay_item = 3;
+}
+
+// Next tag: 13
+message Player {
+    string ticket_id = 1;
+    string username = 2;
+    int32 ticket_status = 3;
+    double score = 4;
+    string rank = 5;
+    string eth_address = 6;
+    string avatar_url = 7;
+    string full_name = 8;
+    string visible_username = 9;
+    PlayerRoleType role = 10;
+    bool surrendered = 11;
+    bool aborted = 12;
+}
+
+enum DeviceType {
+    DEVICE_TYPE_UNDEFINED = 0;
+    DEVICE_TYPE_ANDROID = 1;
+    DEVICE_TYPE_IOS = 2;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Deprecated (Do not use in new features)
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message AmountUsd {
+    option deprecated = true;
+    TokenTypeEnum token_type = 1;
+    double token_value = 2;
+    double token_usd_value = 3;
+}
+
+// Next tag: 4
+message Date {
+    uint32 year = 1;
+    uint32 month = 2; // range from 1 to 12
+    uint32 day = 3; // range from 1 to 31
+}

@@ -1,0 +1,169 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package match;
+
+import "common_mobile.proto";
+import "league_mobile.proto";
+import "account_mobile.proto";
+import "campaign_mobile.proto";
+
+option java_package = "network.celer.proto.match";
+option java_outer_classname = "MatchMobile";
+option go_package = "github.com/celer-network/x-proto-go/match";
+option swift_prefix = "Match";
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * APIs
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Enums
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+enum MatchStatus {
+    MATCH_STATUS_UNDEFINED = 0;
+    MATCH_STATUS_UNMATCHED = 1;
+    MATCH_STATUS_MATCHED = 2;
+    MATCH_STATUS_PENDING = 3; // ready to start
+    MATCH_STATUS_END = 4;
+    MATCH_STATUS_ANY_PRIZE_SENDING_FAILED = 5;
+    MATCH_STATUS_ALL_PRIZE_SENDING_SUCCEEDED = 6;
+    MATCH_STATUS_CANCELED = 7;
+}
+
+enum MatchResultStatus {
+    MATCH_RESULT_STATUS_UNDEFINED = 0;
+    MATCH_RESULT_STATUS_FIRST_PLACE = 1;
+    MATCH_RESULT_STATUS_SECOND_PLACE = 2;
+    MATCH_RESULT_STATUS_PENDING_WAITING_FOR_RESULT = 3;
+    MATCH_RESULT_STATUS_DRAW = 4;
+    MATCH_RESULT_STATUS_CANCELED = 5;
+    reserved 6,7;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Data Models
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+message Bucket {
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    string token = 4;
+    double entry_fee = 5;
+    double prize = 6;
+    int32 max_player_number = 7;
+    bool should_highlight = 8;
+    string image_url = 9;
+}
+
+message MatchDetail {
+    string match_id = 1;
+    string app_id = 2;
+    Bucket bucket = 3;
+    int64 initiated = 4;
+    int64 last_updated = 5;
+    int32 match_status = 6;
+    repeated common.Player players = 7;
+    bool should_notify = 8;
+    bool has_unclaimed_prize = 9;
+    double prize_to_claim_in_token_amount = 10;
+    double prize_to_claim_in_usd_value = 11;
+    common.Player current_player = 12;
+    string shout_out_message = 13; // challenge message
+}
+
+// new match detail for mobile
+message MatchDetailInfo {
+    string match_id = 1;
+    common.GameInfo game = 2;
+    MatchBucket match_bucket = 3;
+    MatchStatus match_status = 4;
+    MatchResultStatus match_result_status = 5; // calculated by match_status in backend
+    MatchTicket current_player_ticket = 6;
+    repeated MatchTicket all_players_list = 7;
+    int64 initiated = 8;
+    int64 last_updated = 9;
+    bool should_notify = 10;
+    bool exists_unclaimed_prize = 11;
+    common.TokenAmount prize_to_claim = 12;
+    common.GemRewardNote gem_reward_note = 13;
+    league.LeagueStarRewardNote league_star_reward_note = 14;
+    string room_id = 15;
+    common.ReplayBoard replay_board = 16;
+    //Use user_guidance when match result has come out when user enters the match result.
+    //Only when some conditions are met, this field is filled with data. Most of the time, it is not filled.
+    //The requirement is that this field appears at most once per user per day, which is controlled by backend.
+    //Backend verifies all conditions and will control whether to fill this field, and what type of data to fill.
+    MatchResultUserGuidance user_guidance = 17;
+    double applied_discount_percentage = 18; // if no coupon applied, this value is 0. otherwise, this value is [0, 1). eg. 0.4 means 40% off
+}
+
+message MatchBucket {
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    common.TokenAmount entry_fee = 4;
+    common.TokenAmount prize = 5;
+    string image_url = 6; // https://get.celer.app/celerx/bucket-icon/cash2.png
+    int32 max_player_number = 7;
+    bool should_highlight  = 8;
+    repeated common.BucketReward bucket_reward = 9;
+    bool should_record = 10;
+    int32 difficulty_level = 11; //1 - 10
+    string highlight_text = 13;
+    bool is_special_bucket  = 14;
+    double star_multiplier = 15;
+    common.TokenAmount original_prize = 16; // this is a prize only for UI, means user will win prize(field 5), but see this origin prize in UI. This will be null if no need to high light new prize.
+    bool has_usable_coupon = 17;
+}
+
+message MatchTicket {
+    string ticket_id = 1;
+    common.TicketStatus ticket_status = 2;
+    string username = 3;
+    string eth_address = 4;
+    string visible_username = 5;
+    string full_name = 6;
+    string avatar_url = 7;
+    common.PlayerRoleType player_role = 8; //FOR SOCIAL CHALLENGE. CHALLENGER or DEFENDER
+    int32 rank_number = 9;
+    int64 score = 10;
+    bool surrendered = 11;
+    bool aborted = 12;
+    int64 initiated = 13; //in milliseconds, example: 1568617200000
+    int64 last_updated = 14; //in milliseconds, example: 1568617200011
+    string challenge_message = 15;
+    bool is_cancelable = 16;
+    account.Geolocation geolocation = 17;
+}
+
+message MatchHistoryDetail {
+    string match_id = 1;
+    common.GameInfo game = 2;
+    MatchBucket match_bucket = 3;
+    MatchStatus match_status = 4;
+    MatchResultStatus match_result_status = 5;
+    double shared_random_seed = 6; // a double number between 0 and 1, example: 0.81739652
+    MatchTicket current_player_ticket = 7;
+    repeated MatchTicket all_players_tickets = 8;
+    int64 initiated = 9; //in milliseconds, example: 1568617200000
+    int64 last_updated = 10; //in milliseconds, example: 1568617200011
+    bool should_notify = 11;
+    bool exists_unclaimed_prize = 12;
+    common.TokenAmount prize_to_claim = 13;
+    common.GemRewardNote gem_reward_note = 14;
+    league.LeagueStarRewardNote league_star_reward_note = 15;
+    string room_id = 16;
+    bool is_challengeable = 17;
+    string shout_out_message = 18; // challenge message
+    int32 difficulty_level = 19; //1 - 10
+}
+
+message MatchResultUserGuidance {
+    oneof user_guidance {
+        MatchBucket higher_stake_bucket_for_usd_winner = 1; // usd winner to play higher-stake buckets
+        campaign.DepositCampaignTaskOffer task_based_deposit_offer_for_usd_loser = 2; // task-based deposit offer with the highest bonus-to-deposit ratio for usd loser
+        campaign.CampaignDepositOption time_limited_deposit_offer_for_usd_loser = 3; // limited time deposit offer with the highest bonus-to-deposit ratio for usd loser
+        campaign.DepositCampaignTaskOffer task_based_deposit_offer_for_gt_winner = 4; // task-based deposit offer with the highest bonus-to-deposit ratio for gt winner
+        campaign.CampaignDepositOption time_limited_deposit_offer_for_gt_winner = 5; // limited time deposit offer with the highest bonus-to-deposit ratio for gt winner
+    }
+}

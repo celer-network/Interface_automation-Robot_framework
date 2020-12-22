@@ -1,0 +1,43 @@
+// Copyright 2020 Celer Network
+// This file defines Messages/Enums if they are common for all backend modules.
+// Such as Amount, Bucket, Ticket, Player, MatchDetail and so on.
+// The purpose of this file is to avoid multiple definitions of the same data in different modules, or confusion of package references
+// Don't add private data to this file, which only used in a specific module.
+
+// Note if a message/enum is exposed to mobile, it should be put into common_mobile.proto
+
+syntax = "proto3";
+package common;
+
+import "common_mobile.proto";
+
+option java_package = "network.celer.proto.common";
+option java_outer_classname = "CommonInternal";
+option go_package = "github.com/celer-network/x-proto-go/common";
+option swift_prefix = "Common";
+
+//********** enums ***********//
+
+//********** data ***********//
+// "symbol" and "token_type" are synonyms and serve the same purpose, only one of those two needs to be populated
+message Amount {
+    string symbol = 1;
+    double value = 2;
+    TokenTypeEnum token_type = 3;
+}
+
+// Next tag: 4
+message PrizeDistributionChunk {
+    uint32 from_rank = 1;
+    uint32 to_rank = 2;
+    double percentage = 3;
+}
+
+
+// this message is used by fiat and bank to auth user in v1 grpc for sdk.
+// will be deprecated/replaced by jwt_token when we move to mobile native grpc
+// the password field is eth sign a shared fix string, so stays the same per user
+message BasicAuth {
+    string username = 1;
+    string password = 2;
+}

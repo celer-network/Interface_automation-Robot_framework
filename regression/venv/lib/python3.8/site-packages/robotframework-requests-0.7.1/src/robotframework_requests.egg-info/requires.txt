@@ -1,0 +1,8 @@
+robotframework
+requests
+
+[test]
+pytest
+flask
+coverage
+flake8

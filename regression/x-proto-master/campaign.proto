@@ -1,0 +1,238 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package campaign;
+
+import "user_tagging.proto";
+import "error.proto";
+import "common_backend.proto";
+import "common_mobile.proto";
+import "loyalty_internal.proto";
+import "campaign_mobile.proto";
+
+option java_package = "network.celer.backend.rpcApi";
+option java_outer_classname = "CampaignPKG";
+option go_package = "github.com/celer-network/x-proto-go/campaign";
+
+// ************* service *************//
+service CampaignService {
+    rpc CreateCampaign (CampaignCreationInfo) returns (CampaignDTOResponse) {
+    }
+
+    rpc UpdateCampaign (CampaignUpdateInfo) returns (CampaignDTOResponse) {
+    }
+
+    rpc PaginateCampaigns (PaginateCampaignRequest) returns (PaginateCampaignResponse) {
+    }
+
+    rpc GetEligibleCampaigns (CheckCampaignRequest) returns (EligibleCampaignsResponse) {
+    }
+
+    rpc GetCampaignByID (GetCampaignRequest) returns (CampaignDTOResponse) {
+    }
+
+    rpc CheckByCampaignAndSendRCByRefId (SendRCRequest) returns (SendRCResponse) {
+    }
+
+    // this API is used to mark user has begin a time limited campaign, and backend will record the begin time.
+    rpc MarkTimeLimitedCampaignBegin (CampaignMarkedRequest) returns (CampaignMarkedResponse) {
+    }
+}
+
+service CampaignAdminService {
+    rpc AdminCreateCampaign (CampaignCreationInfo) returns (CampaignDTOResponse);
+    rpc AdminUpdateCampaign (CampaignUpdateInfo) returns (CampaignDTOResponse);
+    rpc AdminPaginateCampaigns (PaginateCampaignRequest) returns (PaginateCampaignResponse);
+    rpc AdminGetCampaignByID (GetCampaignRequest) returns (CampaignDTOResponse);
+}
+
+// ************* enums *************//
+// Next tag: 6
+enum CampaignTypeEnum {
+    UNKNOWN_TYPE = 0;
+    DEPOSIT = 1; // users can join campaign any time if campaign is available。 ignore 'duration_time_sec' in this case
+    INVITATION = 2;
+    TIME_LIMITED_DEPOSIT = 3; // campaign is eligible for users within limited period('duration_time_sec') after some event triggered
+    TIME_LIMITED_DEPOSIT_WITH_TASK = 4; // this campaign requires users to complete tasks before claim all rewards
+    SPECIAL_BUCKET = 5; // special bucket for users
+}
+
+// Next tag: 3
+enum TriggerTypeEnum {
+    UNKNOWN_TRIGGER = 0;
+    RECURRING = 1;
+    SNAPSHOT = 2;
+}
+
+// Next tag: 4
+enum CampaignStatusEnum {
+    UNKNOWN_STATUS = 0;
+    INVALID = 1;
+    VALID = 2;
+    ENDED = 3;
+}
+
+// Next tag: 15
+message CampaignCreationInfo {
+    UserTaggingTypeEnum user_tagging = 1; // if user_tagging==UNKNOWN, it means that Everyone can participate without user tagging filtering.
+    uint64 begin_time = 2;
+    uint64 end_time = 3; // 0 or '1970-01-01 00:00:00' means this campaign won't end
+    TriggerTypeEnum trigger_type = 4;
+    CampaignStatusEnum status = 5;
+    int32 max_times = 6; // 0 means this campaign can be used unlimited times
+    common.Amount deposit_amount = 7;
+    common.Amount reward_amount = 8;
+    CampaignDisplayContent display_content = 9;
+    CampaignTypeEnum campaign_type = 10;
+    uint64 duration_time_sec = 11; // it only makes difference when campaign type is TIME_LIMITED_DEPOSIT
+    string user_tagging_schema = 12;
+    int32 max_global_times = 13; // if max_global_times == 0, it means that campaign can be take part in unlimited.
+    SpecialMatchBucket special_bucket = 14;
+    CampaignTasks campaign_tasks = 15;
+}
+
+// Next tag: 14
+message SpecialMatchBucket {
+    string id = 1;
+    string title = 2;
+    string image_url = 3; // https://get.celer.app/celerx/bucket-icon/cash2.png
+    common.Amount entry_fee = 4; // prize is from campaign
+    common.Amount prize = 5; // prize is from campaign
+    bool should_highlight = 6;
+    string highlight_text = 7;
+    repeated common.BucketReward bucket_reward = 8;
+    bool should_record = 9;
+    int32 difficulty_level = 10; //1 - 10
+    double star_multiplier = 11;
+    repeated string game_ids = 12;
+    repeated common.DeviceType device_types = 13;
+    string min_version = 14;
+    string max_version = 15;
+    common.Amount original_prize = 16; // this is a prize only for UI, means user will win prize(field 5), but see this origin prize in UI. This will be null if no need to high light new prize.
+}
+
+// used for serialized storage
+message CampaignTasks {
+    repeated CampaignTaskConfig campaign_tasks = 1;
+}
+
+message CampaignTaskConfig {
+    int32 day_sequence_number = 1; // 0 means Day 0 Task, 1 means Day 1 Task, etc
+    string name = 2;
+    string description = 3;
+    Rewards rewards = 4;
+    repeated string appids = 5; // empty list allowed (match any/all appids)
+    repeated string tokens = 6;
+    oneof goal {
+        loyalty.TaskGoalPlay play = 7;
+        loyalty.TaskGoalGather gather = 8;
+        loyalty.TaskGoalWin win = 9;
+    }
+}
+
+// used for serialized storage
+message Rewards {
+    repeated common.Amount rewards = 1;
+}
+
+// Next tag: 3
+message CampaignUpdateInfo {
+    int64 campaign_id = 1;
+    CampaignCreationInfo update_info = 2; // new info for this campaign
+}
+
+// Next tag: 16
+message CampaignDTO {
+    int64 campaign_id = 1;
+    uint64 begin_time = 2;
+    uint64 end_time = 3;
+    CampaignStatusEnum status = 4;
+    TriggerTypeEnum trigger_type = 5;
+    common.Amount deposit_amount = 6;
+    common.Amount reward_amount = 7;
+    CampaignDisplayContent display_content = 8;
+    CampaignTypeEnum campaign_type = 9;
+    UserTaggingTypeEnum user_tagging = 10;
+    uint64 duration_time_sec = 11;
+    int32 max_times = 12; // if max_time == 0, it means that users can take part in campaign unlimitedly.
+    string user_tagging_schema = 13;
+    QueryExpression user_tagging_expression = 14;
+    int32 max_global_times = 15; // if max_global_times == 0, it means that campaign can be take part in unlimited.
+    CampaignTasks campaign_tasks = 16; // only shown when campaign_type == TIME_LIMITED_DEPOSIT_WITH_TASK
+}
+
+// Next tag: 5
+message CampaignMarkHistory {
+    CampaignDTO campaign = 1;
+    uint64 first_marked_time = 2;
+    uint64 marked_to_time = 3; // marked_to_time = first_marked_time + duration_time_sec
+    uint64 duration_time_sec = 4;
+    int32 claim_times = 5; // amount of times this campaign has been claimed (deposited by users)
+}
+
+// ************* request *************//
+// Next tag: 3
+message CheckCampaignRequest {
+    string username = 1;
+    CampaignTypeEnum campaign_type = 2; // if campaign_type is UNKNOWN_TYPE here, campaigns will be selected ignoring campaign_type, and just filtering by ohter conditions such as user tagging and stock.
+}
+
+// Next tag: 5
+message PaginateCampaignRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    repeated CampaignStatusEnum campaign_status = 3;
+    repeated CampaignTypeEnum campaign_type = 4;
+}
+
+// Next tag: 5
+message SendRCRequest {
+    string username = 1;
+    int64 campaign_id = 2;
+    string ref_id = 3;
+    bool skip_tag_check = 4;
+}
+
+// Next tag: 2
+message GetCampaignRequest {
+    int64 campaign_id = 1;
+}
+
+// Next tag: 3
+message CampaignMarkedRequest {
+    int64 campaign_id = 1;
+    string username = 2;
+}
+
+// ************* response *************//
+// Next tag: 4
+message PaginateCampaignResponse {
+    err.BackendError error = 1;
+    repeated CampaignDTO campaign = 2;
+    int32 total = 3; // It's the number of entries. All responses in different pages return the same total.
+}
+
+// Next tag: 3
+message EligibleCampaignsResponse {
+    err.BackendError error = 1;
+    repeated CampaignDTO non_time_limited_campaign = 2; // unlimited campaigns that user can join during begin/end time
+    repeated CampaignMarkHistory time_limited_campaign = 3; // time limited campaigns that user can join or has joined, during campaign begin/end time
+}
+
+// Next tag: 4
+message SendRCResponse {
+    err.BackendError error = 1; // empty error if send success
+    common.Amount reward_amount = 2;
+}
+
+// Next tag: 3
+message CampaignDTOResponse {
+    err.BackendError error = 1;
+    CampaignDTO campaign_dto = 2;
+    SpecialMatchBucket special_bucket = 3;
+}
+
+message CampaignMarkedResponse {
+    err.BackendError error = 1;
+    CampaignMarkHistory mark_info = 2;
+}

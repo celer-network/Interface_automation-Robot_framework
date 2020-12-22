@@ -1,0 +1,33 @@
+# per https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
+# last match will take effect
+# so for xxx_mobile.proto, we may have to list each file individually
+
+# DO NOT ALLOW ANY NEW CHANGES TO mobile folder
+/mobile/ @i9
+
+# mobile team
+sdk*.proto @sweetbot
+*_mobile.proto @sweetbot
+
+# backend team (keep file sorted)
+*_internal.proto @zhangqi021
+account_*.proto @rdcel
+auth_mgr_*.proto @rdcel
+bank.proto @rdcel
+bank_*.proto @rdcel
+campaign_*.proto @zhangqi021
+finance_*.proto @liuxiaobleach
+game_*.proto @zhangyuxuan1992
+history_*.proto @liuxiaobleach
+config_*.proto @zhangqi021
+loyalty_*.proto @rdcel
+league_*.proto @patrickmao93
+match_mobile.proto @liuxiaobleach
+match_ticket_*.proto @zhangyuxuan1992
+notification_*.proto @zhangyuxuan1992
+social_*.proto @zhangqi021
+tournament_*.proto @patrickmao93
+match_mobile.proto @liuxiaobleach
+bucket_mobile.proto @liuxiaobleach
+sale_mobile.proto @patrickmao93
+sale_internal.proto @patrickmao93

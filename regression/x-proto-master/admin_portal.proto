@@ -1,0 +1,121 @@
+syntax = "proto3";
+package admin_portal;
+
+option java_package = "network.celer.proto.admin";
+option java_outer_classname = "AdminPortal";
+
+import "account_mobile.proto";
+import "error.proto";
+import "common_mobile.proto";
+import "common_backend.proto";
+import "finance_mobile.proto";
+
+service Admin {
+    rpc GetUserProfile (GetUserProfileRequest) returns (UserProfileResponse);
+    rpc GetUserMatchHistory (GetUserMatchHistoryRequest) returns (MatchHistoryResponse);
+    rpc GetUserWithdrawalDetail (GetUserWithdrawalDetailRequest) returns (GetUserWithdrawalDetailResponse);
+    rpc GetWithdrawals (GetWithdrawalsRequest) returns (GetWithdrawalsResponse);
+    rpc FlagWithdrawalRecord (FlagWithdrawalRecordRequest) returns (FlagWithdrawalRecordResponse);
+}
+
+// Requests
+message GetUserProfileRequest {
+    string search_content = 1;
+    SearchType search_type = 2;
+}
+
+message GetUserMatchHistoryRequest {
+    string username = 1;
+    int32 limit = 2;
+    string next_page_token = 3;
+}
+
+message GetWithdrawalsRequest {
+    string next_page_token = 1;
+    int32 limit = 2;
+    repeated finance.WithdrawalStatus withdrawal_status = 3;
+}
+
+message FlagWithdrawalRecordRequest {
+    string tx_id = 1;
+    FlagType flag = 2;
+}
+
+message GetUserWithdrawalDetailRequest {
+    string tx_id = 1;
+}
+
+// Responses
+message UserProfileResponse {
+    err.BackendError error = 1;
+    repeated UserProfile user_profiles = 2;
+}
+
+message MatchHistoryResponse {
+    err.BackendError error = 1;
+    repeated MatchResult matches = 2;
+    string next_page_token = 3;
+}
+
+message FlagWithdrawalRecordResponse {
+    err.BackendError error = 1;
+    WithdrawalWithMetadata withdrawal = 2;
+}
+
+message GetWithdrawalsResponse {
+    err.BackendError error = 1;
+    repeated TxWithMetadata withdrawal_txs = 2;
+}
+
+message GetUserWithdrawalDetailResponse {
+    err.BackendError error = 1;
+    WithdrawalWithMetadata withdrawal = 2;
+}
+
+// Payloads
+enum SearchType {
+    UNKNOWN_SEARCH_TYPE = 0;
+    USERNAME = 1;
+    ETH_ADDRESS = 2;
+    VISIBLE_USERNAME = 3;
+    EMAIL = 4;
+    LOGIN_EMAIL = 5;
+}
+
+enum FlagType {
+    UNKNOWN_MARK_TYPE = 0;
+    NORMAL = 1; // "green"
+    SUSPICIOUS = 2; // "red"
+}
+
+message UserProfile {
+    account.User user = 2;
+    string user_tags_json = 3;
+    int32 jail_level = 4;
+}
+
+message MatchResult {
+    string ticket_id = 1;
+    common.TicketStatus ticket_status = 2;
+    string username = 3;
+    int32 rank = 4;
+    double score = 5;
+    int64 initiated = 6; //in milliseconds
+    int64 last_updated = 7; //in milliseconds
+    int32 game_level = 8;
+    common.Amount entry_fee = 9;
+    common.Amount prize = 10;
+    string game_id = 11;
+}
+
+message TxWithMetadata {
+    finance.FiatTransaction tx = 1;
+    FlagType flag = 2;
+    account.UserSnip user_snip = 3;
+}
+
+message WithdrawalWithMetadata {
+    finance.WithdrawalDetail withdrawal_detail = 1;
+    FlagType flag = 2;
+    account.UserSnip user_snip = 3;
+}

@@ -1,0 +1,61 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package finance;
+
+import "error.proto";
+import "common_backend.proto";
+import "common_mobile.proto";
+import "finance_mobile.proto";
+
+option java_package = "network.celer.proto.finance";
+option java_outer_classname = "FinanceInternal";
+option go_package = "github.com/celer-network/x-proto-go/finance";
+
+service Internal {
+    rpc InternalGetUserWithdrawalSum (InternalGetUserWithdrawalSumRequest) returns (InternalGetUserWithdrawalSumResponse);
+    rpc InternalGetWithdrawals (InternalGetWithdrawalsRequest) returns (InternalGetWithdrawalsResponse);
+    rpc InternalGetWithdrawalDetail (InternalGetWithdrawalDetailRequest) returns (InternalGetWithdrawalDetailResponse);
+    rpc InternalConfirmCheckWithdrawal (InternalConfirmCheckWithdrawalRequest) returns (InternalConfirmCheckWithdrawalResponse);
+}
+
+message InternalConfirmCheckWithdrawalRequest {
+    string tx_id = 1; // tx id will change to bank id after check withdrawal is successful confirmed.
+}
+
+message InternalConfirmCheckWithdrawalResponse {
+    err.BackendError error = 1;
+    string tx_id = 2; // tx id will change to bank id after check withdrawal is successful confirmed.
+}
+
+message InternalGetUserWithdrawalSumRequest {
+    string eth_addr = 1;
+    int64 from_time = 2; // milliseconds
+    int64 to_time = 3; // milliseconds
+    common.TokenTypeEnum token_type = 4;
+}
+
+message InternalGetWithdrawalsRequest {
+    string next_page_token = 1;
+    int32 limit = 2;
+    repeated WithdrawalStatus withdrawal_status = 3;
+}
+
+message InternalGetWithdrawalDetailRequest {
+    string tx_id = 1;
+}
+
+message InternalGetUserWithdrawalSumResponse {
+    err.BackendError error = 1;
+    common.Amount amount = 2;
+}
+
+message InternalGetWithdrawalsResponse {
+    err.BackendError error = 1;
+    repeated FiatTransaction withdrawal_txs = 2;
+}
+
+message InternalGetWithdrawalDetailResponse {
+    err.BackendError error = 1;
+    WithdrawalDetail withdrawal_detail = 2;
+    string addr = 3;
+}

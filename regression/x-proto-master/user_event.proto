@@ -1,0 +1,219 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package ue;
+
+import "account_mobile.proto";
+import "common_backend.proto";
+import "common_mobile.proto";
+import "bank_internal.proto";
+import "match_ticket_internal.proto";
+
+option java_package = "network.celer.proto.ue";
+option java_outer_classname = "UserEventInternal";
+option go_package = "github.com/celer-network/x-proto-go/ue";
+
+// define user events like deposit, won game etc
+
+// append only, never change already defined enums
+enum EventType {
+  UNDEFINED_EVENT_TYPE = 0;
+  // from fiat module
+  FIAT_DEPOSIT = 1;
+  // from celerx
+  GAME_COMPLETED = 2;             // kafka topic: game_completed
+  USER_MATCH_RANK_DETERMINED = 3; // kafka topic: user_match_rank_determined
+  USER_TOURNAMENT_PRIZE_PAID = 4; // kafka topic: user_tournament_prize_paid
+  USER_LEAGUE_PRIZE_RECEIVED = 5; // kafka topic: user_league_prize_received
+  // from loyalty
+  LOYALTY_TIER_INFO = 6; // kafka topic: loyalty_tier_info
+  // from bank
+  BANK_BALANCE_INFO = 7; // kafka topic: bank_balance_info
+  // from celerx-user
+  USER_CREATED = 8; // kafka topic: user_created
+  APP_ID_INSTALLED = 9; // kafka topic: app_id_installed
+  ACCT_MIGRATION = 10; // kafka topic: account_migration
+  USER_GOT_BETTER_RANK_IN_LEAGUE_TOP_TEN = 11; // kafka topic: user_got_better_rank_in_league_top_ten
+  USER_REQUESTED_WITHDRAW = 12;
+  USER_SET_MARKETING_CAMPAIGN_TAG = 13; // kafka topic: user_set_marketing_campaign_tag
+  USER_SET_AB_TEST_EXPERIMENT_TAG = 14; // kafka topic: user_set_ab_test_experiment_tag
+  USER_GEOLOCATION_UPDATED = 15; // kafka topic: user_geolocation_updated
+}
+
+// Next tag: 21
+message UserEvent {
+  uint64 ts = 1; // must be millisecond since epoch
+  EventType type = 2;
+  // deprecated, new messages should set oneof user_id, this field will be deprecated soon
+  reserved 3;
+  oneof user_id { // note: eventually replace "usr" -- producer chooses, consumer adapts
+    string username = 9; // CelerX username
+    string eth_addr = 10; // ETH address
+  }
+  oneof payload { // biz module defined event details
+    Deposit deposit = 4;
+    GameCompleted game_completed = 5;
+    UserMatchRankDetermined user_match_rank_determined = 6;
+    UserTournamentPrizePaid user_tournament_prize_paid = 7;
+    UserLeaguePrizeReceived user_league_prize_received = 8;
+    LoyaltyTierInfo loyalty_tier_info = 11;
+    BankBalanceInfo bank_balance_info = 12;
+    UserCreated user_created = 13;
+    AppIdInstalled app_id_installed = 14;
+    AccountMigrationEvent acct_migration = 15;
+    UserGotBetterRankInLeagueTopTen user_got_better_rank_in_league_top_ten = 16;
+    UserRequestedWithdraw user_requested_withdraw = 17;
+    UserSetMarketingCampaignTag user_set_marketing_campaign_tag = 18;
+    UserSetABTestingExperimentTag user_set_ab_test_experiment_tag = 19;
+    UserGeolocationUpdated user_geolocation_updated = 20;
+  }
+}
+
+// Next tag: 4
+message AccountMigrationEvent {
+  // latest user object.
+  account.User user = 1;
+  // delta_entry defines which fields in user to read from that include change.
+  repeated string delta_entry = 2;
+  // indicate if the event is for user creation.
+  bool create = 3;
+}
+
+enum Status { // generic status enum for events that need status
+  UNDEFINED_STATUS = 0;
+  SUCCESS = 1;
+  ERROR = 2;
+  TIMEOUT = 3;
+}
+
+// payload messages, defined by each biz module
+
+// fiat Deposit
+message Deposit {
+  string symbol = 1 [deprecated = true];
+  double amount = 2 [deprecated = true];
+  Status status = 3;
+  string errmsg = 4;     // if status is ERROR, err details
+  int64 campaign_id = 5; // which campaign the user chose eg. for bonus
+  // bonus tx should use this as refid to bank api so we can
+  // link 2 txs together
+  string refid = 6;
+  common.Amount deposit_amount = 7;
+  int64 ts = 8; // epoch milliseconds
+  bool is_first_time_deposit = 9;
+}
+
+message UserRequestedWithdraw {
+  common.Amount withdraw_amount = 1;
+  int64 ts = 2; // epoch milliseconds
+}
+
+// per user when a user's ticket reaches READY state
+message GameCompleted {
+  string app_id = 1; // id of the game
+  string ticket_id = 2;
+  common.TokenTypeEnum token = 5;
+  string eth_addr = 7;
+}
+
+enum MatchOutcomeEnum {
+  UNKNOWN_MATCH_OUTCOME = 0;
+  WIN = 1;
+  LOSE = 2;
+  TIE = 3;
+}
+
+// per user when tickets in a match reaches RANK_DETERMINED state
+message UserMatchRankDetermined {
+  string game_id = 1;
+  string username = 2;
+  string eth_addr = 3;
+  common.Amount entry_fee = 4;
+  common.Amount prize = 5;
+  MatchOutcomeEnum outcome = 6;
+  int32 score = 7;
+  int32 rank = 8;
+  string match_id = 9;
+  common.TokenTypeEnum token = 10;
+  string game_title = 11;
+  string opponent = 12;
+  string room_id = 13;
+  double league_star_multiplier = 14;
+  string bucket_id = 15;
+  match.ticket.TicketBotTypeEnum bot_type = 16;
+  match.ticket.TicketBotTypeEnum with_bot_type = 17;
+}
+
+// per user when tournament prize has been paid to user
+message UserTournamentPrizePaid {
+  int64 tournament_id = 1;
+  string username = 2;
+  int32 rank = 3;
+  common.Amount prize = 4;
+  string app_id = 5;
+  string eth_addr = 6;
+  int32 num_entries = 7; // total number of entries
+  common.Amount single_entry_fee = 8; // entry fee per entry
+}
+
+// per user when league prize has been received by user (fee service got notified by OSP)
+message UserLeaguePrizeReceived {
+  int64 league_id = 1;
+  string username = 2;
+  string eth_addr = 3;
+  string ref_id = 4;
+  common.Amount prize = 5;
+}
+
+// per user when a user is placed in league top ten
+message UserGotBetterRankInLeagueTopTen {
+  int64 league_id = 1;
+  string title = 2;
+  int32 rank = 3;
+}
+
+// Per user when loyalty tier information changes (tier, gems in current cycle, etc.).
+// Next tag: 5
+message LoyaltyTierInfo {
+  string tier = 1;
+  uint64 gems = 2; // gems accumulated in the current quarter
+  uint32 year = 3; // year of current quarter
+  uint32 quarter = 4; // 1: Jan-Mar, 2: Apr-Jun, 3: Jul-Sep, 4: Oct-Dec
+}
+
+// Per user per token (inside Amount) when bank balance changes.
+// The transaction that caused this balance change is also included.
+// Next tag: 6
+message BankBalanceInfo {
+  common.Amount balance = 1; // iou_balance + amount_balance + reward_balance
+  bank.BankTx tx = 2;
+  // the following fields have the same token type specified in "balance" field
+  double iou_balance = 3;
+  double amount_balance = 4;
+  double reward_balance = 5;
+}
+
+// Per user when user is created. nothing more than username and time is needed
+message UserCreated {}
+
+// appId is like "celerx_app", "celerx_app_daubcash", "celerx_app_solitaire".
+// '.' will be replace into '_'
+message AppIdInstalled {
+  string app_id = 2;
+}
+
+// Per user when user set marketing campaign tag
+message UserSetMarketingCampaignTag {
+  string marketing_campaign_tag = 1;
+}
+
+// Per user when user set ab test experiment tag
+message UserSetABTestingExperimentTag {
+  int32 experiment_tag_num = 1;
+  string experiment_user_tag = 2;
+}
+
+// Per user when user's geolocation updates
+message UserGeolocationUpdated {
+  string username = 1;
+  account.Geolocation geolocation = 2;
+}

@@ -1,0 +1,137 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package account;
+
+import "error.proto";
+import "account_mobile.proto";
+
+option java_package = "network.celer.proto.account";
+option java_outer_classname = "AccountInternal";
+option go_package = "github.com/celer-network/x-proto-go/account";
+
+service Internal {
+  rpc AdminUsernameToEthAddress(AdminUsernameToEthAddressRequest) returns (AdminUsernameToEthAddressResponse) {}
+  rpc AdminEthAddressToUsername(AdminEthAddressToUsernameRequest) returns (AdminEthAddressToUsernameResponse) {}
+  rpc AdminEmailToUsernames(AdminEmailToUsernamesRequest) returns (AdminEmailToUsernamesResponse) {}
+  rpc AdminGetUserByUsername(AdminGetUserByUsernameRequest) returns (AdminGetUserByUsernameResponse) {}
+  rpc AdminGetUserByEthAddress(AdminGetUserByEthAddressRequest) returns (AdminGetUserByEthAddressResponse) {}
+  rpc AdminGetUserByLoginEmail(AdminGetUserByLoginEmailRequest) returns (AdminGetUserByLoginEmailResponse) {}
+  rpc AdminGetUserSnipBatchByUsername(AdminGetUserSnipBatchByUsernameRequest) returns (AdminGetUserSnipBatchByUsernameResponse) {}
+  rpc AdminGetUserSnipBatchByEthAddress(AdminGetUserSnipBatchByEthAddressRequest) returns (AdminGetUserSnipBatchByEthAddressResponse) {}
+  rpc AdminGetUserSnipBatchByVisibleUsername(AdminGetUserSnipBatchByVisibleUsernameRequest) returns (AdminGetUserSnipBatchByVisibleUsernameResponse) {}
+  rpc AdminSetUserBanStatus(AdminSetUserBanStatusRequest) returns (AdminSetUserBanStatusResponse) {}
+}
+
+// Next tag: 2
+message AdminUsernameToEthAddressRequest {
+  string username = 1;
+}
+
+// Next tag: 3
+message AdminUsernameToEthAddressResponse {
+  err.BackendError error = 1;
+  string eth_address = 2;
+}
+
+// Next tag: 2
+message AdminEthAddressToUsernameRequest {
+  string eth_address = 1;
+}
+
+// Next tag: 3
+message AdminEthAddressToUsernameResponse {
+  err.BackendError error = 1;
+  string username = 2;
+}
+
+// Next tag: 2
+message AdminGetUserByUsernameRequest {
+  string username = 1;
+}
+
+// Next tag: 3
+message AdminGetUserByUsernameResponse {
+  err.BackendError error = 1;
+  User user = 2;
+}
+
+// Next tag: 2
+message AdminGetUserByEthAddressRequest {
+  string eth_address = 1;
+}
+
+// Next tag: 3
+message AdminGetUserByEthAddressResponse {
+  err.BackendError error = 1;
+  User user = 2;
+}
+
+// Next tag: 2
+message AdminGetUserByLoginEmailRequest {
+  string login_email = 1;
+}
+
+// Next tag: 3
+message AdminGetUserByLoginEmailResponse {
+  err.BackendError error = 1;
+  User user = 2;
+}
+
+// Next tag: 2
+message AdminGetUserSnipBatchByUsernameRequest {
+  repeated string usernames = 1;
+}
+
+// Next tag: 4
+message AdminGetUserSnipBatchByUsernameResponse {
+  err.BackendError error = 1;
+  map<string, UserSnip> user_snips = 2;
+  repeated string invalid_usernames = 3;
+}
+
+// Next tag: 2
+message AdminGetUserSnipBatchByEthAddressRequest {
+  repeated string eth_addresses = 1;
+}
+
+// Next tag: 4
+message AdminGetUserSnipBatchByEthAddressResponse {
+  err.BackendError error = 1;
+  map<string, UserSnip> user_snips = 2;
+  repeated string invalid_eth_addresses = 3;
+}
+
+// Next tag: 2
+message AdminGetUserSnipBatchByVisibleUsernameRequest {
+  repeated string visible_usernames = 1;
+}
+
+// Next tag: 4
+message AdminGetUserSnipBatchByVisibleUsernameResponse {
+  err.BackendError error = 1;
+  map<string, UserSnip> user_snips = 2;
+  repeated string invalid_visible_usernames = 3;
+}
+
+// Next tag: 3
+message AdminSetUserBanStatusRequest{
+  string username = 1;
+  bool banned = 2;
+}
+
+// Next tag: 2
+message AdminSetUserBanStatusResponse{
+  err.BackendError error = 1;
+}
+
+// Next tag: 2
+message AdminEmailToUsernamesRequest {
+  string email = 1;
+}
+
+// Next tag: 3
+message AdminEmailToUsernamesResponse {
+  err.BackendError error = 1;
+  repeated string usernames = 2;
+}

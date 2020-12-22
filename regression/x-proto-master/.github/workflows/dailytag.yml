@@ -1,0 +1,22 @@
+name: DailyTag
+
+on:
+  schedule:
+    # daily utc 1am, pst 5pm
+    - cron: "0 1 * * *"
+
+jobs:
+  do_tag:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get date string like 0.2.11 (2020 Feb 11)
+      id: get_date
+      run: echo "::set-output name=datestr::$(date +'%y.%-m.%-d'|tail -c +2)"
+    - name: Add tag v${{ steps.get_date.outputs.datestr }}
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.get_date.outputs.datestr }}
+        release_name: v${{ steps.get_date.outputs.datestr }}

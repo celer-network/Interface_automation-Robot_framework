@@ -1,0 +1,23 @@
+// Copyright 2020 Celer Network
+syntax = "proto3";
+package game;
+
+import "error.proto";
+
+option java_package = "network.celer.proto.game";
+option java_outer_classname = "GameInternal";
+
+service Internal {
+    // get all the possible real appId like "celerx.app" or "celerx.app.solitaire" from gameId like "000403"
+    rpc GetAppIdByGameId (GetAppIdByGameIdRequest) returns (GetAppIdByGameIdResponse) {
+    }
+}
+
+message GetAppIdByGameIdRequest {
+    string game_id = 1;
+}
+
+message GetAppIdByGameIdResponse {
+    err.BackendError error = 1;
+    repeated string app_id = 2;
+}

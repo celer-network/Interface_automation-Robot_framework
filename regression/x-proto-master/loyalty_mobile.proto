@@ -1,0 +1,428 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package loyalty;
+
+import "error.proto";
+import "common_backend.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/celer-network/x-proto-go/loyalty";
+option swift_prefix = "Loyalty";
+
+service Mobile {
+  // Called by the client (SDK).
+  rpc GetFirstGame(GetFirstGameRequest) returns (GetFirstGameResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/get_first_game"
+      body: "*"
+    };
+  }
+
+  rpc GetCheckin(GetCheckinRequest) returns (GetCheckinResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/get_checkin"
+      body: "*"
+    };
+  }
+  rpc SubmitCheckin(SubmitCheckinRequest) returns (SubmitCheckinResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/submit_checkin"
+      body: "*"
+    };
+  }
+  rpc ResetCheckin(ResetCheckinRequest) returns (ResetCheckinResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/reset_checkin"
+      body: "*"
+    };
+  }
+
+  rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/get_tasks"
+      body: "*"
+    };
+  }
+  rpc AcceptTask(AcceptTaskRequest) returns (AcceptTaskResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/accept_task"
+      body: "*"
+    };
+  }
+  rpc AcceptAllTasks(AcceptAllTasksRequest) returns (AcceptAllTasksResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/accept_all_tasks"
+      body: "*"
+    };
+  }
+  rpc ClaimTask(ClaimTaskRequest) returns (ClaimTaskResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/claim_task"
+      body: "*"
+    };
+  }
+
+  rpc GetRedeemTable(GetRedeemTableRequest) returns (GetRedeemTableResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/get_redeem_table"
+      body: "*"
+    };
+  }
+  rpc Redeem(RedeemRequest) returns (RedeemResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/redeem"
+      body: "*"
+    };
+  }
+
+  rpc GetTier(GetTierRequest) returns (GetTierResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/get_tier"
+      body: "*"
+    };
+  }
+
+  rpc GetTiers(GetTiersRequest) returns (GetTiersResponse) {}
+
+  rpc ClaimFreeLootBox(ClaimFreeLootBoxRequest) returns (ClaimFreeLootBoxResponse) {
+    option (google.api.http) = {
+      post: "/v1/loyalty/claim_free_loot_box"
+      body: "*"
+    };
+  }
+
+  rpc GetDailyRewardsPreview(GetDailyRewardsPreviewRequest) returns (GetDailyRewardsPreviewResponse) {}
+}
+
+
+// Next tag: 3
+message GetFirstGameRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 4
+message GetFirstGameResponse {
+  err.BackendError error = 1;
+  bool got_reward = 2;
+  MultiQuantity gain = 3;
+}
+
+// Next tag: 3
+message GetCheckinRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 9
+message GetCheckinResponse {
+  err.BackendError error = 1;
+  bool has_checkin = 2;
+  bool has_makeup = 3;
+  Date start = 4;
+  Date today = 5;
+  uint64 now = 6; // UTC-8 timestamp in milliseconds
+  uint64 today_end = 7; // UTC-8 timestamp in milliseconds
+  repeated CheckinDay days = 8;
+}
+
+// Next tag: 3
+message SubmitCheckinRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 4
+message SubmitCheckinResponse {
+  err.BackendError error = 1;
+  bool got_reward = 2;
+  Reward reward = 3;
+}
+
+// Next tag: 3
+message ResetCheckinRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 2
+message ResetCheckinResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 3
+message GetTasksRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 3
+message GetTasksResponse {
+  err.BackendError error = 1;
+  repeated Task tasks = 2;
+}
+
+// Next tag: 4
+message AcceptTaskRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+  uint64 task_id = 3;
+}
+
+// Next tag: 6
+message AcceptTaskResponse {
+  err.BackendError error = 1;
+  bool started = 2;
+  uint64 start = 3; // UTC-8 timestamp in milliseconds
+  uint64 deadline = 4; // UTC-8 timestamp in milliseconds
+  uint64 now = 5; // UTC-8 timestamp in milliseconds
+}
+
+// Next tag: 3
+message AcceptAllTasksRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 2
+message AcceptAllTasksResponse {
+  err.BackendError error = 1;
+}
+
+// Next tag: 4
+message ClaimTaskRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+  uint64 task_id = 3;
+}
+
+// Next tag: 5
+message ClaimTaskResponse {
+  err.BackendError error = 1;
+  bool got_reward = 2;
+  MultiQuantity gain = 3 [deprecated = true];
+  Reward reward = 4;
+}
+
+// Next tag: 3
+message GetRedeemTableRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 5
+message GetRedeemTableResponse {
+  err.BackendError error = 1;
+  double expiring_amount = 2;
+  Date expiration = 3;
+  repeated RedeemEntry entries = 4;
+}
+
+// Next tag: 7
+message RedeemRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+  uint64 redeem_id = 3;
+  string user_email = 4; // only needed if "id" is for physical reward
+  bytes proof = 5; // redeem proof passed to bank (addr/amount/symbol/ts)
+  uint64 proofts = 6; // UTC timestamp (in seconds) used by the proof
+}
+
+// Next tag: 5
+message RedeemResponse {
+  err.BackendError error = 1;
+  bool got_reward = 2;
+  oneof reward {
+    MultiQuantity gain = 3;
+    string txid = 4; // Tx ID to track the request for a physical reward
+  }
+}
+
+// Next tag: 3
+message GetTierRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 14
+message GetTierResponse {
+  err.BackendError error = 1;
+  string tier = 2;
+  string icon = 3;
+  double multiplier = 4;
+  bool was_upgraded = 5; // tier was upgraded since last GetTier request
+  uint32 year = 6;
+  uint32 quarter = 7; // 1: Jan-Mar, 2: Apr-Jun, 3: Jul-Sep, 4: Oct-Dec
+  uint64 gems = 8; // gems accumulated in the quarter
+  uint64 gems_needed = 9; // gems needed for the next goal (move up or maintain)
+  bool move_up = 10; // next goal: gem needed to move up or to maintain this tier
+  string next_tier = 11; // only set if next goal is to move up
+  string next_icon = 12; // only set if next goal is to move up
+  double next_multiplier = 13; // only set if next goal is to move up
+}
+
+// Next tag: 1
+message GetTiersRequest {
+}
+
+// Next tag: 3
+message GetTiersResponse {
+  err.BackendError error = 1;
+  repeated TierEntry entries = 2;
+}
+
+// Next tag: 3
+message ClaimFreeLootBoxRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 4
+message ClaimFreeLootBoxResponse {
+  err.BackendError error = 1;
+  repeated LootBoxOption options = 2;
+  uint64 countdown_timer_duration = 3; // milliseconds, the time user need to wait until next valid claim.
+}
+
+// Next tag: 3
+message FreeLootBoxPreview {
+  bool with_unclaimed_loot_box = 1;
+  uint64 countdown_timer_duration = 2; // milliseconds, the time user need to wait until next valid claim.
+}
+
+// Next tag: 5
+message DailyTasksPreview {
+  bool with_unaccepted_tasks = 1;
+  double total_usd_value = 2;
+  double total_gem_value = 3;
+  bool with_unclaimed_tasks = 4;
+}
+
+// Next tag: 4
+message DailyCheckInPreview {
+  bool with_unclaimed_bonus = 1;
+  uint64 expire_duration = 2; // milliseconds, the time of this check in expire.
+  uint64 countdown_timer_duration = 3; // milliseconds, the time user need to wait until next valid claim.
+}
+
+// Next tag: 3
+message GetDailyRewardsPreviewRequest {
+  string user_addr = 1;
+  common.BasicAuth auth = 2;
+}
+
+// Next tag: 5
+message GetDailyRewardsPreviewResponse {
+  err.BackendError error = 1;
+  DailyCheckInPreview daily_check_in_preview = 2;
+  DailyTasksPreview daily_tasks_preview = 3;
+  FreeLootBoxPreview free_loot_box_preview = 4;
+}
+
+// Next tag: 5
+message Quantity {
+  string symbol = 1;
+  double amount = 2;
+  double iou = 3;
+  double reward = 4;
+}
+
+// Next tag: 2
+message MultiQuantity {
+    repeated Quantity quantities = 1;
+}
+
+// Next tag: 4
+message Date {
+  uint32 year = 1;
+  uint32 month = 2; // 1=Jan, 12=Dec
+  uint32 day = 3; // 1-31
+}
+
+// Next tag: 4
+message Time {
+  uint32 hour = 1;
+  uint32 min = 2;
+  uint32 sec = 3;
+}
+
+// Next tag: 3
+message Datetime {
+  Date date = 1;
+  Time time = 2;
+}
+
+// Next tag: 5
+message CheckinDay {
+  Date date = 1;
+  bool taken = 2;
+  Reward reward = 3;
+  string image_url = 4;
+}
+
+// Next tag: 3
+message Reward {
+  oneof reward {
+    MultiQuantity gain = 1;
+    LootBox box = 2;
+  }
+}
+
+// Next tag: 3
+message LootBox {
+  string name = 1;
+  repeated LootBoxOption options = 2;
+}
+
+// Next tag: 5
+message LootBoxOption {
+  MultiQuantity gain = 1;
+  double probability = 2;
+  bool selected = 3;
+  string image_url = 4;
+}
+
+enum TaskStatus {
+    INVALID = 0;
+    AVAILABLE = 1;
+    STARTED = 2;
+    COMPLETED = 3;
+    CLAIMED = 4;
+}
+
+// Next tag: 13
+message Task {
+  uint64 task_id = 1;
+  string name = 2;
+  string description = 3;
+  TaskStatus status = 4;
+  uint64 start = 5; // UTC-8 timestamp (msec) when task "started"
+  uint64 deadline = 6; // UTC-8 timestamp (msec) deadline of "started" task
+  uint64 now = 7; // UTC-8 timestamp (msec) at the server
+  uint32 goal = 9; // goal number to reach
+  uint32 progress = 10; // current progress on that goal
+  Date expiration = 11; // when "available" task expires
+  repeated Reward rewards = 8; // can win multiple rewards
+  string reward_image_url = 12;
+}
+
+// Next tag: 6
+message RedeemEntry {
+  uint64 redeem_id = 1;
+  Quantity input_quantity = 2;
+  oneof output {
+    MultiQuantity gain = 3; // quantities automatically exchanged
+    string description = 4; // info about physical reward
+  }
+  string prize_image_url = 5;
+}
+
+// Next tag: 6
+message TierEntry {
+  string tier = 1;
+  string icon = 2;
+  double multiplier = 3;
+  uint64 min_gems = 4; // gems >= min_gems to be in this tier
+  uint64 max_gems = 5; // gems <= max_gems to be in this tier
+}

@@ -1,0 +1,69 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package bank;
+
+import "error.proto";
+import "common_mobile.proto";
+
+option go_package = "github.com/celer-network/x-proto-go/bank";
+option swift_prefix = "Bank";
+
+service Mobile {
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse) {}
+  rpc GetRecentTxs(GetRecentTxsRequest) returns (GetRecentTxsResponse) {}
+  rpc GetRefidTxs(GetRefidTxsRequest) returns (GetRefidTxsResponse) {}
+}
+
+// Next tag: 3
+message GetBalancesRequest {
+  string jwt_token = 1;
+  repeated common.TokenTypeEnum token_types = 2; // optional filtering
+}
+
+// Next tag: 3
+message GetBalancesResponse {
+  err.BackendError error = 1;
+  repeated TokenQuantity balances = 2;
+}
+
+// Next tag: 3
+message GetRecentTxsRequest {
+  string jwt_token = 1;
+  common.TokenTypeEnum token_type = 2;
+}
+
+// Next tag: 3
+message GetRecentTxsResponse {
+  err.BackendError error = 1;
+  repeated Transaction txs = 2;
+}
+
+// Next tag: 3
+message GetRefidTxsRequest {
+  string jwt_token = 1;
+  string refid = 2;
+}
+
+// Next tag: 3
+message GetRefidTxsResponse {
+  err.BackendError error = 1;
+  repeated Transaction txs = 2;
+}
+
+// Next tag: 5
+message TokenQuantity {
+  common.TokenTypeEnum token_type = 1;
+  double amount = 2;
+  double iou = 3;
+  double reward = 4;
+}
+
+// Next tag: 6
+message Transaction {
+  string txid = 1;
+  string addr = 2;
+  TokenQuantity value = 3;
+  string refid = 4;
+  int64 ts = 5; // UTC timestamp in seconds
+}

@@ -1,0 +1,29 @@
+// Copyright 2020 Celer Network
+
+syntax = "proto3";
+package storage;
+
+import "error.proto";
+
+option java_package = "network.celer.proto.storage";
+option java_outer_classname = "StorageMobile";
+option go_package = "github.com/celer-network/x-proto-go/storage";
+option swift_prefix = "Storage";
+
+service Mobile {
+  rpc RecordInviterInfo (RecordInviterInfoRequest) returns (RecordInviterInfoResponse) {
+  }
+}
+
+// Next tag: 5
+message RecordInviterInfoRequest {
+  string inviter_username = 1;
+  string invitation_code = 2;
+  string inviter_avatar_url = 3;
+  string inviter_visible_username = 4;
+}
+
+// Next tag: 2
+message RecordInviterInfoResponse {
+  err.BackendError error = 1;
+}
